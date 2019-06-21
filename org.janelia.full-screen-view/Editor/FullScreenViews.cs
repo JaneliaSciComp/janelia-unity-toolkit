@@ -342,7 +342,11 @@ namespace Janelia
             if (_rendering)
             {
                 _camera.Render();
-                GUI.DrawTexture(new Rect(0, 0, position.width, position.height), _camera.targetTexture);
+
+                // Disable alpha blending when drawing the texture, so black really is black.
+                bool alphaBlend = false;
+                GUI.DrawTexture(new Rect(0, 0, position.width, position.height), _camera.targetTexture,
+                                ScaleMode.ScaleToFit, alphaBlend);
             }
         }
 
