@@ -371,18 +371,19 @@ namespace Janelia
         }
 
         // Any FullScreenView that is displayed when the editor is quit will appear as a blank, un-closeable window
-        // the next time the editor is started.  It seems difficult to programmatically close all FullScreenViews
-        // when the editor is quitting, so instead, prompt the user to do so.
+        // the next time the editor is started.  So close all FullScreenViews when the editor is quitting.
 
         internal static bool OnEditorWantsToQuit()
         {
-            if (views.Count > 0)
+            while (views.Count > 0)
             {
-                bool ok = EditorUtility.DisplayDialog("Full Screen Views", "Please manually dismiss all full-screen views before exiting the editor", "OK", "Exit Anyway");
-                return !ok;
+                FullScreenView view = views[0];
+                views.RemoveAt(0);
+                view.Close();
             }
             return true;
         }
+
     }
 
     //
