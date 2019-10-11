@@ -10,6 +10,6 @@ Follow the Unity documentation for [installing a local package](https://docs.uni
 3. In the Unity editor's "Window" menu, choose the "Package Manager" item.
 4. Press the small "+" button in the upper-left corner of the Package Manager window, and click on the "Add package from disk..." item that appears.
 ![Package Manager "+" button](installation.png)
-5. In the file chooser that appears, navigate to the directory with the downloaded repository. Then go down one more level into the subdirectory for the particular package to be installed (e.g., "org.janelia.full-screen.view").
+5. In the file chooser that appears, navigate to the directory with the downloaded repository. Then go down one more level into the subdirectory for the particular package to be installed (e.g., "org.janelia.full-screen-view").
 6. Select the "package.json" file and press "Open" (or double click).
 7. Unity should load that package and make its functionality available, and it should be visible in the Package Manager's list of packages, (e.g., as "Janelia Full Screen View").
