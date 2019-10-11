@@ -4,6 +4,11 @@
 // to the animal (as opposed to using a projector), as all the editor functionality
 // is available for fine-tuning the world while the animal is in it.
 
+// To achieve a high frame rate (e.g., 240 Hz), it may help to close as much of the
+// standard Unity user interface as possible.  This code redraws the game views in
+// the same loop that redraws the standard user interface, so it is helpful to make
+// that loop as streamlined as possible.
+
 // Note that the current code works on Windows platforms only (specifically, the code
 // that detects the details of all the monitors).
 
@@ -319,12 +324,19 @@ namespace Janelia
             EditorApplication.wantsToQuit += OnEditorWantsToQuit;
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             Event e = Event.current;
             if (e.isMouse && e.button == 0)
             {
                 Close();
+            }
+            else if (e.type != EventType.Repaint)
+            {
+                // OnGUI seems to be called at least twice for each Update.
+                // So do no camera rendering except when triggered by Update's Repaint.
+
+                return;
             }
 
             if (_camera == null)
