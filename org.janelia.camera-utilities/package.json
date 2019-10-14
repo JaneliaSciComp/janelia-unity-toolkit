@@ -3,7 +3,7 @@
     "displayName": "Janelia Camera Utilities",
     "version": "0.1.0",
     "unity": "2018.3",
-    "description": "Utilities routines related to cameras.",
+    "description": "Utility code related to cameras.",
     "keywords": ["VR"],
     "dependencies": {
     }
