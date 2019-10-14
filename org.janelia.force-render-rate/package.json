@@ -1,0 +1,10 @@
+{
+    "name": "org.janelia.force-render-rate",
+    "displayName": "Janelia Force Render Rate",
+    "version": "0.1.0",
+    "unity": "2018.3",
+    "description": "Force a consistent rendering frame rate (adapted from Unity Blog, June 3, 2019).",
+    "keywords": ["VR"],
+    "dependencies": {
+    }
+}
