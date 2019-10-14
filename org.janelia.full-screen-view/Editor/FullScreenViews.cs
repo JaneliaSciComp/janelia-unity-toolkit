@@ -19,13 +19,14 @@
 // 2. shared data stored in resources
 // Uncomment one of the following definitions to choose the persistence method.
 
-#define PERSIST_AS_EDITOR_PREFS
-// #define PERSIST_AS_RESOURCE
+// #define PERSIST_AS_EDITOR_PREFS
+#define PERSIST_AS_RESOURCE
 
 using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 #if PERSIST_AS_RESOURCE
@@ -117,6 +118,13 @@ namespace Janelia
 
         private void OnGUIShowFullScreenViews()
         {
+            _progressBoxLocation = 
+                (ProgressBoxLocation)EditorGUILayout.EnumPopup("Progress box", _progressBoxLocation);
+            _progressBoxScreen = EditorGUILayout.IntField("Progress box screen", _progressBoxScreen);
+            _progressBoxScreen = Math.Max(1, Math.Min(_progressBoxScreen, _monitors.Count));
+            _progressBoxSize = EditorGUILayout.IntField("Progress box size (px)", _progressBoxSize);
+            _progressBoxSize = Math.Max(5, Math.Min(_progressBoxSize, 100));
+
             if (GUILayout.Button("Show Full-Screen Views"))
             {
                 // Avoid showing redundant FullScreenViews by closing all of them before (re)showing all of them.
@@ -127,6 +135,7 @@ namespace Janelia
                     view.Close();
                 }
 
+                int i = 1;
                 foreach (Monitor monitor in _monitors)
                 {
                     Camera camera = (Camera)EditorUtility.InstanceIDToObject(monitor.cameraInstanceId);
@@ -147,6 +156,12 @@ namespace Janelia
 
                         window.position = new Rect(x, y, width, height);
                         window.cameraInstanceId = camera.GetInstanceID();
+
+                        if (i++ == _progressBoxScreen)
+                        {
+                            window.progressBoxLocation = _progressBoxLocation;
+                            window.progressBoxSize = _progressBoxSize;
+                        }
 
                         // Using ShowPopup() eliminates all borders and window decorations.
 
@@ -171,6 +186,9 @@ namespace Janelia
                 string path = (camera != null) ? PathName(camera.gameObject) : "";
                 EditorPrefs.SetString(CameraNamePersistenceKey(i), path);
             }
+            EditorPrefs.SetInt(ProgressBoxLocationPersistenceKey(), (int)_progressBoxLocation);
+            EditorPrefs.SetInt(ProgressBoxScreenPersistenceKey(), _progressBoxScreen);
+            EditorPrefs.SetInt(ProgressBoxSizePersistenceKey(), _progressBoxSize);
         }
 
         private void LoadCameras()
@@ -192,6 +210,10 @@ namespace Janelia
                     }
                 }
             }
+            _progressBoxLocation =
+                (ProgressBoxLocation)EditorPrefs.GetInt(ProgressBoxLocationPersistenceKey());
+            _progressBoxScreen = EditorPrefs.GetInt(ProgressBoxScreenPersistenceKey());
+            _progressBoxSize = EditorPrefs.GetInt(ProgressBoxSizePersistenceKey());
         }
 
         private string PersistenceKeyPrefix()
@@ -209,6 +231,21 @@ namespace Janelia
             return PersistenceKeyPrefix() + ".numMonitors";
         }
 
+        private string ProgressBoxLocationPersistenceKey()
+        {
+            return PersistenceKeyPrefix() + ".progressBoxLocation";
+        }
+
+        private string ProgressBoxScreenPersistenceKey()
+        {
+            return PersistenceKeyPrefix() + ".progressBoxScreen";
+        }
+
+        private string ProgressBoxSizePersistenceKey()
+        {
+            return PersistenceKeyPrefix() + ".progressBoxSize";
+        }
+
 #elif PERSIST_AS_RESOURCE
         private FullScreenViewsSaved _savedFullScreenViews;
 
@@ -221,6 +258,10 @@ namespace Janelia
                 string path = (camera != null) ? PathName(camera.gameObject) : "";
                 _savedFullScreenViews.cameraNames.Add(path);
             }
+            _savedFullScreenViews.progressBoxLocation = (int)_progressBoxLocation;
+            _savedFullScreenViews.progressBoxScreen = _progressBoxScreen;
+            _savedFullScreenViews.progressBoxSize = _progressBoxSize;
+
             AssetDatabase.Refresh();
             EditorUtility.SetDirty(_savedFullScreenViews);
             AssetDatabase.SaveAssets();
@@ -248,6 +289,10 @@ namespace Janelia
                         }
                     }
                 }
+
+                _progressBoxLocation = (ProgressBoxLocation)_savedFullScreenViews.progressBoxLocation;
+                _progressBoxScreen = _savedFullScreenViews.progressBoxScreen;
+                _progressBoxSize = _savedFullScreenViews.progressBoxSize;
             }
             else
             {
@@ -294,6 +339,18 @@ namespace Janelia
 
         [SerializeField]
         private List<Monitor> _monitors;
+
+        public enum ProgressBoxLocation
+        {
+            NONE = 0,
+            UPPER_LEFT = 1,
+            UPPER_RIGHT = 2,
+            LOWER_LEFT = 3,
+            LOWER_RIGHT = 4
+        }
+        private int _progressBoxScreen = 1;
+        private ProgressBoxLocation _progressBoxLocation;
+        private int _progressBoxSize = 20;
     }
 
     //
@@ -307,6 +364,13 @@ namespace Janelia
         public int cameraInstanceId;
         private Camera _camera;
         private bool _rendering = false;
+
+        public FullScreenViewManager.ProgressBoxLocation progressBoxLocation =
+            FullScreenViewManager.ProgressBoxLocation.NONE;
+        public int progressBoxSize = 20;
+        private int _frameCounter = 0;
+        private static Texture2D _progressTextureEven;
+        private static Texture2D _progressTextureOdd;
 
         static FullScreenView()
         {
@@ -359,6 +423,36 @@ namespace Janelia
                 bool alphaBlend = false;
                 GUI.DrawTexture(new Rect(0, 0, position.width, position.height), _camera.targetTexture,
                                 ScaleMode.ScaleToFit, alphaBlend);
+
+                if (progressBoxLocation != FullScreenViewManager.ProgressBoxLocation.NONE)
+                {
+                    InitializeProgressTexturesIfNeeded(progressBoxSize);
+
+                    Texture2D progressTexture = (_frameCounter % 2 == 0) ? _progressTextureEven : _progressTextureOdd;
+                    int displayWidth = (int)position.width;
+                    int displayHeight = (int)position.height;
+                    float x, y;
+                    switch (progressBoxLocation)
+                    {
+                        case FullScreenViewManager.ProgressBoxLocation.UPPER_LEFT:
+                            x = 0;
+                            y = 0;
+                            break;
+                        case FullScreenViewManager.ProgressBoxLocation.UPPER_RIGHT:
+                            x = displayWidth - progressTexture.width;
+                            y = 0;
+                            break;
+                        case FullScreenViewManager.ProgressBoxLocation.LOWER_LEFT:
+                            x = 0;
+                            y = displayHeight - progressTexture.height;
+                            break;
+                        default:
+                            x = displayWidth - progressTexture.width;
+                            y = displayHeight - progressTexture.height;
+                            break;
+                    }
+                    GUI.DrawTexture(new Rect(x, y, progressTexture.width, progressTexture.height), progressTexture, ScaleMode.ScaleToFit, false);
+                }
             }
         }
 
@@ -367,6 +461,7 @@ namespace Janelia
             if ((_camera != null) && _rendering)
             {
                 Repaint();
+                _frameCounter++;
             }
 
 #if false
@@ -396,6 +491,34 @@ namespace Janelia
             return true;
         }
 
+        private static void InitializeProgressTexturesIfNeeded(int size)
+        {
+            if ((_progressTextureEven == null) || (_progressTextureEven.width != size))
+            {
+                _progressTextureEven = MakeProgressTexture(size, size, true);
+            }
+            if ((_progressTextureOdd == null) || (_progressTextureOdd.width != size))
+            {
+                _progressTextureOdd = MakeProgressTexture(size, size, false);
+            }
+        }
+
+        private static Texture2D MakeProgressTexture(int width, int height, bool even)
+        {
+            Texture2D result = new Texture2D(width, height);
+            Color color = even ? new Color(0, 0, 0, 1) : new Color(1, 1, 1, 1);
+            Color[] pixels = Enumerable.Repeat(color, width * height).ToArray();
+            result.SetPixels(pixels);
+            result.Apply();
+
+            // The texture must be saved as an asset or the reference to the texture will be lost.
+            // https://forum.unity.com/threads/unity-randomly-loses-references.356082/
+
+            string name = even ? "TmpProgressTextureEven.asset" : "TmpProgressTextureOdd.asset";
+            AssetDatabase.CreateAsset(result, "Assets/" + name);
+
+            return result;
+        }
     }
 
     //

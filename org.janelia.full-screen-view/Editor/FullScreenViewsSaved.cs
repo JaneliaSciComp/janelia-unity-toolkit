@@ -10,6 +10,10 @@ namespace Janelia
     public class FullScreenViewsSaved : ScriptableObject
     {
         public List<string> cameraNames;
+        public int progressBoxLocation;
+        public int progressBoxScreen;
+        public int progressBoxSize;
+
         public void OnEnable()
         {
             if (cameraNames == null)
