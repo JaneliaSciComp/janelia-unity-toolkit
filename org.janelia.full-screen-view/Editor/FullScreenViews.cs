@@ -427,6 +427,29 @@ namespace Janelia
                 },
                 0);
 
+            // Sort the monitors because EnumDisplayMonitors does not seem to return them in a
+            // consistent order across sessions.
+
+            result.Sort(delegate (Monitor x, Monitor y)
+            {
+                // The monitor at (0, 0) is the main monitor, which should always be first.
+                if ((x.left == 0) && (x.top == 0))
+                {
+                    return -1;
+                }
+                else if ((y.left == 0) && (y.top == 0))
+                {
+                    return 1;
+                }
+
+                // Other monitors should be sorted in left-to-right order based on their left edges.
+                if (x.left == y.left)
+                {
+                    return (x.top - y.top);
+                }
+                return (x.left - y.left);
+            });
+
             foreach (Monitor monitor in result)
             {
                 MonitorTester tester = EditorWindow.CreateInstance<MonitorTester>();
