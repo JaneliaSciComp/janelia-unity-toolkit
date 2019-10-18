@@ -13,7 +13,7 @@ namespace Janelia
 {
     public class ForceRenderRate : MonoBehaviour
     {
-        public float rate = 360.0f;
+        public float rateHz = 360.0f;
         private float _currentFrameTime;
 
         // For reporting the current frame rate, averaged to avoid excesses reporting overhead.
@@ -25,7 +25,7 @@ namespace Janelia
 
         private void Start()
         {
-            Debug.Log("ForceRenderRate: Rate (FPS) " + rate);
+            Debug.Log("ForceRenderRate: Rate (FPS) " + rateHz);
 
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 9999;
@@ -38,7 +38,7 @@ namespace Janelia
             while (true)
             {
                 yield return new WaitForEndOfFrame();
-                _currentFrameTime += 1.0f / rate;
+                _currentFrameTime += 1.0f / rateHz;
                 var t = Time.realtimeSinceStartup;
                 var sleepTime = _currentFrameTime - t - 0.01f;
                 if (sleepTime > 0)
