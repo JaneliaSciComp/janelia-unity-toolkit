@@ -15,7 +15,7 @@
 // 5. Build the game.
 // 6. Run the executable with the "-popupwindow" commandline option, to eliminate window
 // borders.  One way to do so is to make a Windows shortcut to the .exe file, right-click
-// on the shortcut, choose "Propertis", and on the "Shortcut" tab's "Target" field, add
+// on the shortcut, choose "Properties", and on the "Shortcut" tab's "Target" field, add
 // "-popupwindow" after the .exe name.
 // 7. When the "Display Resolution Dialog" appears before the game actually starts, use
 // "Select Monitor" to choose the leftmost external display from the Windows extended 
