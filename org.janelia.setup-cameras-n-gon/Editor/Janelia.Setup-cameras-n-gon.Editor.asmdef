@@ -2,7 +2,7 @@
     "name": "Janelia.Setup-cameras-n-gon.Editor",
     "references": ["Janelia.Camera-utilities.Runtime"],
     "optionalUnityReferences": [],
-    "includePlatforms": [],
+    "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
