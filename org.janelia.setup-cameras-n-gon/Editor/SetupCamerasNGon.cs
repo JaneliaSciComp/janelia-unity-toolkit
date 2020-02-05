@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 // Depends on: org.janelia.camera-utilities for OffAxisPerspectiveCamera.
@@ -126,6 +127,11 @@ namespace Janelia
                 _fly = new GameObject("Fly");
                 _fly.transform.localPosition = new Vector3(0, 0, 0);
 
+                // For some reason, creating objects in this routine does not seem to
+                // mark the containing scene as dirty, so it is difficult to save the
+                // scene.  As a work-around, manually force the dirty marking.
+                SetObjectDirty(_fly);
+
                 if ((_flyComponentExtra != null) && (_flyComponentExtra.Length > 0))
                 {
                     string fullName = _flyComponentExtra + ",Assembly-CSharp";
@@ -146,6 +152,7 @@ namespace Janelia
                 if (_cameraScreens[i].camera == null)
                 {
                     GameObject cameraObj = new GameObject("FlyCamera" + (i + 1));
+                    SetObjectDirty(cameraObj);
                     _cameraScreens[i].camera = cameraObj.AddComponent(typeof(Camera)) as Camera;
 
                     _cameraScreens[i].camera.targetDisplay = i + 1;
@@ -155,6 +162,7 @@ namespace Janelia
                 if (_cameraScreens[i].screen == null)
                 {
                     _cameraScreens[i].screen = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    SetObjectDirty(_cameraScreens[i].screen);
                     _cameraScreens[i].screen.name = "FlyCamera" + (i + 1) + "Screen";
                 }
                 _cameraScreens[i].screen.transform.localRotation = Quaternion.identity;
@@ -305,6 +313,15 @@ namespace Janelia
                 path = o.name + "/" + path;
             }
             return path;
+        }
+
+        private void SetObjectDirty(GameObject obj)
+        {
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(obj);
+                EditorSceneManager.MarkSceneDirty(obj.scene);
+            }
         }
     }
 }

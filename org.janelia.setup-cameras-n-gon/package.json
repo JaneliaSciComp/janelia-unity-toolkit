@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.setup-cameras-n-gon",
     "displayName": "Janelia Setup Cameras N-Gon",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "unity": "2018.3",
     "description": "Set up VR cameras in an N-gon pattern (e.g, a pentagon).",
     "keywords": ["VR"],
