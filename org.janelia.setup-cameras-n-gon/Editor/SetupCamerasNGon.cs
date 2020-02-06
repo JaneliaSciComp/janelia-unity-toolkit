@@ -50,15 +50,16 @@ namespace Janelia
         public static void ShowWindow()
         {
             SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
-            if (window._cameraScreens.Count == 0)
-            {
-                window.Load();
-            }
         }
 
         public SetupCamerasNGon()
         {
             _cameraScreens = new List<CameraScreen>();
+        }
+
+        public void OnEnable()
+        {
+            Load();
         }
 
         private void OnGUI()
