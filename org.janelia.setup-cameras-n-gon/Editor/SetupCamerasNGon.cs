@@ -86,9 +86,13 @@ namespace Janelia
             _near = EditorGUILayout.FloatField("Near", _near);
             _far = EditorGUILayout.FloatField("Far", _far);
 
-             while (_cameraScreens.Count < _numCameras)
+            while (_cameraScreens.Count < _numCameras)
             {
                 _cameraScreens.Add(new CameraScreen());
+            }
+            if (_cameraScreens.Count > _numCameras)
+            {
+                _cameraScreens.RemoveRange(_numCameras - 1, _cameraScreens.Count - _numCameras);
             }
 
             for (int i = 0; i < _cameraScreens.Count; i++)
