@@ -3,7 +3,16 @@
 ## Summary
 This package (org.janelia.collision-handling) adds some functionality for collision detection and response.
 
-An example is the `KinematicCollisionHandler` class, which adds simple collision handling for a Transform moving kinematically, like the Transform from a GameObject representing a fly walking on a treadmill.  The following example code shows how to use this class:
+An example is the `Janelia.KinematicCollisionHandler` class, which adds simple collision handling for a Transform moving kinematically, like the `Transform` from a `GameObject` representing a fly walking on a treadmill.  
+
+## Installation
+Follow the [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation).
+
+## Details
+
+### Janelia.KinematicCollisionHandler
+
+The following example code shows how to use the  `Janelia.KinematicCollisionHandler` class:
 
 ```csharp
 using UnityEngine;
@@ -51,6 +60,3 @@ public class ButtonMoveable : MonoBehaviour
     }
 }
 ```
-
-## Installation
-Follow the [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation).
