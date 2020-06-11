@@ -23,7 +23,9 @@ To use `Janelia.AdjoiningDisplaysCamera` on Windows:
 
 1. Connect the external displays so they are numbered `2` through `N` in the Windows "Display Settings".  Make sure that `2` is the leftmost, and then the display numbers increase in order.
 
-![Display settings](adjoiningDisplaysCamera.PNG)
+<p align="center">
+<img src="./adjoiningDisplaysCamera.PNG" height="400">
+</p>
 
 2. In the "Display Settings", give each display the appropriate resolution (e.g., 1920 horizontal and 1080 vertical).  The resolution must be the same for all displays, and they must have the same "Orientation".
 
