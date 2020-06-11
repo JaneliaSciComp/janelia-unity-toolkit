@@ -1,7 +1,8 @@
 {
-    "name": "Janelia.Camera-utilities.Runtime",
-    "references": ["Janelia.Camera-utilities.Editor"],
-    "includePlatforms": [],
+    "name": "Janelia.Camera-utilities.Editor",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
