@@ -1,25 +1,31 @@
 ﻿// Makes the attached camera display the images of N other cameras, adjoined with each
-// to form a kind of panorama.
-
-// Useful as a work-around for the poor performance of Unity's "multidisplay" capability, 
-// for building a stand-alone game application (not running in the Unity editor) that has
-// multiple cameras each filling an external display.  To use this work-around:
-// 1. Use the Windows "Display" settings to arrange the Windows extended desktop with
-// the external displays adjacent to each other horizontally (possibly rotated by
-// having "Portrait" enabled).
-// 2. Set the "displayWidth" and "displayHeight" fields of this script to match the
-// resoluton of the external displays.
-// 3. Set the camera attached to this script to have a "Target Display" of "Display 1".
-// 4. In the Unity "Build Settings", in the "Player Settings", set "Fullscreen Mode" to
-// "Windowed" and "Display Resolution Dialog" to "Enabled".
-// 5. Build the game.
-// 6. Run the executable with the "-popupwindow" commandline option, to eliminate window
-// borders.  One way to do so is to make a Windows shortcut to the .exe file, right-click
-// on the shortcut, choose "Properties", and on the "Shortcut" tab's "Target" field, add
-// "-popupwindow" after the .exe name.
-// 7. When the "Display Resolution Dialog" appears before the game actually starts, use
-// "Select Monitor" to choose the leftmost external display from the Windows extended 
-// desktop.
+// to form a kind of panorama.  Useful as a work-around for the limited performance of 
+// Unity's "multi-display" capability, for building a stand-alone game application
+// (not running in the Unity editor) that has multiple cameras each filling an external
+// display.  
+// To use:
+// 1. Connect the external displays so they are numbered 2 through N in the Windows 
+// "Display Settings".  Make sure that 2 is the leftmost, and then the display numbers 
+// increase in order.
+// 2. In the "Display Settings", give each display the appropriate resolution.  
+// The resolution must be the same for all displays, and they must have the same 
+// "Orientation"
+// 3. In the "Display Settings", make sure the "Multiple displays" fields says "Extend 
+// desktop to this display" (not "Duplicate desktop").
+// 4. Add this script to one camera, such as the standard "Main Camera".  The "Target 
+// Display" for this camera should be "Display 1".
+// 5. In this script's "Display Cameras" section, set the "Size" field to the number 
+// of external displays, and set "Element i" to the camera for external display i+1.
+// 6. Set this script's "Display Width" and "Display Height" fields to match the external 
+// display resolution from step 2.
+// 7. Build the game.  The `AdjoiningDisplaysCameraBuilder.PerformBuild` function is a
+// convenient way to do so.
+// 8. The `AdjoiningDisplaysCameraBuilder.OnPostprocessBuild` function will run at the
+// end of the build process.  It creates a Windows shortcut called "standalone" in the
+// Unity project root folder.  This shortcut runs the game executable with the command
+// line arguments that make the adjoined images extend from display 2 onto all the 
+// other displays, making each camera's image appear on the appropriate display.  These
+// arguments are: -popupwindow -screen-fullscreen 0 -monitor 2
 
 #define SUPPORT_KEYBOARD_SHORTCUTS
 
@@ -210,5 +216,13 @@ namespace Janelia
             GL.PopMatrix();
             _frameCounter++;
         }
+
+#if UNITY_EDITOR
+        [MenuItem("File/Build and Make Adjoining-Displays Shortcut")]
+        public static void PerformBuild()
+        {
+            Janelia.AdjoiningDisplaysCameraBuilder.PerformBuild();
+        }
+#endif
     }
 }
