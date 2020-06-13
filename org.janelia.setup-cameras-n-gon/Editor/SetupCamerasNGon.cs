@@ -33,6 +33,7 @@ namespace Janelia
         private float _screenWidth = 95.0f;
         private float _screenHeight = 182.0f;
         private float _fractionalHeight = 0.3333f;
+        private float _rotationY = 0;
         private float _offsetX = 0;
         private float _offsetZ = 0;
         private float _near = 0.1f;
@@ -78,6 +79,8 @@ namespace Janelia
             _screenWidth = EditorGUILayout.FloatField("Screen width (mm)", _screenWidth);
             _screenHeight = EditorGUILayout.FloatField("Screen height (mm)", _screenHeight);
             _fractionalHeight = EditorGUILayout.FloatField("Fractional height", _fractionalHeight);
+
+            _rotationY = EditorGUILayout.FloatField("Rotation Y (deg)", _rotationY);
 
             // The created "fly" object will be displaced from the center of the n-gon by this vector.
             _offsetX = EditorGUILayout.FloatField("Offset X (mm)", _offsetX);
@@ -190,7 +193,7 @@ namespace Janelia
             float fovDeg = 360.0f / numSides;
             float fovRad = Mathf.PI * 2.0f / numSides;
 
-            float camYRot = 0.0f;
+            float camYRot = _rotationY;
 
             float viewDirTrans = (_screenWidth / 2.0f) / Mathf.Tan(fovRad / 2.0f);
             float heightDirTrans = _screenHeight / 2.0f - _fractionalHeight * _screenHeight;
