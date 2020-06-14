@@ -2,7 +2,7 @@
 // (e.g., the Transform from a GameObject representing a fly walking on a treadmill
 // to move through a virtual world).  Collisions with all Colliders in the scene 
 // will be handled (and note that most standard 3D objects have a Collider by
-// default).  The algorithms treat the Transform's object as a small sphere and
+// default).  The algorithms treat the Transform's object as a sphere and
 // support an approximate form of sliding along the surface of any contacted Collider.
 
 using UnityEngine;
@@ -11,17 +11,22 @@ namespace Janelia
 {
     public class KinematicCollisionHandler
     {
-        // Collisions are calculated for a sphere of this radius (which should be small).
+        // Collisions are calculated for a sphere of this radius.
 
         public float radius;
+
+        // If not null, the corrected translation is projected onto the plane with this normal.
+
+        public Vector3? planarMotionNormal;
 
         // Initialize collision handling for the specified Transform, represented
         // as a sphere with the specified radius.
 
-        public KinematicCollisionHandler(Transform transf, float rad = 0.1f)
+        public KinematicCollisionHandler(Transform transf, Vector3? planarMotionNorm = null, float rad = 0.1f)
         {
-            radius = rad;
             _transform = transf;
+            radius = rad;
+            planarMotionNormal = planarMotionNorm;
         }
 
         // Correct the specified translation to account for collisions, and apply it to
@@ -31,8 +36,10 @@ namespace Janelia
         {
             Vector3 validTranslation = translation;
 
-            Ray ray = new Ray(_transform.position, translation);
-            float maxDistance = translation.magnitude + radius;
+            Vector3 translationWorld = _transform.rotation * translation;
+            Ray ray = new Ray(_transform.position, translationWorld);
+            float maxDistance = translationWorld.magnitude + radius;
+
             RaycastHit[] hits = Physics.RaycastAll(ray, maxDistance);
             if (hits.Length > 0)
             {
@@ -52,8 +59,15 @@ namespace Janelia
 
                 if (approximateSliding && (Mathf.Abs(contactDistance) < radius / 1000.0f))
                 {
-                    validTranslation = Vector3.ProjectOnPlane(translation, closestHit.normal);
+                    Vector3 validTranslationWorld = Vector3.ProjectOnPlane(translationWorld, closestHit.normal);
+                    validTranslation = Quaternion.Inverse(_transform.rotation) * validTranslationWorld;
                 }
+            }
+
+            if (planarMotionNormal != null)
+            {
+                Vector3 normal = (Vector3)planarMotionNormal;
+                validTranslation = Vector3.ProjectOnPlane(validTranslation, normal);
             }
 
             _transform.Translate(validTranslation);
