@@ -113,8 +113,10 @@ namespace Janelia
                 Debug.LogWarning("AdjoiningDisplaysCamera: attached camera should have 'Target Display' set to 'Display 1'");
             }
 
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = Color.blue;
+            // Don't render anything with this camera, as OnRenderImage() will completely replace
+            // its image with the concatenation of the displayCamera images.
+            camera.cullingMask = 0;
+            camera.clearFlags = CameraClearFlags.Nothing;
 
             // The final "false" is important, to turn off full-screen display, so an extra wide image will
             // spill over onto other displays that are adjacent in the Windows extended desktop.
