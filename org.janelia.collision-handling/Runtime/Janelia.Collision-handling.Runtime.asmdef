@@ -1,6 +1,6 @@
 {
     "name": "Janelia.Collision-handling.Runtime",
-    "references": [],
+    "references": ["Janelia.Logging.Runtime"],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
