@@ -1,14 +1,24 @@
 # Janelia Collision Handling
 
 ## Summary
+
 This package (org.janelia.collision-handling) adds some functionality for collision detection and response.
 
 An example is the `Janelia.KinematicCollisionHandler` class, which adds simple collision handling for a Transform moving kinematically, like the `Transform` from a `GameObject` representing a fly walking on a treadmill.  
 
 ## Installation
+
 Follow the [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation).
 
 ## Details
+
+### Janelia.KinematicSubject
+
+This base class update the rotation and translation of a `GameObject`'s `Transform` using `Janelia.KinematicCollisionHandler` to prevent collisions, and logging the motion with `Janelia.Logger` from [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging).  A subclass of this base class must have an object conforming to the `Janelia.KinematicSubject.IKinematicUpdater` interface to provide the rotation and translation at each frame.  The motion data in the log can be read and played back by the base class, using command-line options for the application.
+
+### Janelia.ExampleKinematicSubject
+
+This subclass of `Janelia.KinematicSubject` gives an example of how to use the base class, with the `Janelia.KinematicSubject.IKinematicUpdater` object getting translation and rotation from the user via keyboard commands.
 
 ### Janelia.KinematicCollisionHandler
 
