@@ -243,6 +243,9 @@ namespace Janelia
             _saved.screenWidth = _screenWidth;
             _saved.screenHeight = _screenHeight;
             _saved.fractionalHeight = _fractionalHeight;
+            _saved.rotationY = _rotationY;
+            _saved.offsetX = _offsetX;
+            _saved.offsetZ = _offsetZ;
             _saved.near = _near;
             _saved.far = _far;
 
@@ -273,6 +276,9 @@ namespace Janelia
                     _screenWidth = _saved.screenWidth;
                     _screenHeight = _saved.screenHeight;
                     _fractionalHeight = _saved.fractionalHeight;
+                    _rotationY = _saved.rotationY;
+                    _offsetX = _saved.offsetX;
+                    _offsetZ = _saved.offsetZ;
                     _near = _saved.near;
                     _far = _saved.far;
                 }
