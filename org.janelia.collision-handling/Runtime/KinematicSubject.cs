@@ -12,7 +12,10 @@
 // `-playback logDir/logFile` : plays back the specified log file
 
 // This class has a post-build step that creates a simple "launcher script", to give a
-// simple user interface for the command-line arguments for playback.  This script is
+// simple user interface for the command-line arguments for playback.  The user interface
+// appears on the primary display, before the application starts running; this approach
+// is preferable to an "in-game" UI on one of the secondary displays, since they may be
+// set up for an animal participating in an experiment.  This launcher script is
 // a Windows Script File (.wsf file) so double-clicking on it runs it on any modern 
 // version of Windows, with no need to install any additional software.  The trade-off 
 // is that the user interface is crude and looks dated, because it is implemented with 
