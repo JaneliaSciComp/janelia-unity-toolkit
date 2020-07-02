@@ -60,8 +60,6 @@ namespace Janelia
         private Texture2D _progressTextureEven;
         private Texture2D _progressTextureOdd;
 
-        private int _frameCounter = 0;
-
         private void SetupCamera(Camera camera)
         {
             if (camera != null)
@@ -189,7 +187,7 @@ namespace Janelia
             if (progressBoxLocation != ProgressBoxLocation.NONE)
             {
                 InitializeProgressTexturesIfNeeded(progressBoxSize);
-                Texture2D progressTexture = (_frameCounter % 2 == 0) ? _progressTextureEven : _progressTextureOdd;
+                Texture2D progressTexture = (Time.frameCount % 2 == 0) ? _progressTextureEven : _progressTextureOdd;
 
                 progressBoxCamera = Math.Max(0, Math.Min(progressBoxCamera, displayCameras.Count() - 1));
                 float x, y;
@@ -216,7 +214,6 @@ namespace Janelia
             }
 
             GL.PopMatrix();
-            _frameCounter++;
         }
 
 #if UNITY_EDITOR
