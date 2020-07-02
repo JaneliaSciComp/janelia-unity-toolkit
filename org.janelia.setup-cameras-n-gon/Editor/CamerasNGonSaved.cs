@@ -15,6 +15,9 @@ namespace Janelia
         public float screenWidth;
         public float screenHeight;
         public float fractionalHeight;
+        public float rotationY;
+        public float offsetX;
+        public float offsetZ;
         public float near;
         public float far;
 
