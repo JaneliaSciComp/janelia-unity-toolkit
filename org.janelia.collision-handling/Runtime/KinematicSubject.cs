@@ -53,7 +53,7 @@ namespace Janelia
         {
             // With C# 8.0, interfaces will be able to have default implementations.  But
             // as of 2020, Unity is not using C# 8.0.  So classes implementing this interface
-            // must have a `Start()` method even if it does nothing.
+            // must have `Start()` and `Update()` methods even if they do nothing.
             void Start();
             void Update();
 
@@ -93,6 +93,8 @@ namespace Janelia
                 Debug.LogError("Janelia.KinematicSubject.updater must be set.");
                 Application.Quit();
             }
+
+            updater.Start();
 
             // Set up the collision handler to act on this `GameObject`'s transform.
             _collisionHandler = new KinematicCollisionHandler(transform, collisionPlaneNormal, collisionRadius);
