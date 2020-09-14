@@ -56,6 +56,7 @@ namespace Janelia
         public SetupCamerasNGon()
         {
             _cameraScreens = new List<CameraScreen>();
+            _rotationY = rotationYCentered();
         }
 
         public void OnEnable()
@@ -73,6 +74,8 @@ namespace Janelia
             // as a convenience.
             _flyComponentExtra = EditorGUILayout.TextField("Extra script for fly", _flyComponentExtra);
 
+            int numCamerasBefore = _numCameras;
+            int numEmptySidesBefore = _numEmptySides;
             _numCameras = EditorGUILayout.IntField("Number of cameras", _numCameras);
             _numEmptySides = EditorGUILayout.IntField("Number of empty sides", _numEmptySides);
 
@@ -104,6 +107,15 @@ namespace Janelia
                 _cameraScreens[i].screen = (GameObject)EditorGUILayout.ObjectField("Screen " + (i + 1), _cameraScreens[i].screen, typeof(GameObject), true);
             }
 
+            if (GUI.changed)
+            {
+                if ((_numCameras != numCamerasBefore) || (_numEmptySides != numEmptySidesBefore))
+                {
+                    // Recompute _rotationY only when a manually set value might no longer make sense.
+                    _rotationY = rotationYCentered();
+                }
+            }
+
             if (GUILayout.Button("Update"))
             {
                 UpdateCameras();
@@ -115,6 +127,16 @@ namespace Janelia
         private void OnDestroy()
         {
             Save();
+        }
+
+        private float rotationYCentered()
+        {
+            // Rotates the screen so the positive Z axis points to:
+            // the middle of the middle screen for an odd number of screens
+            // the middle edge between screens for an even number of screens
+            int numSides = _numCameras + _numEmptySides;
+            float fovDeg = 360.0f / numSides;
+            return -(_numCameras - 1) * fovDeg / 2.0f;
         }
 
         private void UpdateCameras()
