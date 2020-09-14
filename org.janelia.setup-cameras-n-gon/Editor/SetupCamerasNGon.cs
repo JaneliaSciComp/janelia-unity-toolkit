@@ -198,6 +198,9 @@ namespace Janelia
                 _cameraScreens[i].screen.transform.localRotation = Quaternion.identity;
                 _cameraScreens[i].screen.transform.localPosition = Vector3.zero;
 
+                MeshRenderer renderer = _cameraScreens[i].screen.GetComponent<MeshRenderer>();
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
 
                 OffAxisPerspectiveCamera offAxisPerspectiveCamera =
                     _cameraScreens[i].camera.gameObject.AddComponent<OffAxisPerspectiveCamera>() as OffAxisPerspectiveCamera;
