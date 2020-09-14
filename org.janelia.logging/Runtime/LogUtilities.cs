@@ -9,6 +9,20 @@ namespace Janelia
 {
     public static class LogUtilities
     {
+        public static LogOptions GetOptions()
+        {
+            LogOptions[] paramObjs = UnityEngine.Object.FindObjectsOfType<LogOptions>();
+            if (paramObjs.Length > 0)
+            {
+                if (paramObjs.Length > 1)
+                {
+                    Debug.LogError("One LogOptions object expected, " + paramObjs.Length + " found; using first.");
+                }
+                return paramObjs[0];
+            }
+            return null;
+        }
+
         public static void LogAllMeshes()
         {
             MeshFilter[] meshes = (MeshFilter[])Resources.FindObjectsOfTypeAll(typeof(MeshFilter));

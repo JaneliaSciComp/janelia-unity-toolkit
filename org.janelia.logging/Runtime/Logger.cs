@@ -49,39 +49,45 @@ namespace Janelia
         // objects as JSON, `T` cannot be a generic (i.e., a class with a `<U>` of its own).
         public static void Log<T>(T data)
         {
-            Entry<T> entry = new Entry<T>();
-            entry.timeSecs = Time.time;
-            entry.frame = Time.frameCount;
-            entry.data = data;
+            if (_doLogging)
+            {
+                Entry<T> entry = new Entry<T>();
+                entry.timeSecs = Time.time;
+                entry.frame = Time.frameCount;
+                entry.data = data;
 
-            string s = JsonUtility.ToJson(entry, true);
-            _entries.Add(s);
+                string s = JsonUtility.ToJson(entry, true);
+                _entries.Add(s);
+            }
         }
 
         // Force the entries currently in the log to be written to a file.  The log is
         // then cleared, so those entries will not be written again.
         public static void Write()
         {
-            if (_entries.Count > 0)
+            if (_doLogging)
             {
-                _wroteIndicator.numberOfEntriesWritten = _entries.Count;
-                Log(_wroteIndicator);
-
-                for (int i = 0; i < _entries.Count; i++)
+                if (_entries.Count > 0)
                 {
-                    if (_firstWrite)
-                    {
-                        _firstWrite = false;
-                    }
-                    else
-                    {
-                        _writer.Write(",\n");
-                    }
-                    _writer.Write(_entries[i]);
-                }
-                _writer.Flush();
+                    _wroteIndicator.numberOfEntriesWritten = _entries.Count;
+                    Log(_wroteIndicator);
 
-                _entries.Clear();
+                    for (int i = 0; i < _entries.Count; i++)
+                    {
+                        if (_firstWrite)
+                        {
+                            _firstWrite = false;
+                        }
+                        else
+                        {
+                            _writer.Write(",\n");
+                        }
+                        _writer.Write(_entries[i]);
+                    }
+                    _writer.Flush();
+
+                    _entries.Clear();
+                }
             }
         }
 
@@ -127,48 +133,59 @@ namespace Janelia
         [RuntimeInitializeOnLoadMethod]
         private static void OnRuntimeMethodLoad()
         {
-            Debug.Log("Logger: starting");
-
-            _entries = new List<string>(4096);
-
-            DateTime now = DateTime.Now;
-            logDir = Environment.GetEnvironmentVariable("AppData") + "/" +
-                "../LocalLow/" + Application.companyName + "/" + Application.productName;
-            if (!Directory.Exists(logDir))
+            LogOptions options = LogUtilities.GetOptions();
+            if (options != null)
             {
-                Directory.CreateDirectory(logDir);
+                _doLogging = options.EnableLogging;
             }
-
-            _previousLogFile = "";
-            DirectoryInfo dirInfo = new DirectoryInfo(logDir);
-            System.IO.FileInfo[] files = dirInfo.GetFiles("*.json");
-            if (files.Length > 0)
+            if (_doLogging)
             {
-                _previousLogFile = files.OrderByDescending(f => f.LastWriteTime).First().FullName;
+                Debug.Log("Logger: starting");
+
+                _entries = new List<string>(4096);
+
+                DateTime now = DateTime.Now;
+                logDir = Environment.GetEnvironmentVariable("AppData") + "/" +
+                    "../LocalLow/" + Application.companyName + "/" + Application.productName;
+                if (!Directory.Exists(logDir))
+                {
+                    Directory.CreateDirectory(logDir);
+                }
+
+                _previousLogFile = "";
+                DirectoryInfo dirInfo = new DirectoryInfo(logDir);
+                System.IO.FileInfo[] files = dirInfo.GetFiles("*.json");
+                if (files.Length > 0)
+                {
+                    _previousLogFile = files.OrderByDescending(f => f.LastWriteTime).First().FullName;
+                }
+
+                string filename = "Log_" + now.Year + "-" + now.Month + "-" + now.Day + "_" +
+                    now.Hour + "-" + now.Minute + "-" + now.Second + ".json";
+                string path = logDir + "/" + filename;
+
+                _currentLogFile = path;
+
+                _writer = new StreamWriter(path);
+
+                _writer.Write("[\n");
+                _writer.Flush();
+
+                Application.quitting += ApplicationQuitting;
             }
-
-            string filename = "Log_" + now.Year + "-" + now.Month + "-" + now.Day + "_" +
-                now.Hour + "-" + now.Minute + "-" + now.Second + ".json";
-            string path = logDir + "/" + filename;
-
-            _currentLogFile = path;
-
-            _writer = new StreamWriter(path);
-
-            _writer.Write("[\n");
-            _writer.Flush();
-
-            Application.quitting += ApplicationQuitting;
         }
 
         private static void ApplicationQuitting()
         {
-            Debug.Log("Logger: stopping");
+            if (_doLogging)
+            {
+                Debug.Log("Logger: stopping");
 
-            Write();
-            _writer.Write("\n]\n");
-            _writer.Flush();
-            _writer.Dispose();
+                Write();
+                _writer.Write("\n]\n");
+                _writer.Flush();
+                _writer.Dispose();
+            }
         }
 
         private static bool FindTopLevelObject(string s, ref int i0, out int i1)
@@ -193,6 +210,8 @@ namespace Janelia
             }
             return true;
         }
+
+        private static bool _doLogging = true;
 
         private static StreamWriter _writer;
         private static bool _firstWrite = true;
