@@ -159,10 +159,10 @@ namespace Janelia
             }
             else
             {
-                Transformation? transformation = CurrentPlaybackTransformation();
+                Transformation transformation = CurrentPlaybackTransformation();
                 if (transformation != null)
                 {
-                    _currentTransformation = (Transformation)transformation;
+                    _currentTransformation.Set(transformation);
 
                     transform.position = _currentTransformation.worldPosition;
                     transform.eulerAngles = _currentTransformation.worldRotationDegs;
@@ -321,12 +321,12 @@ namespace Janelia
             }
         }
 
-        private List<Logger.Entry<Transformation>> Filter(List<Logger.Entry<Transformation>> l)
+        private List<Transformation> Filter(List<Transformation> l)
         {
-            return l.Where(x => x.data.attemptedTranslation != Vector3.zero || x.data.rotationDegs != Vector3.zero).ToList();
+            return l.Where(x => x.attemptedTranslation != Vector3.zero || x.rotationDegs != Vector3.zero).ToList();
         }
 
-        private Transformation? CurrentPlaybackTransformation()
+        private Transformation CurrentPlaybackTransformation()
         {
             if (_playbackActive && (_playbackLogEntries != null))
             {
@@ -341,7 +341,7 @@ namespace Janelia
                     {
                         if (_playbackLogEntries[_playbackLogIndex].frame == adjustedFrame)
                         {
-                            return _playbackLogEntries[_playbackLogIndex].data;
+                            return _playbackLogEntries[_playbackLogIndex];
                         }
                         return null;
                     }
@@ -353,27 +353,37 @@ namespace Janelia
 
         private KinematicCollisionHandler _collisionHandler;
 
-        // To make `Janelia.Logger.Log<T>()`'s call to JsonUtility.ToJson() work correctly,
-        // the `T` must be marked `[Serlializable]`, but its individual fields need not be
-        // marked `[SerializeField]`.  The individual fields must be `public`, though.
+        // To make `Janelia.Logger.Log(entry)`'s call to JsonUtility.ToJson() work correctly,
+        // the type of `entry` must be marked `[Serlializable]`, but its individual fields need not
+        // be marked `[SerializeField]`.  The individual fields must be `public`, though.
         [Serializable]
-        internal struct Transformation
+        internal class Transformation : Logger.Entry
         {
             public Vector3 attemptedTranslation;
             public Vector3 actualTranslation;
             public Vector3 worldPosition;
             public Vector3 rotationDegs;
             public Vector3 worldRotationDegs;
+
+            // Needed only for `KinematicSubject`'s playback of the log.
+            public void Set(Transformation other)
+            {
+                attemptedTranslation = other.attemptedTranslation;
+                actualTranslation = other.actualTranslation;
+                worldPosition = other.worldPosition;
+                rotationDegs = other.rotationDegs;
+                worldRotationDegs = other.worldRotationDegs;
+            }
         };
 
-        private Transformation _currentTransformation;
+        private Transformation _currentTransformation = new Transformation();
 
         private int _framesSinceLogWrite = 0;
         private int _framesBeingStill = 0;
 
         private bool _playbackActive = false;
         private string _playbackLogFile = "";
-        private List<Logger.Entry<Transformation>> _playbackLogEntries;
+        private List<Transformation> _playbackLogEntries;
         private int _playbackLogIndex;
         private int _playbackStartFrame;
     }

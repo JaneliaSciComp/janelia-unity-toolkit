@@ -60,7 +60,7 @@ namespace Janelia
         }
 
         [Serializable]
-        private struct MeshLog
+        private class MeshLog : Logger.Entry
         {
             public string meshGameObjectPath;
             public string colliderType;
@@ -71,7 +71,7 @@ namespace Janelia
         static private MeshLog _meshLog = new MeshLog();
 
         [Serializable]
-        private struct DeltaTimeLog
+        private class DeltaTimeLog : Logger.Entry
         {
             public float deltaTime;
         };

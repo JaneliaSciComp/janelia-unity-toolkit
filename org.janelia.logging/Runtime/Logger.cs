@@ -15,6 +15,8 @@ namespace Janelia
 {
     public class Logger
     {
+        public static int maxLogEntries = 4096;
+
         public static string logDir;
 
         public static string currentLogFile
@@ -26,11 +28,9 @@ namespace Janelia
             get { return _previousLogFile; }
         }
 
-        // A log entries consists of an instance of this class for general information,
-        // with an embeded instance of the struct/class `T` for specific information.
-        // Due to the way Unity serializes JSON, `T` cannot itself be a generic.
+        // Base class for log entries.
         [Serializable]
-        public class Entry<T>
+        public class Entry
         {
             // The elapsed time since the application started.
             [SerializeField]
@@ -39,40 +39,41 @@ namespace Janelia
             // The current frame (starting at 1).
             [SerializeField]
             public float frame;
-
-            [SerializeField]
-            public T data;
         }
 
-        // Add some specific information to the log as of the current frame, where the
-        // type `T` describes the specific information.  Due to the way Unity serializes
-        // objects as JSON, `T` cannot be a generic (i.e., a class with a `<U>` of its own).
-        public static void Log<T>(T data)
+        // The `entry` should be an instance of a class derived from `Entry`,
+        // adding the data to be logged.
+        public static void Log(Entry entry)
         {
             if (_doLogging)
             {
-                Entry<T> entry = new Entry<T>();
                 entry.timeSecs = Time.time;
                 entry.frame = Time.frameCount;
-                entry.data = data;
 
                 string s = JsonUtility.ToJson(entry, true);
-                _entries.Add(s);
+                _entries[_iEntries++] = s;
+                // Subtract 1 because `Write()` logs one item of its own.
+                if (_iEntries == _entries.Length - 1)
+                {
+                    Write();
+                }
             }
         }
 
         // Force the entries currently in the log to be written to a file.  The log is
-        // then cleared, so those entries will not be written again.
+        // then reset, so those entries will not be written again.
         public static void Write()
         {
-            if (_doLogging)
+            if (_doLogging && !_writing)
             {
-                if (_entries.Count > 0)
+                _writing = true;
+
+                if (_iEntries > 0)
                 {
-                    _wroteIndicator.numberOfEntriesWritten = _entries.Count;
+                    _wroteIndicator.numberOfEntriesWritten = _iEntries;
                     Log(_wroteIndicator);
 
-                    for (int i = 0; i < _entries.Count; i++)
+                    for (int i = 0; i < _iEntries; i++)
                     {
                         if (_firstWrite)
                         {
@@ -85,18 +86,18 @@ namespace Janelia
                         _writer.Write(_entries[i]);
                     }
                     _writer.Flush();
-
-                    _entries.Clear();
+                    // Don't actually clear the array, so its current entries become garbage
+                    // more gradually, which may make garbage collection performance more consistent.
+                    _iEntries = 0;
                 }
+
+                _writing = false;
             }
         }
 
-        // Read the log from the file at `path`, and return each entry interpreted as an
-        // instance of the type, `T`.  Any entry that is not really an instance of `T`
-        // will become an instance of the default value of `T`.
-        public static List<Entry<T>> Read<T>(string path)
+        public static List<T> Read<T>(string path) where T : Entry
         {
-            List<Entry<T>> result = new List<Entry<T>>();
+            List<T> result = new List<T>();
             if (File.Exists(path))
             {
                 try
@@ -111,7 +112,7 @@ namespace Janelia
                         {
                             string s1 = s.Substring(i0, i1 - i0 + 1);
                             i0 = i1 + 1;
-                            Entry<T> entry = JsonUtility.FromJson<Entry<T>>(s1);
+                            T entry = JsonUtility.FromJson<T>(s1);
                             result.Add(entry);
                         }
                         else
@@ -142,7 +143,7 @@ namespace Janelia
             {
                 Debug.Log("Logger: starting");
 
-                _entries = new List<string>(4096);
+                _entries = new string[maxLogEntries];
 
                 DateTime now = DateTime.Now;
                 logDir = Environment.GetEnvironmentVariable("AppData") + "/" +
@@ -219,13 +220,15 @@ namespace Janelia
         // A special log entry added each time the log is written, indicating how many
         // elements were written.
         [Serializable]
-        private struct WroteIndicator
+        private class WroteIndicator : Entry
         {
             public int numberOfEntriesWritten;
         };
         static private WroteIndicator _wroteIndicator = new WroteIndicator();
 
-        private static List<string> _entries;
+        private static string[] _entries;
+        private static int _iEntries = 0;
+        private static bool _writing = false;
 
         private static string _currentLogFile;
         private static string _previousLogFile;
