@@ -19,7 +19,7 @@ namespace Janelia
         }
 
         [Serializable]
-        private struct TotalMemoryLog
+        private class TotalMemoryLog : Logger.Entry
         {
             public long totalMemory;
         };
