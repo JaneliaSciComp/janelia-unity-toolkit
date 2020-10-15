@@ -1,0 +1,13 @@
+{
+  "name": "Janelia.Package-installer.EditorTests",
+  "references": [
+    "Janelia.Package-installer.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
