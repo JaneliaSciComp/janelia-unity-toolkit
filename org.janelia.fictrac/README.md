@@ -36,15 +36,15 @@ A simple Python script that sends messages in the FicTrac format over a socket, 
 To run this package's unit tests, use the following steps:
 1. Create a new Unity project and add this package.
 2. In the directory for the new project, in its `Packages` subdirectory, edit the `manifest.json` file to add a `"testables"` section as follows:
-```
-{
-  "dependencies": {
-   ...
-  },
-  "testables": ["org.janelia.fictrac"]
-}
-```
-Note the comma separating the `"dependencies"` and `"testables"` sections.
+    ```
+    {
+      "dependencies": {
+       ...
+      },
+      "testables": ["org.janelia.fictrac"]
+    }
+    ```
+    Note the comma separating the `"dependencies"` and `"testables"` sections.
 3. In the Unity editor's "Window" menu, under "General", choose "Test Runner".
 4. In the new "Test Runner" window, choose the "PlayMode" tab.
 5. There should be an item for the new project, with items underneath it for "Janelia.Fictrac.RuntimeTests.dll", etc.
