@@ -37,11 +37,11 @@ namespace Janelia
 
                 if (Input.GetKey("up"))
                 {
-                    return new Vector3(0, 0, deltaTranslation);
+                    return new Vector3(deltaTranslation, 0, 0);
                 }
                 if (Input.GetKey("down"))
                 {
-                    return new Vector3(0, 0, -deltaTranslation);
+                    return new Vector3(-deltaTranslation, 0, 0);
                 }
 
                 return null;

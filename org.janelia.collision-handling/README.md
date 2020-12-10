@@ -14,7 +14,7 @@ Follow the [installation instructions in the main repository](https://github.com
 
 ### Janelia.KinematicSubject
 
-This base class update the rotation and translation of a `GameObject`'s `Transform` using `Janelia.KinematicCollisionHandler` to prevent collisions, and logging the motion with `Janelia.Logger` from [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging).  A subclass of this base class must have an object conforming to the `Janelia.KinematicSubject.IKinematicUpdater` interface to provide the rotation and translation at each frame.  The motion data in the log can be read and played back by the base class, using command-line options for the application.
+This base class updates the rotation and translation of a `GameObject`'s `Transform` using `Janelia.KinematicCollisionHandler` to prevent collisions, and logs the motion with `Janelia.Logger` from [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging).  A subclass of this base class must have an object conforming to the `Janelia.KinematicSubject.IKinematicUpdater` interface to provide the rotation and translation at each frame.  The motion data in the log can be read and played back by the base class, using command-line options for the application.
 
 ### Janelia.ExampleKinematicSubject
 

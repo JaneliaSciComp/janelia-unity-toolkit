@@ -131,12 +131,12 @@ namespace Janelia
 
         private float rotationYCentered()
         {
-            // Rotates the screen so the positive Z axis points to:
+            // Rotates the screen so the positive X axis points to:
             // the middle of the middle screen for an odd number of screens
             // the middle edge between screens for an even number of screens
             int numSides = _numCameras + _numEmptySides;
             float fovDeg = 360.0f / numSides;
-            return -(_numCameras - 1) * fovDeg / 2.0f;
+            return -(_numCameras - 1) * fovDeg / 2.0f + 90.0f;
         }
 
         private void UpdateCameras()
