@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <HTA:APPLICATION ID='oHTA' MAXIMIZEBUTTON='no' MINIMIZEBUTTON='no'/>
+  </head>
+  <body scroll='no'>
+    <form id='MAIN' name='radioForm' onSubmit='OnSubmit(); return false'>
+      <div>
+        <label>
+          <input type='radio' name='radios' id='0' checked='checked' />
+          Add log header notes for a new session (line breaks become spaces)
+        </label>
+        <div style='padding-left:30px'>
+          <textarea id='id_textareaLogHeader' rows='10' style='width:99%; overflow-y: scroll'></textarea>
+        </div>
+      </div>
+      <div>
+        <label>
+          <input type='radio' name='radios' id='1' />
+          Omit the log header for the new session
+        </label>
+      </div>
+      PLUGIN_RADIO_BUTTONS
+      <div>
+        <input type='submit' value='Continue' />
+        <input type='button' value='Cancel' onClick='self.close()' />
+      </div>
+    </form>
+    <script language='javascript'>
+      var m = document.getElementById('MAIN');
+      var h = m.offsetHeight + 110;
+      window.resizeTo(2500, h);
+      window.focus();
+      function OnSubmit(event)
+      {
+        var r = document.forms.radioForm.radios;
+        if (r[0].checked)
+          action0();
+        else if (r[1].checked)
+          action1();
+        CALL_PLUGIN_FUNCTIONS
+        self.close();
+      }
+      function runApp(extraArgs)
+      {
+        var sh = new ActiveXObject('Shell.Application');
+        var exe = 'STANDALONE_PATH';
+        sh.ShellExecute(exe, extraArgs, '', 'open', '1');
+      }
+    </script>
+    <script language='javascript'>
+      var textarea = document.getElementById('id_textareaLogHeader');
+      var fso = new ActiveXObject('Scripting.FileSystemObject');
+      var logHeaderPath = 'LOG_DIR\\LogHeader.txt';
+      if (fso.FileExists(logHeaderPath)) {
+        var tso = fso.OpenTextFile(logHeaderPath, 1);
+        if (tso) {
+          var text = tso.ReadAll();
+          textarea.value = text;
+        }
+      }
+      function action0()
+      {
+        var tso = fso.OpenTextFile(logHeaderPath, 2, true);
+        if (tso) {
+          var text = textarea.value;
+          tso.WriteLine(text);
+          runApp('-addLogHeader');
+        }
+      }
+      function action1()
+      {
+        runApp();
+      }
+    </script>
+    PLUGIN_SCRIPT_BLOCKS
+  </body>
+</html>

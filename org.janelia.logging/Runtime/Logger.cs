@@ -5,24 +5,46 @@
 // quits.  The log is stored in the same directory as the standard
 // log of strings that Unity creates for calls to `Debug.Log()`.
 
+// Also creates a launcher script, which first presents a dialog box for configuring
+// the application and then runs the application when the user closes the dialog.
+// The launcher script is created in the main project directory and its name has the
+// suffix "Launcher.hta".  The dialog appears on the "console" display (i.e., the
+// display where the script is run, not the external displays where the application's
+// content appears).  By default, the dialog contains a text input for adding
+// "header notes" to be saved at the beginning of the log.  Optionally, other packages
+// can add other user interface to the launcher with the `Logger.AddLauncherPlugin`
+// function (see below).
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using UnityEditor;
+#if UNITY_EDITOR
+using UnityEditor.Callbacks;
+#endif
 using UnityEngine;
 
 namespace Janelia
 {
+    // A static class to support logging.  There is no need to explicitly create an instance of this class
+    // or start the logging, or end the logging: that functionality happens automatically.  Also has a
+    // post-process build function to create the launcher script.
     public class Logger
     {
         public static int maxLogEntries = 4096;
 
-        public static string logDir;
+        public static string logDirectory
+        {
+            get { return getLogDirectory(); }
+        }
 
         public static string currentLogFile
         {
             get { return _currentLogFile; }
         }
+
         public static string previousLogFile
         {
             get { return _previousLogFile; }
@@ -41,8 +63,8 @@ namespace Janelia
             public float frame;
         }
 
-        // The `entry` should be an instance of a class derived from `Entry`,
-        // adding the data to be logged.
+        // Adds a log entry, saved as JSON.  The `entry` should be an instance of 
+        // a class derived from `Entry`, adding the data to be logged.
         public static void Log(Entry entry)
         {
             if (_doLogging)
@@ -130,6 +152,38 @@ namespace Janelia
             return result;
         }
 
+        // Plugs in some launcher capabilities.  The launcher will have a new radio button with label text `radioButtonLabel`.
+        // Optionally, next to this radio button will be the additional components specified by `radioButtonOtherHTML`.
+        // When the launcher dialog `Continue` button is pressed with this radio button selected, then the function named
+        // `radioButtonFuncName` will be called.  That function should be defined in the Javascript code block 
+        // `scriptBlockWithRadioButtonFunc`.
+        public static void AddLauncherPlugin(string radioButtonLabel, string radioButtonOtherHTML, string radioButtonFuncName,
+            string scriptBlockWithRadioButtonFunc)
+        {
+            _launcherPlugins.Add(new LauncherPlugin
+            {
+                radioButtonLabel = radioButtonLabel,
+                radioButtonOtherHTML = radioButtonOtherHTML,
+                radioButtonFuncName = radioButtonFuncName,
+                scriptBlockWithRadioButtonFunc = scriptBlockWithRadioButtonFunc
+            });
+        }
+
+        private static string getLogDirectory()
+        {
+            if (_logDirectory == null)
+            {
+                string[] path = {Environment.GetEnvironmentVariable("AppData"), @"..\", "LocalLow",
+                    Application.companyName, Application.productName };
+                _logDirectory = Path.GetFullPath(Path.Combine(path));
+                if (!Directory.Exists(_logDirectory))
+                {
+                    Directory.CreateDirectory(_logDirectory);
+                }
+            }
+            return _logDirectory;
+        }
+
         // Executed after `Awake` methods and before `Start` methods.
         [RuntimeInitializeOnLoadMethod]
         private static void OnRuntimeMethodLoad()
@@ -145,25 +199,19 @@ namespace Janelia
 
                 _entries = new string[maxLogEntries];
 
-                DateTime now = DateTime.Now;
-                logDir = Environment.GetEnvironmentVariable("AppData") + "/" +
-                    "../LocalLow/" + Application.companyName + "/" + Application.productName;
-                if (!Directory.Exists(logDir))
-                {
-                    Directory.CreateDirectory(logDir);
-                }
-
                 _previousLogFile = "";
-                DirectoryInfo dirInfo = new DirectoryInfo(logDir);
+                DirectoryInfo dirInfo = new DirectoryInfo(logDirectory);
                 System.IO.FileInfo[] files = dirInfo.GetFiles("*.json");
                 if (files.Length > 0)
                 {
                     _previousLogFile = files.OrderByDescending(f => f.LastWriteTime).First().FullName;
                 }
 
-                string filename = "Log_" + now.Year + "-" + now.Month + "-" + now.Day + "_" +
-                    now.Hour + "-" + now.Minute + "-" + now.Second + ".json";
-                string path = logDir + "/" + filename;
+                DateTime now = DateTime.Now;
+                string filename = "Log_" + now.ToString("yyyy") + "-" + now.ToString("MM") + "-" +
+                    now.ToString("dd") + "_" + now.ToString("HH") + "-" + now.ToString("mm") + "-" +
+                    now.ToString("ss") + ".json";
+                string path = logDirectory + "/" + filename;
 
                 _currentLogFile = path;
 
@@ -173,6 +221,11 @@ namespace Janelia
                 _writer.Flush();
 
                 Application.quitting += ApplicationQuitting;
+
+                string args = String.Join(" ", System.Environment.GetCommandLineArgs());
+                Debug.Log("Logger: executable run as: " + args);
+
+                AddLogHeader();
             }
         }
 
@@ -212,6 +265,183 @@ namespace Janelia
             return true;
         }
 
+#if UNITY_EDITOR
+        // The attribute value orders this function first among the scripts run after building,
+        // so plugin support can be initialized.
+        [PostProcessBuildAttribute(1)]
+        public static void OnPostprocessBuildStart(BuildTarget target, string pathToBuiltProject)
+        {
+            Debug.Log("Janelia.Logger.OnPostprocessBuildStart: " + pathToBuiltProject);
+
+            _launcherPlugins = new List<LauncherPlugin>();
+        }
+
+        // The attribute value orders this function last among the scripts run after building,
+        // so capabilities added by plugins can be incorporated.
+        [PostProcessBuildAttribute(999)]
+        public static void OnPostprocessBuildFinish(BuildTarget target, string pathToBuiltProject)
+        {
+            Debug.Log("Janelia.Logger.OnPostprocessBuildFinish: " + pathToBuiltProject);
+
+            string standaloneNameNoExt = Path.GetFileNameWithoutExtension(pathToBuiltProject);
+            string projectDir = Directory.GetCurrentDirectory();
+            string scriptPath = Path.Combine(projectDir, standaloneNameNoExt + "Launcher.hta");
+            Debug.Log("scriptPath: " + scriptPath);
+
+            string scriptTemplatePath = Path.GetFullPath("Packages/org.janelia.logging/Editor/launcherScriptTemplate.hta");
+
+            string standalonePath = pathToBuiltProject;
+
+            // TODO: Rather than using this cheap and cheerful approach to find the shortcut file created
+            // by org.janelia.camera-utilities' `AdjoiningDisplaysCameraBuilder`, it might be better to
+            // check all files in `projectDir` for a shortcut with `Arguments` mentioning the executable.
+            string shortcutPath = Path.Combine(projectDir, standaloneNameNoExt + ".lnk");
+            Debug.Log("Checking for shortcut: " + shortcutPath);
+            // TODO: Unfortunately, initially creating the shortcut file seems to take some time, and it
+            // may not be finished when this code is run.  So if no shortcut is found, sleep for a few
+            // seconds and check again.  Is there a better solution?
+            if (!File.Exists(shortcutPath)) {
+                Thread.Sleep(2000);
+            }
+            if (File.Exists(shortcutPath)) {
+                standalonePath = shortcutPath;
+                Debug.Log("Using shortcut");
+            }            
+
+            MakeLauncherScript(scriptTemplatePath, scriptPath, standalonePath);
+        }
+
+        // The launcher script is a Microsoft "HTML Application" ("HTA"), with HTML and
+        // JScript (Javascript) code that gets run by Internet Explorer:
+        // https://en.wikipedia.org/wiki/HTML_Application
+        // This implementation has the advantage that it runs on any modern Windows system
+        // without requiring the installation of any additional software.
+        // TODO: The disadvantage is that this implementation works on Windows only, so
+        // there should be an alternative implementation is other platforms are to be supported.
+
+        private static void MakeLauncherScript(string scriptTemplatePath, string scriptPath, string standalonePath)
+        {
+            if (File.Exists(scriptPath))
+            {
+                File.Delete(scriptPath);
+            }
+
+            string logDirStr = logDirectory.Replace("\\", "\\\\");
+            string standalonePathStr = standalonePath.Replace("\\", "\\\\");
+
+            // The HTML and JScript code is in a separate "template" file, which has
+            // special directives that get replaced with application-specific details
+            // like the location of the log directory.  There are also directives for
+            // plugin code.
+
+            List<string> lines = new List<string>();
+            using (StreamReader inputFile = new StreamReader(scriptTemplatePath))
+            {
+                string line;
+                while ((line = inputFile.ReadLine()) != null)
+                {
+                    if (line.Contains("PLUGIN_RADIO_BUTTONS"))
+                    {
+                        line = MakeLauncherPluginRadioButtons();
+                    }
+                    else if (line.Contains("CALL_PLUGIN_FUNCTIONS"))
+                    {
+                        line = MakeLauncherPluginFunctionCalls();
+                    }
+                    else if (line.Contains("PLUGIN_SCRIPT_BLOCKS"))
+                    {
+                        line = MakeLauncherPluginScriptBlocks();
+                    }
+                    string line1 = line.Replace("LOG_DIR", logDirStr);
+                    string line2 = line1.Replace("STANDALONE_PATH", standalonePathStr);
+                    lines.Add(line2);
+                }
+            }
+
+            using (StreamWriter outputFile = new StreamWriter(scriptPath))
+            {
+                foreach (string line in lines)
+                    outputFile.WriteLine(line);
+            }
+        }
+
+        private static string MakeLauncherPluginRadioButtons()
+        {
+            string result = "";
+            string n = System.Environment.NewLine;
+            int index = 2;
+            foreach (LauncherPlugin plugin in _launcherPlugins)
+            {
+               result += (!String.IsNullOrEmpty(result)) ? n : "";
+               result +=
+                    "      <div>" + n +
+                    "        <label>" + n +
+                    "          <input type='radio' name='radios' id='" + index + "' />" + n +
+                    "          " + plugin.radioButtonLabel + n +
+                    "        </label>" + n;
+                if (!String.IsNullOrEmpty(plugin.radioButtonOtherHTML))
+                {
+                    result +=
+                        "        <div style='padding-left:30px'>" + n +
+                                 plugin.radioButtonOtherHTML + n +
+                        "        </div>" + n;
+                }
+                result +=
+                    "      </div>";
+                index += 1;
+            }
+            return result;
+        }
+
+        private static string MakeLauncherPluginFunctionCalls()
+        {
+            string result = "";
+            string n = System.Environment.NewLine;
+            int index = 2;
+            foreach (LauncherPlugin plugin in _launcherPlugins)
+            {
+                result += (!String.IsNullOrEmpty(result)) ? n : "";
+                result +=
+                    "        else if (r[" + index + "].checked)" + n +
+                    "          " + plugin.radioButtonFuncName + "();";
+                index += 1;
+            }
+            return result;
+        }
+
+        private static string MakeLauncherPluginScriptBlocks()
+        {
+            string result = "";
+            foreach (LauncherPlugin plugin in _launcherPlugins)
+            {
+                result += plugin.scriptBlockWithRadioButtonFunc;
+            }
+            return result;
+        }
+#endif
+
+        private static void AddLogHeader()
+        {
+            string[] args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-addLogHeader")
+                {
+                    string logHeaderPath = Path.Combine(logDirectory, "logHeader.txt");
+                    using (StreamReader inputFile = new StreamReader(logHeaderPath))
+                    {
+                        _logHeader.headerNotes = "";
+                        string line;
+                        while ((line = inputFile.ReadLine()) != null)
+                        {
+                            _logHeader.headerNotes += line + " ";
+                        }
+                        Log(_logHeader);
+                    }
+                }
+            }
+        }
+
         private static bool _doLogging = true;
 
         private static StreamWriter _writer;
@@ -230,7 +460,24 @@ namespace Janelia
         private static int _iEntries = 0;
         private static bool _writing = false;
 
+        private static string _logDirectory;
         private static string _currentLogFile;
         private static string _previousLogFile;
+
+        [Serializable]
+        private class LogHeader : Entry
+        {
+            public string headerNotes;
+        };
+        static private LogHeader _logHeader = new LogHeader();
+
+        private struct LauncherPlugin
+        {
+            public string radioButtonLabel;
+            public string radioButtonOtherHTML;
+            public string radioButtonFuncName;
+            public string scriptBlockWithRadioButtonFunc;
+        }
+        private static List<LauncherPlugin> _launcherPlugins = new List<LauncherPlugin>();
     }
 }
