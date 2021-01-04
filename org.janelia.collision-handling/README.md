@@ -6,6 +6,8 @@ This package (org.janelia.collision-handling) adds some functionality for collis
 
 An example is the `Janelia.KinematicCollisionHandler` class, which adds simple collision handling for a Transform moving kinematically, like the `Transform` from a `GameObject` representing a fly walking on a treadmill.  
 
+This package also supports logging of the kinematic motion, and playback of the motion in a log file.  User interface for choosing a log file to play back appears in the dialog created by the [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging) launcher script (located in the main project directory, and having the suffix "Launcher.hta").
+
 ## Installation
 
 Follow the [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation).
@@ -15,6 +17,8 @@ Follow the [installation instructions in the main repository](https://github.com
 ### Janelia.KinematicSubject
 
 This base class updates the rotation and translation of a `GameObject`'s `Transform` using `Janelia.KinematicCollisionHandler` to prevent collisions, and logs the motion with `Janelia.Logger` from [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging).  A subclass of this base class must have an object conforming to the `Janelia.KinematicSubject.IKinematicUpdater` interface to provide the rotation and translation at each frame.  The motion data in the log can be read and played back by the base class, using command-line options for the application.
+
+This class also adds user interface for the [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging) launcher script, using the `Janelia.Logger.AddLauncherPlugin` function.
 
 ### Janelia.ExampleKinematicSubject
 
