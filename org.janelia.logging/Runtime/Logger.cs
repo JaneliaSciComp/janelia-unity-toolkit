@@ -1,5 +1,5 @@
 ﻿// Manages a log of application activity.  When the application starts, a
-// new log is created, and code in the application can add JSON objects 
+// new log is created, and code in the application can add JSON objects
 // to the log at any point.  Code can also force the log to be written
 // to a file, or that writing happens automatically when the application
 // quits.  The log is stored in the same directory as the standard
@@ -25,6 +25,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 #endif
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Janelia
 {
@@ -61,9 +62,18 @@ namespace Janelia
             // The current frame (starting at 1).
             [SerializeField]
             public float frame;
+
+            // The elapsed time since the end of the "Made with Unity" splash screen,
+            // which appears when a standalone executable starts running.
+            [SerializeField]
+            public float timeSecsAfterSplash;
+
+            // The number of frames since the end of the splash screen (starting at 0).
+            [SerializeField]
+            public float frameAfterSplash;
         }
 
-        // Adds a log entry, saved as JSON.  The `entry` should be an instance of 
+        // Adds a log entry, saved as JSON.  The `entry` should be an instance of
         // a class derived from `Entry`, adding the data to be logged.
         public static void Log(Entry entry)
         {
@@ -71,6 +81,18 @@ namespace Janelia
             {
                 entry.timeSecs = Time.time;
                 entry.frame = Time.frameCount;
+
+                if (!_splashIsFinished)
+                {
+                    _splashIsFinished = SplashScreen.isFinished;
+                    if (_splashIsFinished)
+                    {
+                        _timeSecsSplashFinished = Time.time;
+                        _frameSplashFinished = Time.frameCount;
+                    }
+                }
+                entry.timeSecsAfterSplash = entry.timeSecs - _timeSecsSplashFinished;
+                entry.frameAfterSplash = entry.frame - _frameSplashFinished;
 
                 string s = JsonUtility.ToJson(entry, true);
                 _entries[_iEntries++] = s;
@@ -155,7 +177,7 @@ namespace Janelia
         // Plugs in some launcher capabilities.  The launcher will have a new radio button with label text `radioButtonLabel`.
         // Optionally, next to this radio button will be the additional components specified by `radioButtonOtherHTML`.
         // When the launcher dialog `Continue` button is pressed with this radio button selected, then the function named
-        // `radioButtonFuncName` will be called.  That function should be defined in the Javascript code block 
+        // `radioButtonFuncName` will be called.  That function should be defined in the Javascript code block
         // `scriptBlockWithRadioButtonFunc`.
         public static void AddLauncherPlugin(string radioButtonLabel, string radioButtonOtherHTML, string radioButtonFuncName,
             string scriptBlockWithRadioButtonFunc)
@@ -306,7 +328,7 @@ namespace Janelia
             if (File.Exists(shortcutPath)) {
                 standalonePath = shortcutPath;
                 Debug.Log("Using shortcut");
-            }            
+            }
 
             MakeLauncherScript(scriptTemplatePath, scriptPath, standalonePath);
         }
@@ -443,6 +465,10 @@ namespace Janelia
         }
 
         private static bool _doLogging = true;
+
+        private static bool _splashIsFinished = false;
+        private static float _timeSecsSplashFinished;
+        private static float _frameSplashFinished;
 
         private static StreamWriter _writer;
         private static bool _firstWrite = true;

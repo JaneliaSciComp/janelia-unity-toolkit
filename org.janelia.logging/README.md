@@ -22,6 +22,8 @@ Use the following steps to make a script add a custom entry to the log:
 
 1. Add to the script a C# class that derives from `Janelia.Loggger.Entry`, like the following:
 ```csharp
+using System;
+using UnityEngine;
 public class Example : MonoBehaviour
 {
     ...
@@ -34,7 +36,7 @@ public class Example : MonoBehaviour
 }
 ```
 2. The `Janelia.Loggger.Entry` base class adds `frame` and `timeSecs` fields, so there is no need for the custom entry to include the current frame or elapsed time.
-3. Note that the class must be tagged with the [`[Serializable]` attribute](https://docs.unity3d.com/ScriptReference/Serializable.html).
+3. Note that the class must be tagged with the [`[Serializable]` attribute](https://docs.unity3d.com/ScriptReference/Serializable.html), and adding that attribute requires `using System;`.
 4. Note that the class for the log entry may have (and probably should have) the `private` projection level, but its individual fields must be `public`.
 5. While not strictly necessary, it is a good practice to add to the script an instance of this new class, to be reused each time a log entry is to be added:
 ```csharp
