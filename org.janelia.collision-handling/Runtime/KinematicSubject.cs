@@ -1,10 +1,10 @@
 ﻿// A subject (GameObject representing a moving agent) that supports
 // kinematic motion, kinematic collision detection, and logging.
 // The kinematic motion is provided by the `updater` field, an object
-// that must conform to the `Janelia.KinematicSubject.IKinematicUpdater` 
+// that must conform to the `Janelia.KinematicSubject.IKinematicUpdater`
 // interface.
 
-// An application using a `Janelia.KinematicSubject` can play back the motion 
+// An application using a `Janelia.KinematicSubject` can play back the motion
 // captured in the log of a previous session.  This playback is controlled by the
 // following command-line arguments
 // `-playback` : plays back the most recently saved log file
@@ -226,13 +226,13 @@ namespace Janelia
                 "    <script language='javascript'>" + n +
                 "      var select = document.getElementById('id_selectLogs');" + n +
                 "      var fso = new ActiveXObject('Scripting.FileSystemObject');" + n +
-                "      var folderPath = 'LOG_DIR';" + n +
+                "      var folderPath = LogDir();" + n +
                 "      if (fso.FolderExists(folderPath)) {" + n +
                 "        var folder = fso.GetFolder(folderPath);" + n +
                 "        var files = [];" + n +
                 "        for (var en = new Enumerator(folder.Files); !en.atEnd(); en.moveNext()) {" + n +
                 "          var s = en.item();" + n +
-                "          if (/\\.json$/.test(s))" + n +
+                "          if (/Log.*json/.test(s))" + n +
                 "            files.push(s);" + n +
                 "        }" + n +
                 "        files.sort();" + n +
@@ -249,7 +249,7 @@ namespace Janelia
                 "        runApp(extra);" + n +
                 "      }" + n +
                 "    </script>";
-            Logger.AddLauncherPlugin(radioButtonLabel, radioButtonOtherHTML, "actionKinematicSubject", scriptBlockWithRadioButtonFunc);
+            Logger.AddLauncherRadioButtonPlugin(radioButtonLabel, radioButtonOtherHTML, "actionKinematicSubject", scriptBlockWithRadioButtonFunc);
         }
 #endif
 
