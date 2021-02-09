@@ -20,6 +20,7 @@
         </label>
       </div>
       PLUGIN_RADIO_BUTTONS
+      PLUGIN_OTHER_UI
       <div>
         <input type='submit' value='Continue' />
         <input type='button' value='Cancel' onClick='self.close()' />
@@ -42,15 +43,25 @@
       }
       function runApp(extraArgs)
       {
+        CALL_PLUGIN_OTHER_FUNCTIONS
         var sh = new ActiveXObject('Shell.Application');
         var exe = 'STANDALONE_PATH';
         sh.ShellExecute(exe, extraArgs, '', 'open', '1');
       }
     </script>
     <script language='javascript'>
+      function LogDir()
+      {
+        var o = new ActiveXObject('WScript.Shell');
+        if (o) {
+          var appData = o.expandEnvironmentStrings('%AppData%');
+          return appData.substring(0, appData.lastIndexOf('\\') + 1) + 'LOG_DIR_SUFFIX';
+        }
+        return '';
+      }
       var textarea = document.getElementById('id_textareaLogHeader');
       var fso = new ActiveXObject('Scripting.FileSystemObject');
-      var logHeaderPath = 'LOG_DIR\\LogHeader.txt';
+      var logHeaderPath = LogDir() + '\\LogHeader.txt';
       if (fso.FileExists(logHeaderPath)) {
         var tso = fso.OpenTextFile(logHeaderPath, 1);
         if (tso) {

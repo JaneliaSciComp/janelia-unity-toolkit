@@ -1,0 +1,10 @@
+{
+    "name": "org.janelia.general",
+    "displayName": "Janelia General",
+    "version": "0.1.0",
+    "unity": "2018.3",
+    "description": "Some general capabilities for Unity applications.",
+    "keywords": ["VR"],
+    "dependencies": {
+    }
+}

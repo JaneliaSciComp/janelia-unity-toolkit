@@ -9,7 +9,8 @@ Examples of the functionality supported in this toolkit include:
 * set up of virtual cameras for multiple external displays ([org.janelia.camera-utilities](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.camera-utilities), [org.janelia.setup-cameras-n-gon](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.setup-cameras-n-gon))
 * multiple external displays when running in the editor ([org.janelia.full-screen-view](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.full-screen-view))
 * input of kinematic motion from FicTrac ([http://rjdmoore.net/fictrac/](http://rjdmoore.net/fictrac/)), a "webcam-based method for tracking spherical motion and generating fictive animal paths" ([org.janelia.fictrac](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.fictrac), [org.janelia.fictrac-collision](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.fictrac-collision))
-* collision detection and simple sliding response for kinematic motion ([org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling))
+* collision detection and simple sliding response for kinematic motion ([org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling)
+* other general capabilities, like making a standalone executable end automatically after running for a specified period ([org.janelia.general](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.general))
 
 ## Installation
 
