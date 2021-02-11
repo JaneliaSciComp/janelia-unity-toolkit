@@ -1,0 +1,10 @@
+{
+    "name": "org.janelia.ni-daq-mx",
+    "displayName": "Janelia NI DAQmx Support",
+    "version": "0.1.0",
+    "unity": "2018.3",
+    "description": "Unity support for National Instruments data aquisition hardware using the NI-DAQmx driver.",
+    "keywords": ["VR"],
+    "dependencies": {
+    }
+}
