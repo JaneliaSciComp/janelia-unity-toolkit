@@ -12,8 +12,8 @@
 // display where the script is run, not the external displays where the application's
 // content appears).  By default, the dialog contains a text input for adding
 // "header notes" to be saved at the beginning of the log.  Optionally, other packages
-// can add other user interface to the launcher with the `Logger.AddLauncherPlugin`
-// function (see below).
+// can add other user interface to the launcher with the `Logger.AddLauncherRadioButtonPlugin`
+// and `Logger.AddLauncherOtherPlugin` functions (see below).
 
 using System;
 using System.Collections.Generic;
@@ -79,6 +79,8 @@ namespace Janelia
         {
             if (_doLogging)
             {
+                InitIfNeeded();
+
                 entry.timeSecs = Time.time;
                 entry.frame = Time.frameCount;
 
@@ -178,11 +180,12 @@ namespace Janelia
         // Optionally, next to this radio button will be the additional components specified by `radioButtonOtherHTML`.
         // When the launcher dialog `Continue` button is pressed with this radio button selected, then the function named
         // `radioButtonFuncName` will be called.  That function should be defined in the Javascript code block
-        // `scriptBlockWithRadioButtonFunc`.
-        public static void AddLauncherPlugin(string radioButtonLabel, string radioButtonOtherHTML, string radioButtonFuncName,
+        // `scriptBlockWithRadioButtonFunc`.  That function can run the application by calling `runApp(extraArgs)` where
+        // `extraArgs` is a string defining any extra command-line arguments.
+        public static void AddLauncherRadioButtonPlugin(string radioButtonLabel, string radioButtonOtherHTML, string radioButtonFuncName,
             string scriptBlockWithRadioButtonFunc)
         {
-            _launcherPlugins.Add(new LauncherPlugin
+            _launcherRadioButtonPlugins.Add(new LauncherRadioButtonPlugin
             {
                 radioButtonLabel = radioButtonLabel,
                 radioButtonOtherHTML = radioButtonOtherHTML,
@@ -191,12 +194,21 @@ namespace Janelia
             });
         }
 
+        public static void AddLauncherOtherPlugin(string html, string scriptBlock, string onRunAppFuncName)
+        {
+            _launcherOtherPlugins.Add(new LauncherOtherPlugin
+            {
+                html = html,
+                scriptBlock = scriptBlock,
+                onRunAppFuncName = onRunAppFuncName
+            });
+        }
+
         private static string getLogDirectory()
         {
             if (_logDirectory == null)
             {
-                string[] path = {Environment.GetEnvironmentVariable("AppData"), @"..\", "LocalLow",
-                    Application.companyName, Application.productName };
+                string[] path = {Environment.GetEnvironmentVariable("AppData"), @"..\", getLogDirectorySuffix()};
                 _logDirectory = Path.GetFullPath(Path.Combine(path));
                 if (!Directory.Exists(_logDirectory))
                 {
@@ -206,10 +218,30 @@ namespace Janelia
             return _logDirectory;
         }
 
+        private static string getLogDirectorySuffix()
+        {
+          if (_logDirectorySuffix == null)
+          {
+            string[] path = {"LocalLow", Application.companyName, Application.productName };
+            _logDirectorySuffix = Path.Combine(path);
+          }
+          return _logDirectorySuffix;
+        }
+
         // Executed after `Awake` methods and before `Start` methods.
         [RuntimeInitializeOnLoadMethod]
         private static void OnRuntimeMethodLoad()
         {
+            InitIfNeeded();
+        }
+
+        private static void InitIfNeeded()
+        {
+            if (_entries != null)
+            {
+                return;
+            }
+
             LogOptions options = LogUtilities.GetOptions();
             if (options != null)
             {
@@ -295,7 +327,8 @@ namespace Janelia
         {
             Debug.Log("Janelia.Logger.OnPostprocessBuildStart: " + pathToBuiltProject);
 
-            _launcherPlugins = new List<LauncherPlugin>();
+            _launcherRadioButtonPlugins = new List<LauncherRadioButtonPlugin>();
+            _launcherOtherPlugins = new List<LauncherOtherPlugin>();
         }
 
         // The attribute value orders this function last among the scripts run after building,
@@ -348,7 +381,7 @@ namespace Janelia
                 File.Delete(scriptPath);
             }
 
-            string logDirStr = logDirectory.Replace("\\", "\\\\");
+            string logDirSuffixStr = getLogDirectorySuffix().Replace("\\", "\\\\");
             string standalonePathStr = standalonePath.Replace("\\", "\\\\");
 
             // The HTML and JScript code is in a separate "template" file, which has
@@ -374,9 +407,20 @@ namespace Janelia
                     {
                         line = MakeLauncherPluginScriptBlocks();
                     }
-                    string line1 = line.Replace("LOG_DIR", logDirStr);
+                    else if (line.Contains("PLUGIN_OTHER_UI"))
+                    {
+                        line = MakeLauncherPluginOtherUI();
+                    }
+                    else if (line.Contains("CALL_PLUGIN_OTHER_FUNCTIONS"))
+                    {
+                        line = MakeLauncherPluginOtherFunctionCalls();
+                    }
+                    string line1 = line.Replace("LOG_DIR_SUFFIX", logDirSuffixStr);
                     string line2 = line1.Replace("STANDALONE_PATH", standalonePathStr);
-                    lines.Add(line2);
+                    if (line2.Length > 0)
+                    {
+                        lines.Add(line2);
+                    }
                 }
             }
 
@@ -392,7 +436,7 @@ namespace Janelia
             string result = "";
             string n = System.Environment.NewLine;
             int index = 2;
-            foreach (LauncherPlugin plugin in _launcherPlugins)
+            foreach (LauncherRadioButtonPlugin plugin in _launcherRadioButtonPlugins)
             {
                result += (!String.IsNullOrEmpty(result)) ? n : "";
                result +=
@@ -420,7 +464,7 @@ namespace Janelia
             string result = "";
             string n = System.Environment.NewLine;
             int index = 2;
-            foreach (LauncherPlugin plugin in _launcherPlugins)
+            foreach (LauncherRadioButtonPlugin plugin in _launcherRadioButtonPlugins)
             {
                 result += (!String.IsNullOrEmpty(result)) ? n : "";
                 result +=
@@ -434,9 +478,40 @@ namespace Janelia
         private static string MakeLauncherPluginScriptBlocks()
         {
             string result = "";
-            foreach (LauncherPlugin plugin in _launcherPlugins)
+            string n = System.Environment.NewLine;
+            foreach (LauncherRadioButtonPlugin plugin in _launcherRadioButtonPlugins)
             {
+                result += (!String.IsNullOrEmpty(result)) ? n : "";
                 result += plugin.scriptBlockWithRadioButtonFunc;
+            }
+            foreach (LauncherOtherPlugin plugin in _launcherOtherPlugins)
+            {
+                result += (!String.IsNullOrEmpty(result)) ? n : "";
+                result += plugin.scriptBlock;
+            }
+            return result;
+        }
+
+        private static string MakeLauncherPluginOtherUI()
+        {
+            string result = "";
+            string n = System.Environment.NewLine;
+            foreach (LauncherOtherPlugin plugin in _launcherOtherPlugins)
+            {
+                result += (!String.IsNullOrEmpty(result)) ? n : "";
+                result += plugin.html;
+            }
+            return result;
+        }
+
+        private static string MakeLauncherPluginOtherFunctionCalls()
+        {
+            string result = "";
+            string n = System.Environment.NewLine;
+            foreach (LauncherOtherPlugin plugin in _launcherOtherPlugins)
+            {
+                result += (!String.IsNullOrEmpty(result)) ? n : "";
+                result += "        " + plugin.onRunAppFuncName + "();";
             }
             return result;
         }
@@ -487,6 +562,7 @@ namespace Janelia
         private static bool _writing = false;
 
         private static string _logDirectory;
+        private static string _logDirectorySuffix;
         private static string _currentLogFile;
         private static string _previousLogFile;
 
@@ -497,13 +573,21 @@ namespace Janelia
         };
         static private LogHeader _logHeader = new LogHeader();
 
-        private struct LauncherPlugin
+        private struct LauncherRadioButtonPlugin
         {
             public string radioButtonLabel;
             public string radioButtonOtherHTML;
             public string radioButtonFuncName;
             public string scriptBlockWithRadioButtonFunc;
         }
-        private static List<LauncherPlugin> _launcherPlugins = new List<LauncherPlugin>();
+        private static List<LauncherRadioButtonPlugin> _launcherRadioButtonPlugins;
+
+        private struct LauncherOtherPlugin
+        {
+            public string html;
+            public string scriptBlock;
+            public string onRunAppFuncName;
+        }
+        private static List<LauncherOtherPlugin> _launcherOtherPlugins;
     }
 }
