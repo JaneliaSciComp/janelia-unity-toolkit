@@ -79,6 +79,8 @@ namespace Janelia
         public int minWriteInterval = 100;
         public int maxWriteInterval = 200;
 
+        public bool detectCollisions = true;
+
         public bool debug = false;
 
         public void Start()
@@ -115,9 +117,7 @@ namespace Janelia
 
             _framesBeingStill++;
 
-            _currentTransformation.actualTranslation = new Vector3();
-            _currentTransformation.actualTranslation = new Vector3();
-            _currentTransformation.rotationDegs = new Vector3();
+            _currentTransformation.Clear();
             bool addToLog = false;
 
             if (!_playbackActive)
@@ -127,9 +127,18 @@ namespace Janelia
                 Vector3? translation = updater.Translation();
                 if (translation != null)
                 {
-                    // Let the collision handler correct the translation, with approximated sliding contact,
-                    // and apply it to this `GameObject`'s transform.  The corrected translation is returned.
-                    Vector3 actualTranslation = _collisionHandler.Translate((Vector3)translation);
+                    Vector3 actualTranslation;
+                    if (detectCollisions)
+                    {
+                        // Let the collision handler correct the translation, with approximated sliding contact,
+                        // and apply it to this `GameObject`'s transform.  The corrected translation is returned.
+                        actualTranslation = _collisionHandler.Translate((Vector3)translation);
+                    }
+                    else
+                    {
+                        actualTranslation = (Vector3)translation;
+                        transform.Translate(actualTranslation);
+                    }
                     _currentTransformation.attemptedTranslation = (Vector3)translation;
                     _currentTransformation.actualTranslation = actualTranslation;
 
@@ -340,6 +349,15 @@ namespace Janelia
             public Vector3 worldPosition;
             public Vector3 rotationDegs;
             public Vector3 worldRotationDegs;
+
+            public void Clear()
+            {
+                attemptedTranslation.Set(0, 0, 0);
+                actualTranslation.Set(0, 0, 0);
+                worldPosition.Set(0, 0, 0);
+                rotationDegs.Set(0, 0, 0);
+                worldRotationDegs.Set(0, 0, 0);
+            }
 
             // Needed only for `KinematicSubject`'s playback of the log.
             public void Set(Transformation other)
