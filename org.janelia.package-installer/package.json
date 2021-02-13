@@ -2,7 +2,7 @@
     "name": "org.janelia.package-installer",
     "displayName": "Janelia Package Installer For Dependencies",
     "version": "0.1.0",
-    "unity": "2019.2",
+    "unity": "2019.3",
     "description": "Installs a package and all the packages on which it depends",
     "keywords": ["VR"],
     "dependencies": {
