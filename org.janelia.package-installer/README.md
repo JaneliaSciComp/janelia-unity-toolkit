@@ -6,7 +6,7 @@ This package (org.janelia.package-installer) overcomes a weakness of the standar
 
 ## Installation
 
-The [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation) give details of installing [org.janelia.package-installer](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.package-installer) itself, and then using it to install another package with its dependencies.
+The [installation instructions in the main repository](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/README.md#installation) give details of installing [org.janelia.package-installer](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.package-installer) itself, and then using it to install another package with its dependencies.  Note that `org.janelia.package-installer` requires Unity version 2019.3.0 or later, to avoid an error about invalid package names with the `file:` prefix.
 
 ## Testing
 

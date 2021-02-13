@@ -28,6 +28,8 @@ Some of the packages in this repository depend on other packages (e.g., the [pac
 5. Press the "Install" button to install all the listed packages in order.
 6. All the listed packages now should be active.  They should appear in the Unity editor's "Project" tab, in the "Packages" section, and also should appear in the editor's Package Manager window, launched from the "Package Manger" item in the editor's "Window" menu.
 
+Note that `org.janelia.package-installer` requires Unity version 2019.3.0 or later.
+
 ### Without Dependencies
 
 To install the [org.janelia.package-installer](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.package-installer) package (or to install a package without its dependencies), use the following steps:
