@@ -1,0 +1,11 @@
+{
+  "name": "Janelia.Collision-handling.RuntimeTests",
+  "references": [
+    "Janelia.Collision-handling.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": []
+}

@@ -18,6 +18,8 @@ Follow the [installation instructions in the main repository](https://github.com
 
 This base class updates the rotation and translation of a `GameObject`'s `Transform` using `Janelia.KinematicCollisionHandler` to prevent collisions, and logs the motion with `Janelia.Logger` from [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging).  A subclass of this base class must have an object conforming to the `Janelia.KinematicSubject.IKinematicUpdater` interface to provide the rotation and translation at each frame.  The motion data in the log can be read and played back by the base class, using command-line options for the application.
 
+Optionally, this class can support a limit to the motion, a spherical boundary past which the `GameObject` cannot move.  When the `GameObject` hits this limiting boundary it slides along the spherical surface.  This limit take effect if the `limitDistance` field is greater than zero (the default).  The `limitCenter` field specifies the center of the sphere.  These fields are passed to the `Janelia.KinematicCollisionHandler` when execution starts.
+
 This class also adds user interface for the [org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging) launcher script, using the `Janelia.Logger.AddLauncherRadioButtonPlugin` function.
 
 ### Janelia.ExampleKinematicSubject
@@ -74,3 +76,23 @@ public class ButtonMoveable : MonoBehaviour
     }
 }
 ```
+
+## Testing
+
+To run this package's unit tests, use the following steps:
+1. Create a new Unity project and add this package.
+2. In the directory for the new project, in its `Packages` subdirectory, edit the `manifest.json` file to add a `"testables"` section as follows:
+    ```
+    {
+      "dependencies": {
+       ...
+      },
+      "testables": ["org.janelia.collision-handling"]
+    }
+    ```
+    Note the comma separating the `"dependencies"` and `"testables"` sections.
+3. In the Unity editor's "Window" menu, under "General", choose "Test Runner".
+4. In the new "Test Runner" window, choose the "PlayMode" tab.
+5. There should be an item for the new project, with items underneath it for "Janelia.Collision-handling.RuntimeTests.dll", etc.
+6. Press the "Run All" button.
+7. All the items under the new project will have green check marks if the tests succeed.

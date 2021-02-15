@@ -64,6 +64,8 @@ namespace Janelia
         // Parameters of the collision detection supported by this class.
         public float collisionRadius = 1.0f;
         public Vector3? collisionPlaneNormal = null;
+        public float limitDistance = 0;
+        public Vector3 limitCenter = Vector3.zero;
 
         // Parameters to control when the log is written.  The goal is to avoid writing
         // either too frequently or not frequently enough.  A heuristic is to write when
@@ -94,7 +96,7 @@ namespace Janelia
             updater.Start();
 
             // Set up the collision handler to act on this `GameObject`'s transform.
-            _collisionHandler = new KinematicCollisionHandler(transform, collisionPlaneNormal, collisionRadius);
+            _collisionHandler = new KinematicCollisionHandler(transform, collisionPlaneNormal, limitDistance, limitCenter, collisionRadius);
 
             if (ConfigurePlayback())
             {
