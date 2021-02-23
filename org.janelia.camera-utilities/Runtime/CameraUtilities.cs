@@ -5,7 +5,7 @@ namespace Janelia
     public static class CameraUtilities
     {
         // Based on Robert Kooima's "Generalized Perspective Projection":
-        // http://csc.lsu.edu/~kooima/articles/genperspective/
+        // http://160592857366.free.fr/joe/ebooks/ShareData/Generalized%20Perspective%20Projection.pdf
 
         // The projection screen is assumed to be a quad, which started with unit size (i.e., from -0.5 to 0.5)
         // before being scaled to the proper size, with its XY plane being normal to the camera view vector.
