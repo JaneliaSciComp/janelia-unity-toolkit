@@ -22,6 +22,10 @@
       PLUGIN_RADIO_BUTTONS
       PLUGIN_OTHER_UI
       <div>
+        <label for='id_logFilenameExtra'>Extra text in the log filename (spaces removed):</label>
+        <input type='text' id='id_logFilenameExtra' size='45'>
+      </div>
+      <div>
         <input type='submit' value='Continue' />
         <input type='button' value='Cancel' onClick='self.close()' />
       </div>
@@ -44,9 +48,15 @@
       function runApp(extraArgs)
       {
         CALL_PLUGIN_OTHER_FUNCTIONS
+        var args = extraArgs ? extraArgs : '';
+        var filenameExtra = document.getElementById('id_logFilenameExtra');
+        if (filenameExtra.value) {
+          var value = filenameExtra.value.replace(' ', '');
+          args += " -logFilenameExtra " + value;
+        }
         var sh = new ActiveXObject('Shell.Application');
         var exe = 'STANDALONE_PATH';
-        sh.ShellExecute(exe, extraArgs, '', 'open', '1');
+        sh.ShellExecute(exe, args, '', 'open', '1');
       }
     </script>
     <script language='javascript'>
@@ -71,9 +81,9 @@
       }
       function action0()
       {
-        var tso = fso.OpenTextFile(logHeaderPath, 2, true);
-        if (tso) {
-          var text = textarea.value;
+        var text = textarea.value;
+        if (text) {
+          var tso = fso.OpenTextFile(logHeaderPath, 2, true);
           tso.WriteLine(text);
           runApp('-addLogHeader');
         }
