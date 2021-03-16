@@ -261,12 +261,7 @@ namespace Janelia
                     _previousLogFile = files.OrderByDescending(f => f.LastWriteTime).First().FullName;
                 }
 
-                DateTime now = DateTime.Now;
-                string filename = "Log_" + now.ToString("yyyy") + "-" + now.ToString("MM") + "-" +
-                    now.ToString("dd") + "_" + now.ToString("HH") + "-" + now.ToString("mm") + "-" +
-                    now.ToString("ss") + ".json";
-                string path = logDirectory + "/" + filename;
-
+                string path = logDirectory + "/" + logFilename();
                 _currentLogFile = path;
 
                 _writer = new StreamWriter(path);
@@ -281,6 +276,31 @@ namespace Janelia
 
                 AddLogHeader();
             }
+        }
+
+        private static string logFilename()
+        {
+            string extra = "";
+            string[] args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if ((args[i] == "-logFilenameExtra") && (i + 1 < args.Length))
+                {
+                    extra = args[i + 1];
+                    if (!extra.StartsWith("_"))
+                    {
+                      extra = "_" + extra;
+                    }
+                    break;
+                }
+            }
+
+            DateTime now = DateTime.Now;
+            string filename = "Log_" + now.ToString("yyyy") + "-" + now.ToString("MM") + "-" +
+                now.ToString("dd") + "_" + now.ToString("HH") + "-" + now.ToString("mm") + "-" +
+                now.ToString("ss") + extra + ".json";
+
+            return filename;
         }
 
         private static void ApplicationQuitting()
