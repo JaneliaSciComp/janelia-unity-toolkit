@@ -287,6 +287,11 @@ namespace Janelia
                 if ((args[i] == "-logFilenameExtra") && (i + 1 < args.Length))
                 {
                     extra = args[i + 1];
+                    string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+                    foreach (char c in invalid)
+                    {
+                        extra = extra.Replace(c.ToString(), "");
+                    }
                     if (!extra.StartsWith("_"))
                     {
                       extra = "_" + extra;
