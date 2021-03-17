@@ -233,6 +233,7 @@ namespace Janelia
         private static void OnRuntimeMethodLoad()
         {
             InitIfNeeded();
+            LogUtilities.LogCurrentResolution();
         }
 
         private static void InitIfNeeded()
