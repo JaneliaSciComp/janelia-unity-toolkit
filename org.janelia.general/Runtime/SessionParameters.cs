@@ -188,7 +188,7 @@ namespace Janelia
                             Debug.Log("Skipping blank line in " + _filename);
                             continue;
                         }
-                        string[] split = line.Split(':').Select(x => x.Trim()).ToArray();
+                        string[] split = line.Split(new char[] { ':' }, 2).Select(x => x.Trim()).ToArray();
                         if (split.Length != 2)
                         {
                             Debug.LogError("Invalid " + _filename + " line (expecting one ':'): '" + line + "'");
