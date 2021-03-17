@@ -86,6 +86,8 @@
           var tso = fso.OpenTextFile(logHeaderPath, 2, true);
           tso.WriteLine(text);
           runApp('-addLogHeader');
+        } else {
+          runApp();
         }
       }
       function action1()
