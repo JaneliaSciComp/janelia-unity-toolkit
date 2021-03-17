@@ -48,6 +48,15 @@ namespace Janelia
             Logger.Log(_deltaTimeLog);
         }
 
+        public static void LogCurrentResolution()
+        {
+            Resolution current = Screen.currentResolution;
+            _currentResolutionLog.refreshRateHz = current.refreshRate;
+            _currentResolutionLog.widthPixels = current.width;
+            _currentResolutionLog.heightPixels = current.height;
+            Logger.Log(_currentResolutionLog);
+        }
+
         static private string PathName(GameObject o)
         {
             string path = o.name;
@@ -76,5 +85,14 @@ namespace Janelia
             public float deltaTime;
         };
         static private DeltaTimeLog _deltaTimeLog = new DeltaTimeLog();
+
+        [Serializable]
+        private class CurrentResolutionLog : Logger.Entry
+        {
+            public int refreshRateHz;
+            public int widthPixels;
+            public int heightPixels;
+        };
+        static private CurrentResolutionLog _currentResolutionLog = new CurrentResolutionLog();
     }
 }
