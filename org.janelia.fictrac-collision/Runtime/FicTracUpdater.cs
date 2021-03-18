@@ -26,6 +26,12 @@ namespace Janelia
         {
             _dataForSmoothing = new Vector3[smoothingCount];
 
+            _currentFicTracParametersLog.ficTracServerAddress = ficTracServerAddress;
+            _currentFicTracParametersLog.ficTracServerPort = ficTracServerPort;
+            _currentFicTracParametersLog.ficTracBallRadius = ficTracBallRadius;
+            _currentFicTracParametersLog.ficTracSmoothingCount = smoothingCount;
+            Logger.Log(_currentFicTracParametersLog);
+
             _ficTracReader = new FicTracReader(ficTracServerAddress, ficTracServerPort);
             _ficTracReader.Start();
         }
@@ -136,6 +142,17 @@ namespace Janelia
         // To make `Janelia.Logger.Log<T>()`'s call to JsonUtility.ToJson() work correctly,
         // the `T` must be marked `[Serlializable]`, but its individual fields need not be
         // marked `[SerializeField]`.  The individual fields must be `public`, though.
+
+        [Serializable]
+        private class FicTracParametersLog : Logger.Entry
+        {
+            public string ficTracServerAddress;
+            public int ficTracServerPort;
+            public float ficTracBallRadius;
+            public int ficTracSmoothingCount;
+        };
+        private FicTracParametersLog _currentFicTracParametersLog = new FicTracParametersLog();
+
         [Serializable]
         private class FicTracMessageLog : Logger.Entry
         {
