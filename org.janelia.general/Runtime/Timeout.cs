@@ -24,13 +24,15 @@ namespace Janelia
         private static async Task OnRuntimeMethodLoadAsync()
         {
             // Note that this function is marked `RuntimeInitializeOnLoadMethod` witn
-            // no additional argument.  Thus, it should get executed after 
+            // no additional argument.  Thus, it should get executed after
             // `SessionParameters.OnRuntimeMethodLoad`, where the parameters file
             // gets loaded to set the value for thie `GetFloatParameters` call.
             double timeout = SessionParameters.GetFloatParameter("timeoutSecs");
             if (timeout > 0)
             {
+                Debug.Log("Starting to wait for timeout period, " + timeout + " seconds");
                 await Task.Delay(TimeSpan.FromSeconds(timeout));
+                Debug.Log("Done waiting for timeout period, quitting");
                 Application.Quit();
             }
         }
