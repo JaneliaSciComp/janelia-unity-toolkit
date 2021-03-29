@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Background.Runtime",
+    "references": ["Janelia.General.Runtime"],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
