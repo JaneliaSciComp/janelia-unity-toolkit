@@ -29,11 +29,11 @@ namespace Janelia
             foreach (MeshFilter mesh in meshes)
             {
                 GameObject obj = mesh.gameObject;
-                if (obj.hideFlags == HideFlags.None)
+                if ((obj != null) && (obj.hideFlags == HideFlags.None))
                 {
                     _meshLog.meshGameObjectPath = PathName(obj);
                     Collider collider = obj.GetComponent<Collider>();
-                    _meshLog.colliderType = collider.GetType().Name;
+                    _meshLog.colliderType = (collider != null) ? collider.GetType().Name : "NA";
                     _meshLog.worldPosition = obj.transform.position;
                     _meshLog.worldRotationDegs = obj.transform.eulerAngles;
                     _meshLog.worldScale = obj.transform.lossyScale;
