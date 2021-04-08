@@ -100,7 +100,7 @@ namespace Janelia
 
         public Vector3? Translation()
         {
-            float s = ficTracBallRadius * Mathf.Rad2Deg;
+            float s = ficTracBallRadius;
             float forward = _deltaRotationVectorLabUpdated[0] * s;
             float sideways = _deltaRotationVectorLabUpdated[1] * s;
             return new Vector3(forward, 0, sideways);
@@ -108,7 +108,7 @@ namespace Janelia
 
         public Vector3? RotationDegrees()
         {
-            float s = ficTracBallRadius * Mathf.Rad2Deg;
+            float s = Mathf.Rad2Deg;
             float heading = _deltaRotationVectorLabUpdated[2] * s;
             return new Vector3(0, heading, 0);
         }
