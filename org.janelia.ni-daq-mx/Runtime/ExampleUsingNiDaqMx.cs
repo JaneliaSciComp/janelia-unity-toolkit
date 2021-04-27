@@ -101,7 +101,7 @@ namespace Janelia
                 if (numReadPerChannel > 0)
                 {
                     float[] rot = { 0, 0 };
-                    for (int iChannel = 0; iChannel < _inputParams.channelNames.Length; iChannel++)
+                    for (int iChannel = 0; iChannel < _inputParams.ChannelNames.Length; iChannel++)
                     {
                         double sum = 0;
                         for (int i = 0; i < numReadPerChannel; i++)
