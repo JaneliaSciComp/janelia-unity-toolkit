@@ -28,3 +28,9 @@ Code that runs when a standalone executable starts, to load a texture to be plac
 
 Note that with this approach it would be possible to use one standalone executable for a number of experiments that differ only in the particular background texture being presented to the subject.
 For now, at least, the texture file should be specified with a full path, but that path can have `\` or `\\` or `/` as separator characters.
+
+### Janelia.BackgroundUtilities
+
+#### Janelia.BackgroundUtilities.SetCylinderTextureOffset
+
+Applies `SetTextureOffset` to the texture on the background cylinder, moving the texture horizontally and/or vertically.  Can be used for animating the texture offset (e.g., when called in the `Update` function of a `MonoBehaviour`).
