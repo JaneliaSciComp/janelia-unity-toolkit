@@ -35,13 +35,13 @@ def message(i, args):
     rotationRad += rotationRad * random.uniform(-args.noisePercentage, args.noisePercentage)
 
     # https://www.researchgate.net/figure/Visual-output-from-the-FicTrac-software-see-supplementary-video-a-A-segment-of-the_fig2_260044337
-    # Rotation about `W_x` is forward/backward translation.
-    # Rotation about `W_y` is sideways translation.
-    # Rotation about `W_z` is heading change.
-    # The client should consider positive X to be the forward direction,
-    # and positive Y to be the up direction (the normal for the plane containing the motion).
-    msgNumeric[6] = forward
-    msgNumeric[7] = 0
+    # Rotation about `a_x` is sideways translation.
+    # Rotation about `a_y` is forwards/backwards translation.
+    # Rotation about `a_z` is heading change.
+    # The client should consider positive `x` to be the forward direction,
+    # and positive `y` to be the up direction (the normal for the plane containing the motion).
+    msgNumeric[6] = 0
+    msgNumeric[7] = forward
     msgNumeric[8] = rotationRad
 
     # Time (in milliseconds) since the Unix epoch.

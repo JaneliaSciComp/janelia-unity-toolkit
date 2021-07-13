@@ -94,15 +94,15 @@ namespace Janelia
         }
 
         // https://www.researchgate.net/figure/Visual-output-from-the-FicTrac-software-see-supplementary-video-a-A-segment-of-the_fig2_260044337
-        // Rotation about `W_x` is forward/backward translation
-        // Rotation about `W_y` is sideways translation
-        // Rotation about `W_z` is heading change
+        // Rotation about `a_x` is sideways translation
+        // Rotation about `a_y` is forward/backward translation
+        // Rotation about `a_z` is heading change
 
         public Vector3? Translation()
         {
             float s = ficTracBallRadius;
-            float forward = _deltaRotationVectorLabUpdated[0] * s;
-            float sideways = _deltaRotationVectorLabUpdated[1] * s;
+            float forward = _deltaRotationVectorLabUpdated[1] * s;
+            float sideways = _deltaRotationVectorLabUpdated[0] * s;
             return new Vector3(forward, 0, sideways);
         }
 
@@ -110,7 +110,7 @@ namespace Janelia
         {
             float s = Mathf.Rad2Deg;
             float heading = _deltaRotationVectorLabUpdated[2] * s;
-            return new Vector3(0, heading, 0);
+            return new Vector3(0, -heading, 0);
         }
 
         public void OnDisable()
