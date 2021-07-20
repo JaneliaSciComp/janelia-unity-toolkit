@@ -63,16 +63,16 @@ namespace Janelia
                     break;
 
                 // https://www.researchgate.net/figure/Visual-output-from-the-FicTrac-software-see-supplementary-video-a-A-segment-of-the_fig2_260044337
-                // Rotation about `W_x` is forward/backward translation
-                // Rotation about `W_y` is sideways translation
-                // Rotation about `W_z` is heading change
+                // Rotation about `a_x` is sideways translation
+                // Rotation about `a_y` is forward/backward translation
+                // Rotation about `a_z` is heading change
 
-                float forward = a * Mathf.Rad2Deg;
-                float sideways = b * Mathf.Rad2Deg;
+                float forward = b * Mathf.Rad2Deg;
+                float sideways = a * Mathf.Rad2Deg;
                 _translation.Set(forward, 0, sideways);
 
                 float heading = c * Mathf.Rad2Deg;
-                _rotation.Set(0, heading, 0);
+                _rotation.Set(0, -heading, 0);
 
                 transform.Translate(_translation);
                 transform.Rotate(_rotation);
