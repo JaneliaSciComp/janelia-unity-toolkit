@@ -42,7 +42,7 @@ namespace Janelia
         // Correct the specified translation to account for collisions, and apply it to
         // this handler's Transform.  Returns the corrected translation.
 
-        public Vector3 Translate(Vector3 translation, bool approximateSliding = true)
+        public Vector3 CorrectTranslation(Vector3 translation, bool approximateSliding = true)
         {
             Vector3 validTranslation = translation;
 
@@ -94,7 +94,6 @@ namespace Janelia
                 validTranslation = Vector3.ProjectOnPlane(validTranslation, normal);
             }
 
-            _transform.Translate(validTranslation);
             return validTranslation;
         }
 
