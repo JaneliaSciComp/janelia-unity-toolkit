@@ -12,6 +12,7 @@ Examples of the functionality supported in this toolkit include:
 * collision detection and simple sliding response for kinematic motion ([org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling)
 * communication with a National Instruments data acquisition (NI DAQ) device using the NI-DAQmx driver ([org.janelia.ni-daq-mx](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.ni-daq-mx))
 * background images ([org.janelia.background](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.background))
+* generation of simple maze environments ([org.janelia.radial-arm-maze](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.radial-arm-maze))
 * other general capabilities, like making a standalone executable end automatically after running for a specified period ([org.janelia.general](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.general))
 
 ## Installation

@@ -83,6 +83,11 @@ namespace Janelia
 
         public bool detectCollisions = true;
 
+        // Look for objects with names that start with "LimitTranslationTo" and limit the
+        // translation this subject is inside them (e.g., "LimitTranslationToForward" will
+        // not allow motion that is backards relative to its forward axis).
+        public bool limitTranslation = true;
+
         public bool debug = false;
 
         public void Start()
@@ -91,6 +96,14 @@ namespace Janelia
             {
                 Debug.LogError("Janelia.KinematicSubject.updater must be set.");
                 Application.Quit();
+            }
+
+            foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
+            {
+                if (obj.activeInHierarchy && obj.name.StartsWith("LimitTranslationTo"))
+                {
+                    _translationLimiters.Add(obj);
+                }
             }
 
             updater.Start();
@@ -129,19 +142,24 @@ namespace Janelia
                 Vector3? translation = updater.Translation();
                 if (translation != null)
                 {
-                    Vector3 actualTranslation;
+                    Vector3 postCollisionTranslation = (Vector3)translation;
                     if (detectCollisions)
                     {
                         // Let the collision handler correct the translation, with approximated sliding contact,
                         // and apply it to this `GameObject`'s transform.  The corrected translation is returned.
-                        actualTranslation = _collisionHandler.Translate((Vector3)translation);
+                        postCollisionTranslation = _collisionHandler.CorrectTranslation((Vector3)translation);
                     }
-                    else
+
+                    Vector3 actualTranslation = postCollisionTranslation;
+                    if (limitTranslation)
                     {
-                        actualTranslation = (Vector3)translation;
-                        transform.Translate(actualTranslation);
+                        actualTranslation = LimitTranslation(postCollisionTranslation);
                     }
+
+                    transform.Translate(actualTranslation);
+
                     _currentTransformation.attemptedTranslation = (Vector3)translation;
+                    _currentTransformation.postCollisionTranslation = postCollisionTranslation;
                     _currentTransformation.actualTranslation = actualTranslation;
 
                     if (debug)
@@ -216,6 +234,31 @@ namespace Janelia
                 _framesSinceLogWrite = 0;
                 _framesBeingStill = 0;
             }
+        }
+
+        private Vector3 LimitTranslation(Vector3 translation)
+        {
+            Vector3 translationLimited = translation;
+            foreach (GameObject limiter in _translationLimiters)
+            {
+                BoxCollider collider = limiter.GetComponent<BoxCollider>() as BoxCollider;
+                Vector3 positionColliderSpace = collider.transform.InverseTransformPoint(transform.position);
+                Bounds bounds = new Bounds(collider.center, collider.size);
+                if (bounds.Contains(positionColliderSpace))
+                {
+                    if (limiter.name.Contains("Forward"))
+                    {
+                        Vector3 forward = limiter.transform.forward;
+                        Vector3 forwardSubjectSpace = transform.InverseTransformDirection(forward);
+                        if (Vector3.Dot(forwardSubjectSpace, translation) < 0)
+                        {
+                            translationLimited = Vector3.zero;
+                            break;
+                        }
+                    }
+                }
+            }
+            return translationLimited;
         }
 
 #if UNITY_EDITOR
@@ -347,6 +390,7 @@ namespace Janelia
         internal class Transformation : Logger.Entry
         {
             public Vector3 attemptedTranslation;
+            public Vector3 postCollisionTranslation;
             public Vector3 actualTranslation;
             public Vector3 worldPosition;
             public Vector3 rotationDegs;
@@ -355,6 +399,7 @@ namespace Janelia
             public void Clear()
             {
                 attemptedTranslation.Set(0, 0, 0);
+                postCollisionTranslation.Set(0, 0, 0);
                 actualTranslation.Set(0, 0, 0);
                 worldPosition.Set(0, 0, 0);
                 rotationDegs.Set(0, 0, 0);
@@ -365,6 +410,7 @@ namespace Janelia
             public void Set(Transformation other)
             {
                 attemptedTranslation = other.attemptedTranslation;
+                postCollisionTranslation = other.postCollisionTranslation;
                 actualTranslation = other.actualTranslation;
                 worldPosition = other.worldPosition;
                 rotationDegs = other.rotationDegs;
@@ -382,5 +428,7 @@ namespace Janelia
         private List<Transformation> _playbackLogEntries;
         private int _playbackLogIndex;
         private int _playbackStartFrame;
+
+        private List<GameObject> _translationLimiters = new List<GameObject>();
     }
 }
