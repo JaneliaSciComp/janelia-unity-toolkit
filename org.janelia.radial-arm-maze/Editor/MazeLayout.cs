@@ -147,10 +147,10 @@ namespace Janelia
                 Vector3 mid0 = (inter + outer0) / 2 + Y * _spec.height / 2;
                 float lengthAfterInter0 = Vector3.Distance(inter, outer0);
 
-                CreateWall(WALL_NAME + i + "_ " + j, mid0, Y, -sidewaysNorm0, lengthAfterInter0, arm0.color);
+                CreateWall(WALL_NAME + i + "_" + j, mid0, sidewaysNorm0, Y, lengthAfterInter0, arm0.color);
 
                 Vector3 midEnd0 = spine0 + Y * _spec.height / 2;
-                CreateWall(WALL_NAME + i, midEnd0, Y, -spineNorm0, arm0.width, arm0.color, arm0.endTexture);
+                CreateWall(WALL_NAME + i, midEnd0, spineNorm0, Y, arm0.width, arm0.color, arm0.endTexture);
 
                 Vector3 sidewaysNorm1 = Matrix4x4.Rotate(Quaternion.Euler(0, -90, 0)).MultiplyVector(spineNorm1);
                 Vector3 sideways1 = sidewaysNorm1 * arm1.width / 2;
@@ -159,7 +159,7 @@ namespace Janelia
                 Vector3 mid1 = (inter + outer1) / 2 + Y * _spec.height / 2;
                 float lengthAfterInter1 = Vector3.Distance(inter, outer1);
 
-                CreateWall(WALL_NAME + j + "_ " + i, mid1, Y, -sidewaysNorm1, lengthAfterInter1, arm1.color);
+                CreateWall(WALL_NAME + j + "_" + i, mid1, sidewaysNorm1, Y, lengthAfterInter1, arm1.color);
 
                 CreateLimitTranslationTo(arm0, i, spineNorm0, mid0 - sideways0, lengthAfterInter0);
             }
@@ -178,9 +178,23 @@ namespace Janelia
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             _gameObjs.Add(wall);
             wall.name = name;
-            wall.transform.localScale = new Vector3(length, _spec.thickness, _spec.height);
+            wall.transform.localScale = new Vector3(length, _spec.height, _spec.thickness);
             wall.transform.position = mid;
             wall.transform.rotation = Quaternion.LookRotation(forward, upwards);
+
+            // Each wall is what is known in Unity as a "static collider," a `GameObject` that has a `Collider`
+            // but no `RigidBody`.  A static collider is not expected to move, but should still work with the
+            // interesection functionality in `Physics.Raycast`.  Surprisingly, that intersection functionality
+            // is not reliable if the static collider has a nonuniform `transform.localScale`, unless its
+            // `BoxCollider` has its `size` value adjusted in particular ways (which are not necessary if
+            // `transform.localScale` is a uniform scale).  For the case of a wall, it is most important that
+            // the `size` have the proper `z` dimension, since that is where the wall is thin.  To make that
+            // `z` dimension work correctly, it seems to be necessary for the `x` dimension to be 1 and for
+            // the `y` dimension to be something other than 1.  Making the `y` dimension larger than 1 makes
+            // the collider a bit taller than the wall, but that does not really matter.
+
+            BoxCollider collider = wall.GetComponent<Collider>() as BoxCollider;
+            collider.size = new Vector3(1, 1.1f, _spec.thickness);
 
             CreateMaterial(wall, color, texture);
         }
