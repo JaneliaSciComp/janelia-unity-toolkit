@@ -3,11 +3,15 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
+// A lower-level reader.
+// `SocketMessageReader` is higher level, using the current class and adding notion of messages,
+// with a designated delimiter (header or terminator).
+
 namespace Janelia
 {
-    // Supports UDP (the default) or TCP.
     public class SocketReader
     {
+        // Supports UDP (the default) or TCP.
         public readonly bool usingUDP;
         public bool debug = true;
 
@@ -64,6 +68,9 @@ namespace Janelia
 
         private void ThreadFunctionUDP()
         {
+            if (debug)
+                Debug.Log(Now() + "SocketReader using UDP");
+
             // The `UdpClient` class does not seem to support a version of `Receive` that will reuse a
             // `byte []` buffer passed in as argument.  So, to avoid possible problems with garbage collection,
             // use the lower-level `Socket` approach.
@@ -115,6 +122,9 @@ namespace Janelia
 
         private void ThreadFunctionTCP()
         {
+            if (debug)
+                Debug.Log(Now() + "SocketReader using TCP");
+
             Byte[] readBuffer = new Byte[_readBufferSizeBytes];
             while (true)
             {
@@ -167,6 +177,10 @@ namespace Janelia
 
         private string Now()
         {
+            if (Application.isEditor)
+            {
+                return "";
+            }
             DateTime n = DateTime.Now;
             return "[" + n.Hour + ":" + n.Minute + ":" + n.Second + ":" + n.Millisecond + "] ";
         }
@@ -180,64 +194,6 @@ namespace Janelia
         private int _readBufferCount;
 
         private TcpClient _clientSocket;
-
-        public class RingBuffer
-        {
-            public RingBuffer(int itemCount, int itemSizeBytes)
-            {
-                _items = new Item[itemCount];
-                for (int i = 0; i < itemCount; i++)
-                {
-                    _items[i] = new Item
-                    {
-                        bytes = new Byte[itemSizeBytes],
-                        timestampMs = 0
-                    };
-                }
-            }
-
-            public void Give(Byte[] given)
-            {
-                lock (_lock)
-                {
-                    Buffer.BlockCopy(given, 0, _items[_iGive].bytes, 0, given.Length);
-                    _items[_iGive].timestampMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    if (_count == _items.Length)
-                        _iTake = (_iTake + 1) % _items.Length;
-                    else
-                        _count++;
-                    _iGive = (_iGive + 1) % _items.Length;
-                }
-            }
-
-            public bool Take(ref Byte[] taken, ref long timestampMs)
-            {
-                lock (_lock)
-                {
-                    if (_count > 0)
-                    {
-                        Buffer.BlockCopy(_items[_iTake].bytes, 0, taken, 0, taken.Length);
-                        timestampMs = _items[_iTake].timestampMs;
-                        _iTake = (_iTake + 1) % _items.Length;
-                        _count--;
-                        return true;
-                    }
-                    return false;
-                }
-            }
-
-            private struct Item
-            {
-                public long timestampMs;
-                public Byte[] bytes;
-            }
-
-            private Item[] _items;
-            private int _iGive = 0;
-            private int _iTake = 0;
-            private int _count = 0;
-            private readonly object _lock = new object();
-        }
 
         private RingBuffer _ringBuffer;
     }
