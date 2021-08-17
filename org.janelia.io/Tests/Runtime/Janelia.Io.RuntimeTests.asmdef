@@ -1,7 +1,7 @@
 {
-  "name": "Janelia.Fictrac.Tests",
+  "name": "Janelia.Io.Tests",
   "references": [
-    "Janelia.Fictrac.Runtime"
+    "Janelia.Io.Runtime"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

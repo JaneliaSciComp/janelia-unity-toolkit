@@ -4,14 +4,14 @@ using System.Text;
 
 namespace Janelia
 {
-    public static class SocketReaderTest
+    public static class RingBufferTest
     {
         [Test]
-        public static void TestRingBuffer()
+        public static void TestBasic()
         {
             int ItemCount = 4;
             int ItemSizeBytes = 32;
-            SocketReader.RingBuffer buffer = new SocketReader.RingBuffer(ItemCount, ItemSizeBytes);
+            RingBuffer buffer = new RingBuffer(ItemCount, ItemSizeBytes);
 
             buffer.Give(Encoding.ASCII.GetBytes("one"));
             buffer.Give(Encoding.ASCII.GetBytes("two"));

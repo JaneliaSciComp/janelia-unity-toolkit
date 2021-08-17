@@ -1,4 +1,4 @@
-﻿// A simple example of how to use `Janelia.KinematicSubject`.
+// A simple example of how to use `Janelia.KinematicSubject`.
 // In this case, the `IKinematicUpdater` instance checks the keyboard arrow keys
 // to let the user specify the translation and rotation.
 
@@ -72,7 +72,6 @@ namespace Janelia
             // The `collisionRadius` and `collisionPlaneNormal` fields are optional,
             // and if set, they are passed to the `Janelia.KinematicCollisionHandler`
             // created in the base class.
-            collisionRadius = 1.0f;
             foreach (Transform child in transform)
             {
                 if (child.gameObject.name.EndsWith("Marker"))

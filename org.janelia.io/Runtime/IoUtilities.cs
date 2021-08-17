@@ -1,8 +1,11 @@
 ﻿using System;
 
+// Code to support processing messages stored in byte arrays, to avoid code that
+// creates a lot of garabage in the form of temporary strings.
+
 namespace Janelia
 {
-    public static class FicTracUtilities
+    public static class IoUtilities
     {
         public static long ParseLong(Byte[] b, int iStart, int len, ref bool valid)
         {
@@ -59,15 +62,15 @@ namespace Janelia
             return x;
         }
 
-        // Similar to `Encoding.ASCII.GetString(b, i0).Split(',')[n]` without producing
+        // Similar to `Encoding.ASCII.GetString(b, i0).Split(separator)[n]` without producing
         // extra unused string instances.
-        public static void NthSplit(Byte[] b, int i0, int n, ref int i, ref int len)
+        public static void NthSplit(Byte[] b, Byte separator, int i0, int n, ref int i, ref int len)
         {
             int nSoFar = 0;
             i = i0;
             for (; i < b.Length; i++)
             {
-                if (b[i] == ',')
+                if (b[i] == separator)
                 {
                     nSoFar++;
                 }
@@ -76,17 +79,19 @@ namespace Janelia
                     break;
                 }
             }
-            i += (b[i] == ',') ? 1 : 0;
+            i += (b[i] == separator) ? 1 : 0;
             len = 0;
             for (int j = i; j < b.Length; j++, len++)
             {
-                if (b[j] == ',')
+                if (b[j] == separator)
                 {
                     break;
                 }
             }
         }
 
+        // Updates `iStart` and `iEnd` to be the true starting and ending indices, with spaces trimmmed.
+        // Also looks for a `-` and returns `sign` as `+1` or `-1`.
         private static void StartEndSign(Byte[] b, int len, ref int iStart, ref int iEnd, ref int sign)
         {
             sign = 1;

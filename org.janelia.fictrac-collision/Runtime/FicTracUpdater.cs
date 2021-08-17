@@ -32,20 +32,32 @@ namespace Janelia
             _currentFicTracParametersLog.ficTracSmoothingCount = smoothingCount;
             Logger.Log(_currentFicTracParametersLog);
 
-            _ficTracReader = new FicTracReader(ficTracServerAddress, ficTracServerPort);
-            _ficTracReader.Start();
+            _socketMessageReader = new SocketMessageReader(HEADER, ficTracServerAddress, ficTracServerPort);
+            _socketMessageReader.Start();
         }
 
         public void Update()
         {
             _deltaRotationVectorLabUpdated = Vector3.zero;
 
+            // Each message from FicTrac is a string of data values ("columns") separted by commas.
+            // The standard C# code for reading messages from a socket and extracting some of the
+            // columns generates a lot of temporary strings, and thus triggers garbarge collection.
+            // As an alternative, `SocketMessageReader` provides a `GetNextMessage` routine that reuses
+            // an internal `Byte[]` and sets the `ref i0` argument to the index where the next
+            // message begins.
+
             Byte[] dataFromSocket = null;
             long dataTimestampMs = 0;
             int i0 = -1;
-            while (_ficTracReader.GetNextMessage(ref dataFromSocket, ref dataTimestampMs, ref i0))
+            while (_socketMessageReader.GetNextMessage(ref dataFromSocket, ref dataTimestampMs, ref i0))
             {
                 bool valid = true;
+
+                // Then the indices, relative to `i0`, of individual data columns can be found
+                // with `IoUtilities.NthSplit`, and the numerical values can be parsed
+                // the indices using `IoUtilities.ParseDouble` and `IoUtilities.ParseLong`.
+                // The FicTrac documentation indicates the columns of interest.
 
                 // https://github.com/rjdmoore/fictrac/blob/master/doc/data_header.txt
                 // COL     PARAMETER                       DESCRIPTION
@@ -56,20 +68,20 @@ namespace Janelia
                 //                                         * configImg.jpg).
 
                 int i6 = 0, len6 = 0;
-                FicTracUtilities.NthSplit(dataFromSocket, i0, 6, ref i6, ref len6);
-                float a = (float)FicTracUtilities.ParseDouble(dataFromSocket, i6, len6, ref valid);
+                IoUtilities.NthSplit(dataFromSocket, SEPARATOR, i0, 6, ref i6, ref len6);
+                float a = (float)IoUtilities.ParseDouble(dataFromSocket, i6, len6, ref valid);
                 if (!valid)
                     break;
 
                 int i7 = 0, len7 = 0;
-                FicTracUtilities.NthSplit(dataFromSocket, i0, 7, ref i7, ref len7);
-                float b = (float)FicTracUtilities.ParseDouble(dataFromSocket, i7, len7, ref valid);
+                IoUtilities.NthSplit(dataFromSocket, SEPARATOR, i0, 7, ref i7, ref len7);
+                float b = (float)IoUtilities.ParseDouble(dataFromSocket, i7, len7, ref valid);
                 if (!valid)
                     break;
 
                 int i8 = 0, len8 = 0;
-                FicTracUtilities.NthSplit(dataFromSocket, i0, 8, ref i8, ref len8);
-                float c = (float)FicTracUtilities.ParseDouble(dataFromSocket, i8, len8, ref valid);
+                IoUtilities.NthSplit(dataFromSocket, SEPARATOR, i0, 8, ref i8, ref len8);
+                float c = (float)IoUtilities.ParseDouble(dataFromSocket, i8, len8, ref valid);
                 if (!valid)
                     break;
 
@@ -80,8 +92,8 @@ namespace Janelia
                 if (logFicTracMessages)
                 {
                     int i22 = 0, len22 = 0;
-                    FicTracUtilities.NthSplit(dataFromSocket, i0, 22, ref i22, ref len22);
-                    long timestampWrite = FicTracUtilities.ParseLong(dataFromSocket, i22, len22, ref valid);
+                    IoUtilities.NthSplit(dataFromSocket, SEPARATOR, i0, 22, ref i22, ref len22);
+                    long timestampWrite = IoUtilities.ParseLong(dataFromSocket, i22, len22, ref valid);
                     if (!valid)
                         break;
 
@@ -115,7 +127,7 @@ namespace Janelia
 
         public void OnDisable()
         {
-            _ficTracReader.OnDisable();
+            _socketMessageReader.OnDisable();
         }
 
         private void Smooth()
@@ -131,7 +143,9 @@ namespace Janelia
             _deltaRotationVectorLabToSmooth /= smoothingCount;
         }
 
-        FicTracReader _ficTracReader;
+        private SocketMessageReader.Delimiter HEADER = SocketMessageReader.Header((Byte)'F');
+        private const Byte SEPARATOR = (Byte)',';    
+        SocketMessageReader _socketMessageReader;
 
         private Vector3[] _dataForSmoothing;
         private int _dataForSmoothingOldestIndex = 0;

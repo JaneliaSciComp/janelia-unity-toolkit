@@ -24,7 +24,7 @@ def message(i, args):
     # 22      timestamp                       Either position in video file (ms) or frame
     #                                         capture time (ms since epoch).
 
-    msgNumeric = [0 for _ in range(26)]
+    msgNumeric = [0 for _ in range(26+1)]
     frame = i + 1
     msgNumeric[1] = frame
 
@@ -47,6 +47,9 @@ def message(i, args):
     # Time (in milliseconds) since the Unix epoch.
     timestampMs = int(time.time() * 1000)
     msgNumeric[22] = timestampMs
+    
+    msgNumeric[23] = frame
+    msgNumeric[24] = args.delayMs
 
     msg = functools.reduce(lambda a, b: a + ", " + str(b), msgNumeric[1:], "FT")
     msg += " "

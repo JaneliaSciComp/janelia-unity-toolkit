@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
@@ -53,6 +54,32 @@ namespace Janelia
 
             _listRequest = Client.List();
             EditorApplication.update += UpdateForListRequest;
+
+            CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompilationFinished;
+        }
+
+        private static void OnAssemblyCompilationFinished(string s, CompilerMessage[] compilerMessages)
+        {
+            bool updatedApiLevel = false;
+            foreach (CompilerMessage msg in compilerMessages)
+            {
+                if (msg.type == CompilerMessageType.Error)
+                {
+                    // The `org.janelia.io` package uses `System.IO.Ports` to read serial input, and for some reason,
+                    // the default configuration of Unity does not include the required assembly.  So just go ahead and
+                    // change to the non-default setting that solves the problem.
+
+                    if (msg.message.Contains("CS0234") && msg.message.Contains("Ports") && msg.message.Contains("System.IO") && !updatedApiLevel)
+                    {
+                        Debug.Log(msg.message);
+                        Debug.Log("Fixing by changing 'Player' setting 'API Compatibility Level' to 'ApiCompatibilityLevel.NET_4_6'");
+                        PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.Standalone, ApiCompatibilityLevel.NET_4_6);
+
+                        updatedApiLevel = true;
+                        CompilationPipeline.assemblyCompilationFinished -= OnAssemblyCompilationFinished;
+                    }
+                }
+            }
         }
 
         private static void UpdateForListRequest()

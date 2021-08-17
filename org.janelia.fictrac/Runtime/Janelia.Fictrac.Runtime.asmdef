@@ -1,6 +1,6 @@
 {
     "name": "Janelia.Fictrac.Runtime",
-    "references": [],
+    "references": ["Janelia.Io.Runtime"],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
