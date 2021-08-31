@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
-// A lower-level reader.
+// A lower-level reader.  Also supports some writing.
 // `SocketMessageReader` is higher level, using the current class and adding notion of messages,
 // with a designated delimiter (header or terminator).
 
 namespace Janelia
 {
+    // TODO: Consider changing the name to `SocketClient`, since some writing is supported.
     public class SocketReader
     {
         // Supports UDP (the default) or TCP.
@@ -19,15 +20,16 @@ namespace Janelia
         public bool debugSlowly = false;
 
         // Only TCP needs `connectRetryMs`.
-        public SocketReader(string hostname = "127.0.0.1", int port = 2000, int readBufferSizeBytes = 1024, int readBufferCount = 240, bool useUDP = true, int connectRetryMs = 5000)
+        public SocketReader(string hostname = "127.0.0.1", int port = 2000, int bufferSizeBytes = 1024, int readBufferCount = 240, bool useUDP = true, int connectRetryMs = 5000)
         {
             usingUDP = useUDP;
             _hostname = hostname;
             _port = port;
             _connectRetryMs = connectRetryMs;
-            _readBufferSizeBytes = readBufferSizeBytes;
+            _bufferSizeBytes = bufferSizeBytes;
             _readBufferCount = readBufferCount;
-            _ringBuffer = new RingBuffer(_readBufferCount, _readBufferSizeBytes);
+            _ringBuffer = new RingBuffer(_readBufferCount, _bufferSizeBytes);
+            _writeBuffer = new Byte[_bufferSizeBytes];
         }
 
         ~SocketReader()
@@ -37,22 +39,72 @@ namespace Janelia
 
         public void Start()
         {
-            if (_thread == null)
-            {
-                if (debug)
-                    Debug.Log(Now() + "SocketReader.Start() creating socket thread");
 
-                _thread = usingUDP ?
-                    new System.Threading.Thread(ThreadFunctionUDP) { IsBackground = true } :
-                    new System.Threading.Thread(ThreadFunctionTCP) { IsBackground = true };
+            if (debug)
+                Debug.Log(Now() + "SocketReader.Start() creating socket thread");
 
-                _thread.Start();
-            }
+            _thread = usingUDP ?
+                new System.Threading.Thread(ThreadFunctionUDP) { IsBackground = true } :
+                new System.Threading.Thread(ThreadFunctionTCP) { IsBackground = true };
+            _thread.Start();
         }
 
+        // Take some bytes from the buffer of what was read from the socket.
         public bool Take(ref Byte[] taken, ref long timestampMs)
         {
             return _ringBuffer.Take(ref taken, ref timestampMs);
+        }
+
+        public bool ReadyToWrite()
+        {
+            if (usingUDP)
+            {
+                return false;
+            }
+
+            // A cheap-and-cheerful way to wait until `WriteThreadFunctionTCP` is readonly
+            // for the `Monitor.Pulse(_writeLock)`.
+            for (int i = 0; i < 10; ++i)
+            {
+                lock (_writeThreadInitializedLock)
+                {
+                    if (_writeThreadInitialized)
+                    {
+                        return true;
+                    }
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+            
+            if (debug)
+                Debug.Log(Now() + "SocketReader.Write() failed: thread not initialized");
+
+            return false;
+        }
+
+        // Write some data to the socket.
+        public void Write(Byte[] toWrite)
+        {
+            Write(toWrite, toWrite.Length);
+        }
+
+        public void Write(Byte[] toWrite, int sizeToWrite)
+        {
+            if (!usingUDP)
+            {
+                lock (_writeLock)
+                {
+                    // TODO: Consider supporting multiple writes with a ring buffer.
+                    Buffer.BlockCopy(toWrite, 0, _writeBuffer, 0, sizeToWrite);
+                    _writeOffset = 0;
+                    _writeLength = sizeToWrite;
+
+                    if (debug)
+                        Debug.Log(Now() + "SocketReader.Write() Monitor.Pulse");
+
+                    System.Threading.Monitor.Pulse(_writeLock);
+                }
+            }
         }
 
         public void OnDisable()
@@ -63,6 +115,16 @@ namespace Janelia
                     Debug.Log(Now() + "SocketReader.OnDisable() aborting socket thread");
 
                 _thread.Abort();
+                _thread = null;
+            }
+
+            if (_writeThread != null)
+            {
+                if (debug)
+                    Debug.Log(Now() + "SocketReader.OnDisable() aborting socket thread [write]");
+
+                _writeThread.Abort();
+                _writeThread = null;
             }
         }
 
@@ -93,7 +155,7 @@ namespace Janelia
                 return;
             }
 
-            Byte[] readBuffer = new Byte[_readBufferSizeBytes];
+            Byte[] readBuffer = new Byte[_bufferSizeBytes];
             while (true)
             {
                 try
@@ -125,7 +187,7 @@ namespace Janelia
             if (debug)
                 Debug.Log(Now() + "SocketReader using TCP");
 
-            Byte[] readBuffer = new Byte[_readBufferSizeBytes];
+            Byte[] readBuffer = new Byte[_bufferSizeBytes];
             while (true)
             {
                 try
@@ -136,6 +198,10 @@ namespace Janelia
                     _clientSocket = new TcpClient(_hostname, _port);
                     try
                     {
+                        // Start the thread for writing here, so it can use the same `TcpClient` and `NetworkStream`.
+                        _writeThread = new System.Threading.Thread(WriteThreadFunctionTCP) { IsBackground = true };
+                        _writeThread.Start();
+
                         using (NetworkStream stream = _clientSocket.GetStream())
                         {
                             if (debug)
@@ -151,7 +217,6 @@ namespace Janelia
                                 Array.Clear(readBuffer, 0, length);
 
                                 if (debugSlowly)
-
                                     Debug.Log("SocketReader added " + length + " bytes to the ring buffer");
                             }
                         }
@@ -170,8 +235,56 @@ namespace Janelia
                         Debug.Log(Now() + "SocketReader sleeping for " + _connectRetryMs + " ms before retrying");
                     }
 
+                    if (_writeThread != null)
+                    {
+                        _writeThread.Abort();
+                    }
+
                     System.Threading.Thread.Sleep(_connectRetryMs);
                 }
+            }
+        }
+
+        private void WriteThreadFunctionTCP()
+        {
+            try
+            {
+                // https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.networkstream.beginread?view=net-5.0#remarks
+                // "Read and write operations can be performed simultaneously on an instance of the NetworkStream class
+                // without the need for synchronization. As long as there is one unique thread for the write operations and
+                // one unique thread for the read operations, there will be no cross-interference between read and write
+                // threads and no synchronization is required."
+
+                using (NetworkStream stream = _clientSocket.GetStream())
+                {
+                    if (debug)
+                        Debug.Log(Now() + "SocketReader [write] got stream connection to server '" + _hostname + "' port " + _port);
+
+                    lock (_writeThreadInitializedLock)
+                    {
+                        _writeThreadInitialized = true;
+                    }
+
+                    while (true)
+                    {
+                        lock (_writeLock)
+                        {
+                            // Execution will continue here after the `Monitor.Pulse(_writeLock)`
+                            // in the `Write` function on the main thread.
+                            System.Threading.Monitor.Wait(_writeLock);
+
+                            if (debug)
+                                Debug.Log(Now() + "SocketReader about to write " + _writeLength + " bytes");
+
+                            stream.Write(_writeBuffer, _writeOffset, _writeLength);
+                        }
+                    }
+                }
+            }
+            catch (SocketException socketException)
+            {
+                if (debug)
+                    Debug.Log(Now() + "SocketReader [write] socket exception: " + socketException);
             }
         }
 
@@ -185,16 +298,23 @@ namespace Janelia
             return "[" + n.Hour + ":" + n.Minute + ":" + n.Second + ":" + n.Millisecond + "] ";
         }
 
-        private static System.Threading.Thread _thread;
-
         private string _hostname;
         private int _port;
         private int _connectRetryMs;
-        private int _readBufferSizeBytes;
+        private int _bufferSizeBytes;
         private int _readBufferCount;
 
         private TcpClient _clientSocket;
 
+        private System.Threading.Thread _thread;
         private RingBuffer _ringBuffer;
+
+        private System.Threading.Thread _writeThread;
+        private readonly object _writeThreadInitializedLock = new object();
+        private bool _writeThreadInitialized = false;
+        private readonly object _writeLock = new object();
+        private Byte[] _writeBuffer;
+        private int _writeOffset;
+        private int _writeLength;
     }
 }
