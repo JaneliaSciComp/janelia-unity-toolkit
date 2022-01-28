@@ -252,7 +252,9 @@ namespace Janelia
                 AssetDatabase.CreateFolder("Assets", "Materials");
             }
             Material mat = new Material(Shader.Find("Standard"));
-            AssetDatabase.CreateAsset(mat, "Assets/Materials/" + obj.name + ".mat");
+            string path = "Assets/Materials/" + obj.name + ".mat";
+            AssetDatabase.DeleteAsset(path);
+            AssetDatabase.CreateAsset(mat, path);
 
             Color color;
             ColorUtility.TryParseHtmlString(colorStr, out color);
