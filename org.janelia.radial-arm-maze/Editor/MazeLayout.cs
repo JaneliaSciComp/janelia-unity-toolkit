@@ -106,6 +106,10 @@ namespace Janelia
 
         private void CreateWalls()
         {
+            _maze = new GameObject();
+            _maze.name = "Maze";
+            _gameObjs.Add(_maze);
+
             _bbox = new Bounds();
             float maxWidth = 0;
 
@@ -177,6 +181,9 @@ namespace Janelia
         {
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             _gameObjs.Add(wall);
+
+            wall.transform.SetParent(_maze.transform);
+
             wall.name = name;
             wall.transform.localScale = new Vector3(length, _spec.height, _spec.thickness);
             wall.transform.position = mid;
@@ -305,6 +312,7 @@ namespace Janelia
         private Spec _spec;
 
         private Bounds _bbox;
+        private GameObject _maze;
         private List<GameObject> _gameObjs;
 
         private const string LIMIT_TRANSLATION_TO_NAME = "LimitTranslationTo";
