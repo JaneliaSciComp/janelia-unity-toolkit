@@ -27,8 +27,8 @@ namespace Janelia
             _gameObjs = new List<GameObject>();
             foreach (GameObject obj in UnityEngine.Object.FindObjectsOfType<GameObject>())
             {
-                if (obj.name.StartsWith(WALL_NAME) || obj.name.StartsWith(GROUND_NAME) || 
-                    obj.name.StartsWith(LIMIT_TRANSLATION_TO_NAME))
+                if ((obj.name == TOP_LEVEL_NAME) || (obj.name == GROUND_NAME) ||
+                    obj.name.StartsWith(WALL_NAME) || obj.name.StartsWith(LIMIT_TRANSLATION_TO_NAME))
                 {
                     _gameObjs.Add(obj);
                 }
@@ -107,7 +107,7 @@ namespace Janelia
         private void CreateWalls()
         {
             _maze = new GameObject();
-            _maze.name = "Maze";
+            _maze.name = TOP_LEVEL_NAME;
             _gameObjs.Add(_maze);
 
             _bbox = new Bounds();
@@ -319,6 +319,7 @@ namespace Janelia
 
         private const string LIMIT_TRANSLATION_TO_NAME = "LimitTranslationTo";
 
+        private const string TOP_LEVEL_NAME = "Maze";
         private const string GROUND_NAME = "Ground";
         private GameObject _ground;
 
