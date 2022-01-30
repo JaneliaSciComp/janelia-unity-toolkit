@@ -210,7 +210,12 @@ namespace Janelia
                 string candidate = "";
                 foreach (string part in parts)
                 {
-                    candidate = Path.Join(candidate, part);
+                    if (candidate.EndsWith(Path.VolumeSeparatorChar.ToString()))
+                    {
+                        // Necessary for older verisons of .NET that don't support `Path.Join`.
+                        candidate += Path.DirectorySeparatorChar;
+                    }
+                    candidate = Path.Combine(candidate, part);
                     if (part == "janelia-unity-toolkit")
                     {
                         dir = candidate;
