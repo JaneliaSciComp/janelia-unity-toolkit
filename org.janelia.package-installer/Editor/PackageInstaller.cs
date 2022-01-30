@@ -54,8 +54,6 @@ namespace Janelia
 
             _listRequest = Client.List();
             EditorApplication.update += UpdateForListRequest;
-
-            CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompilationFinished;
         }
 
         private static void OnAssemblyCompilationFinished(string s, CompilerMessage[] compilerMessages)
@@ -204,6 +202,23 @@ namespace Janelia
                 dir = Directory.Exists(aunt) ? aunt : "";
             }
 
+            // If that does not work, see if the chosen file is in the some directory within
+            // the "janelia-unit-toolkit" repo itself.
+            if (dir.Length == 0)
+            {
+                string[] parts = chosenPkgListFile.Split('/');
+                string candidate = "";
+                foreach (string part in parts)
+                {
+                    candidate = Path.Join(candidate, part);
+                    if (part == "janelia-unity-toolkit")
+                    {
+                        dir = candidate;
+                        break;
+                    }
+                }
+            }
+
             List<string> result = new List<string>();
             foreach (string path in paths)
             {
@@ -254,6 +269,8 @@ namespace Janelia
             {
                 case State.ADD_STARTING:
                     Debug.Log("Adding package " + _pkgPathsToInstall[_iInstalling]);
+
+                    CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompilationFinished;
 
                     _addRequests.Add(Client.Add("file:" + _pkgPathsToInstall[_iInstalling]));
                     _state = State.ADD_IN_PROGRESS;
