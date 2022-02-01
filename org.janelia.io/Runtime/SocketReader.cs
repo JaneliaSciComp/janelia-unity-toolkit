@@ -39,7 +39,6 @@ namespace Janelia
 
         public void Start()
         {
-
             if (debug)
                 Debug.Log(Now() + "SocketReader.Start() creating socket thread");
 
@@ -62,7 +61,7 @@ namespace Janelia
                 return false;
             }
 
-            // A cheap-and-cheerful way to wait until `WriteThreadFunctionTCP` is readonly
+            // A cheap-and-cheerful way to wait until `WriteThreadFunctionTCP` is ready
             // for the `Monitor.Pulse(_writeLock)`.
             for (int i = 0; i < 10; ++i)
             {
@@ -75,7 +74,7 @@ namespace Janelia
                 }
                 System.Threading.Thread.Sleep(100);
             }
-            
+
             if (debug)
                 Debug.Log(Now() + "SocketReader.Write() failed: thread not initialized");
 
@@ -130,56 +129,60 @@ namespace Janelia
 
         private void ThreadFunctionUDP()
         {
-            if (debug)
-                Debug.Log(Now() + "SocketReader using UDP");
-
-            // The `UdpClient` class does not seem to support a version of `Receive` that will reuse a
-            // `byte []` buffer passed in as argument.  So, to avoid possible problems with garbage collection,
-            // use the lower-level `Socket` approach.
-            Socket socket;
-
             try
             {
                 if (debug)
-                    Debug.Log(Now() + "SocketReader setting up socket for host '" + _hostname + "' port " + _port);
+                    Debug.Log(Now() + "SocketReader using UDP");
 
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                // The `UdpClient` class does not seem to support a version of `Receive` that will reuse a
+                // `byte []` buffer passed in as argument.  So, to avoid possible problems with garbage collection,
+                // use the lower-level `Socket` approach.
+                Socket socket;
 
-                socket.Bind(new IPEndPoint(IPAddress.Parse(_hostname), _port));
-            }
-            catch (SocketException socketException)
-            {
-                if (debug)
-                    Debug.Log(Now() + "SocketReader cannot set up socket: " + socketException);
-                return;
-            }
-
-            Byte[] readBuffer = new Byte[_bufferSizeBytes];
-            while (true)
-            {
                 try
                 {
-                    if (debugSlowly)
-                        Debug.Log(Now() + "SocketReader waiting to receive UDP datagram");
+                    if (debug)
+                        Debug.Log(Now() + "SocketReader setting up socket for host '" + _hostname + "' port " + _port);
 
-                    int length = socket.Receive(readBuffer);
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
 
-                    if (debugSlowly)
-                        Debug.Log("SocketReader read " + length + " bytes");
-
-                    _ringBuffer.Give(readBuffer);
-                    Array.Clear(readBuffer, 0, length);
-
-                    if (debugSlowly)
-                        Debug.Log("SocketReader added " + length + " bytes to the ring buffer");
+                    socket.Bind(new IPEndPoint(IPAddress.Parse(_hostname), _port));
                 }
                 catch (SocketException socketException)
                 {
                     if (debug)
-                        Debug.Log(Now() + "SocketReader exception when during receive: " + socketException);
+                        Debug.Log(Now() + "SocketReader cannot set up socket: " + socketException);
+                    return;
+                }
+
+                Byte[] readBuffer = new Byte[_bufferSizeBytes];
+                while (true)
+                {
+                    try
+                    {
+                        if (debugSlowly)
+                            Debug.Log(Now() + "SocketReader waiting to receive UDP datagram");
+
+                        int length = socket.Receive(readBuffer);
+
+                        if (debugSlowly)
+                            Debug.Log("SocketReader read " + length + " bytes");
+
+                        _ringBuffer.Give(readBuffer);
+                        Array.Clear(readBuffer, 0, length);
+
+                        if (debugSlowly)
+                            Debug.Log("SocketReader added " + length + " bytes to the ring buffer");
+                    }
+                    catch (SocketException socketException)
+                    {
+                        if (debug)
+                            Debug.Log(Now() + "SocketReader exception when during receive: " + socketException);
+                    }
                 }
             }
+            catch (System.Threading.ThreadAbortException) {}
         }
 
         private void ThreadFunctionTCP()
