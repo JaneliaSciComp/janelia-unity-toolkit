@@ -49,6 +49,14 @@ namespace Janelia
             }
         }
 
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                _iGive = _iTake = _count = 0;
+            }
+        }
+
         private struct Item
         {
             public long timestampMs;
