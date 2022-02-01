@@ -104,8 +104,7 @@ namespace Janelia
                 "      var fso = new ActiveXObject('Scripting.FileSystemObject');" + n +
                 "      var parametersPath = LogDir() + '\\\\" + _filename + "';" + n +
                 "      if (!fso.FileExists(parametersPath)) {" + n +
-                "        var exe = 'STANDALONE_PATH';" + n +
-                "        var buildDir = fso.GetParentFolderName(exe);" + n +
+                "        var buildDir = '" + _buildDir.Replace("\\", "\\\\") + "';" + n +
                 "        var parametersAtBuildPath = buildDir + '\\\\" + _filename + "';" + n +
                 "        if (fso.FileExists(parametersAtBuildPath)) {" + n +
                 "          fso.CopyFile(parametersAtBuildPath, parametersPath);" + n +
