@@ -12,29 +12,32 @@ namespace Janelia
 
         public PackageNode(string pkgDir)
         {
-            _pkgDirToNode.Add(pkgDir, this);
-
-            PkgDir = pkgDir;
-
-            HashSet<string> depPkgDirs = GetDepPkgDirs(pkgDir, "Runtime");
-            depPkgDirs.UnionWith(GetDepPkgDirs(pkgDir, "Editor"));
-
-            Deps = new HashSet<PackageNode>();
-            foreach (string depPkgDir in depPkgDirs)
+            if (!_pkgDirToNode.ContainsKey(pkgDir))
             {
-                // Do not get into a cycle if "Editor" depends on "Runtime".
-                if (depPkgDir == pkgDir)
-                {
-                    continue;
-                }
+                _pkgDirToNode.Add(pkgDir, this);
 
-                // An edge from node U to node V means U should preceed V in the
-                // topological sort, that is, V has a dependency on U and
-                // U must be installed before V.
-                PackageNode other = _pkgDirToNode.ContainsKey(depPkgDir) ?
-                    _pkgDirToNode[depPkgDir] :
-                    new PackageNode(depPkgDir);
-                other.Deps.Add(this);
+                PkgDir = pkgDir;
+
+                HashSet<string> depPkgDirs = GetDepPkgDirs(pkgDir, "Runtime");
+                depPkgDirs.UnionWith(GetDepPkgDirs(pkgDir, "Editor"));
+
+                Deps = new HashSet<PackageNode>();
+                foreach (string depPkgDir in depPkgDirs)
+                {
+                    // Do not get into a cycle if "Editor" depends on "Runtime".
+                    if (depPkgDir == pkgDir)
+                    {
+                        continue;
+                    }
+
+                    // An edge from node U to node V means U should preceed V in the
+                    // topological sort, that is, V has a dependency on U and
+                    // U must be installed before V.
+                    PackageNode other = _pkgDirToNode.ContainsKey(depPkgDir) ?
+                        _pkgDirToNode[depPkgDir] :
+                        new PackageNode(depPkgDir);
+                    other.Deps.Add(this);
+                }
             }
         }
 
