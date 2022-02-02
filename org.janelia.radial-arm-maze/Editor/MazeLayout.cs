@@ -242,7 +242,17 @@ namespace Janelia
             ground.transform.position = _bbox.center - new Vector3(0, _spec.thickness / 2, 0);
             ground.transform.localScale = new Vector3(_bbox.size.x, _spec.thickness, _bbox.size.z);
 
-            CreateMaterial(ground, "#66583D");
+            string color = "#ffffff";
+            string texturePath = "";
+            if (_spec.groundColorOrTexture.StartsWith("#"))
+            {
+                color = _spec.groundColorOrTexture;
+            }
+            else
+            {
+                texturePath = _spec.groundColorOrTexture;
+            }
+            CreateMaterial(ground, color, texturePath);
         }
 
         private void CreateMaterial(GameObject obj, string colorStr, string texturePath = "")
@@ -265,13 +275,52 @@ namespace Janelia
 
             if (texturePath.Length > 0)
             {
-                Texture2D texture = AssetDatabase.LoadAssetAtPath(texturePath, typeof(Texture2D)) as Texture2D;
+                // Copy the texture into the "Textures" directory under "Assets.
+                // First, make sure that directory exsists.
+                string projectDir = System.IO.Directory.GetCurrentDirectory();
+                string texturesDir = Path.Combine(projectDir, "Assets", "Textures");
+                EnsureDirectory(texturesDir);
+
+                // Next, make sure the texture file to be copied can be found.
+                string jsonDir = Path.GetDirectoryName(_jsonPath);
+                string texturePathSrc = Path.Combine(jsonDir, texturePath);
+                if (! File.Exists(texturePathSrc))
+                {
+                    Debug.Log("Cannot find texture file '" + texturePathSrc + "'");
+                    return;
+                }
+
+                // Then delete any existing texture asset of the same name.
+                string textureFile = Path.GetFileName(texturePath);
+                path = "Assets/Textures/" + textureFile;
+                AssetDatabase.DeleteAsset(path);
+
+                // Next copy the texture file into the "Textures" subdirectory.
+                string texturePathDst = Path.Combine(texturesDir, textureFile);
+                try
+                {
+                    File.Copy(texturePathSrc, texturePathDst);
+                }
+                catch (System.Exception)
+                {
+                    Debug.Log("Cannot copy texture '" + texturePath + "' to Assets/Textures");
+                    return;
+                }
+
+                // Finally update the asset database, which seems to be necessary after the `File.Copy`.
+                AssetDatabase.Refresh();
+
+                Texture2D texture = AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) as Texture2D;
                 if (texture != null)
                 {
                     mat.SetTexture("_MainTex", texture);
 
                     // Flip the texture vertically.
                     mat.SetTextureScale("_MainTex", new Vector2(1, -1));
+                }
+                else
+                {
+                    Debug.Log("Cannot load texture '" + path + "'");
                 }
             }
         }
@@ -287,6 +336,21 @@ namespace Janelia
 
             // Reduces Mach banding.
             light.shadowResolution = LightShadowResolution.VeryHigh;
+        }
+
+        private void EnsureDirectory(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.CreateDirectory(path);
+                }
+                catch (Exception e)
+                {
+                    Debug.Log("Cannot create " + path + ": " + e.ToString());
+                }
+            }
         }
 
         [Serializable]
@@ -306,6 +370,7 @@ namespace Janelia
             public float height;
             public float thickness = 0.3f;
             public List<SpecArm> arms = new List<SpecArm>();
+            public string groundColorOrTexture = "#66583D";
         }
 
         private string _jsonPath;
