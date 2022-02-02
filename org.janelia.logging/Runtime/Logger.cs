@@ -34,6 +34,8 @@ namespace Janelia
     // post-process build function to create the launcher script.
     public class Logger
     {
+        public static bool enable = true;
+
         public static int maxLogEntries = 4096;
 
         public static string logDirectory
@@ -77,7 +79,7 @@ namespace Janelia
         // a class derived from `Entry`, adding the data to be logged.
         public static void Log(Entry entry)
         {
-            if (_doLogging)
+            if (enable)
             {
                 InitIfNeeded();
 
@@ -96,6 +98,10 @@ namespace Janelia
                 entry.timeSecsAfterSplash = entry.timeSecs - _timeSecsSplashFinished;
                 entry.frameAfterSplash = entry.frame - _frameSplashFinished;
 
+                // This `JsonUtility.ToJson` function is supposed to be the most efficient way to produce
+                // a JSON string in Unity, but it does do a heap allocation (i.e., GC memory) for the string
+                // it returns.  Thus logging will eventually trigger garbage collection, but in practice,
+                // profiling indicates the time involved seems to be only a millisecond or so.
                 string s = JsonUtility.ToJson(entry, true);
                 _entries[_iEntries++] = s;
                 // Subtract 1 because `Write()` logs one item of its own.
@@ -110,7 +116,7 @@ namespace Janelia
         // then reset, so those entries will not be written again.
         public static void Write()
         {
-            if (_doLogging && !_writing)
+            if (enable && !_writing)
             {
                 _writing = true;
 
@@ -243,12 +249,18 @@ namespace Janelia
                 return;
             }
 
+            string[] args = System.Environment.GetCommandLineArgs();
+            if (args.Contains("-noLog") || args.Contains("-nolog"))
+            {
+                enable = false;
+            }
+
             LogOptions options = LogUtilities.GetOptions();
             if (options != null)
             {
-                _doLogging = options.EnableLogging;
+                enable = options.EnableLogging;
             }
-            if (_doLogging)
+            if (enable)
             {
                 Debug.Log("Logger: starting");
 
@@ -272,8 +284,8 @@ namespace Janelia
 
                 Application.quitting += ApplicationQuitting;
 
-                string args = String.Join(" ", System.Environment.GetCommandLineArgs());
-                Debug.Log("Logger: executable run as: " + args);
+                string argsStr = String.Join(" ", System.Environment.GetCommandLineArgs());
+                Debug.Log("Logger: executable run as: " + argsStr);
 
                 AddLogHeader();
             }
@@ -311,7 +323,7 @@ namespace Janelia
 
         private static void ApplicationQuitting()
         {
-            if (_doLogging)
+            if (enable)
             {
                 Debug.Log("Logger: stopping");
 
@@ -564,8 +576,6 @@ namespace Janelia
                 }
             }
         }
-
-        private static bool _doLogging = true;
 
         private static bool _splashIsFinished = false;
         private static float _timeSecsSplashFinished;
