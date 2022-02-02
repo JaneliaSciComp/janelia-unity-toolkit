@@ -69,12 +69,13 @@ Installing the package causes the Unity editor's `Window` menu to have the `Layo
 
 A JSON spec file can include the following elements:
 
-* `"height"` [required]: the height (`Y` scale) of all the walls.
-* `"thickness"` [optional]: the thickness of all the walls and the floor.  Should not be 0 to avoid slight rendering artifacts in Unity, light "leaking" under and between walls.
-* `"arms"` [required]: an array of arm specifications, each of which has the following form:
-  * `"angleDegs"` [required]: the angle of the arm, in degrees, with 0 pointing along the positive `Z` axis.
-  * `"length"` [required]: the length of the arm, from the central point (the origin).
-  * `"width"` [required]: the width of the arm.  (_Not yet fully supported: currently, all arms are given the maximum specified width._)
-  * `"color"` [optional]: defaults to white (`#ffffff`).
-  * `"endTexture"` [optional]: the name of a texture (e.g., a PNG image file) to put on the end wall of the arm.  Must include the path to where the texture file exists in the Unity project (e.g., `"Assets/Textures/file.png"`).
-  * `"limitTranslationTo"` [optional]: a keyword specifying a way to limit the translation of an agent within this arm.  Currently, the only choice is `"limitTranslationTo": "forward"`, which prevents any translation back towards the start of the arm.  The implementation involves adding to the Unity scene a box object whose name starts with `LimitTranslationToForward_"`.  The box, which fills the arm, is invisible unless its `MeshRenderer` is enabled (e.g., in the Unity editor's Inspector).  Disabling the object (e.g., unchecking it in the Inspector, so it appears italicized in the Unity editor's Hierarchy) turns off the limiting effects.
+* `"height"` [required]: The height (`Y` scale) of all the walls.
+* `"thickness"` [optional]: The thickness of all the walls and the floor.  Should not be 0 to avoid slight rendering artifacts in Unity, light "leaking" under and between walls.
+* `"arms"` [required]: An array of arm specifications, each of which has the following form:
+  * `"angleDegs"` [required]: The angle of the arm, in degrees, with 0 pointing along the positive `Z` axis.
+  * `"length"` [required]: The length of the arm, from the central point (the origin).
+  * `"width"` [required]: The width of the arm.  (_Not yet fully supported: currently, all arms are given the maximum specified width._)
+  * `"color"` [optional]: Defaults to white (`#ffffff`).
+  * `"endTexture"` [optional]: The name of a texture (e.g., a PNG image file) to put on the end wall of the arm.  Must include the path to where the texture file exists, relative to the spec file.
+  * `"groundTextureOrColor"` [optional]: A string that is either a color (e.g, `"#66583D"` for brown) or a the name of a texture (e.g., a PNG image file), to be applied to the ground plane.  A texture name must include the path to where the texture file exists, relative to the spec file.
+  * `"limitTranslationTo"` [optional]: A keyword specifying a way to limit the translation of an agent within this arm.  Currently, the only choice is `"limitTranslationTo": "forward"`, which prevents any translation back towards the start of the arm.  The implementation involves adding to the Unity scene a box object whose name starts with `LimitTranslationToForward_"`.  The box, which fills the arm, is invisible unless its `MeshRenderer` is enabled (e.g., in the Unity editor's Inspector).  Disabling the object (e.g., unchecking it in the Inspector, so it appears italicized in the Unity editor's Hierarchy) turns off the limiting effects.
