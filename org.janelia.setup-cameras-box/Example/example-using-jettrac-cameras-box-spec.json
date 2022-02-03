@@ -1,0 +1,33 @@
+{
+  "subjectName": "Subject",
+
+  "side": {
+      "screenWidth": 5.6,
+      "screenHeight": 3.0,
+      "screenBottom": 0.0,
+
+      "cameraX": 0.0,
+      "cameraY": 1.0,
+      "cameraZ": 0.0,
+
+      "displayIDs": [2, 3, 4, 5]
+  },
+
+  "floor": {
+      "screenWidth": 5.6,
+      "screenHeight": 3.0,
+
+      "camera1X": 0.0,
+      "camera1Y": 3.3,
+      "camera1Z": 1.5,
+
+      "camera2X": 0.0,
+      "camera2Y": 3.3,
+      "camera2Z": -1.5,
+
+      "displayIDs": [6, 7]
+  },
+
+  "near" : 0.1,
+  "far": 100
+}

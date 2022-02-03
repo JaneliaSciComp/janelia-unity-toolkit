@@ -1,0 +1,25 @@
+{
+  "height": 5.0,
+  "thickness": 0.25,
+  "arms": [
+    {
+      "angleDegs": 45.0,
+      "length": 24.0,
+      "width": 8.0,
+      "color": "#6A5ACD"
+    },
+    {
+      "angleDegs": 180.0,
+      "length": 24.0,
+      "width": 8.0,
+      "color": "#4682B4"
+    },
+    {
+      "angleDegs": 315.0,
+      "length": 24.0,
+      "width": 8.0,
+      "color": "#008080"
+    }
+  ],
+  "groundColorOrTexture": "photos_2015_09_18_fst_765b3qqmm4v.jpg"
+}
