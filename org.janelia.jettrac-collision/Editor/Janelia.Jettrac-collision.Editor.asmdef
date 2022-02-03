@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Jettrac-collision.Editor",
+    "references": ["Janelia.Jettrac-collision.Runtime", "Janelia.Collision-handling.Runtime", "Janelia.General.Runtime"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

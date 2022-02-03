@@ -1,0 +1,11 @@
+{
+  "name": "Janelia.Jettrac.Tests",
+  "references": [
+    "Janelia.Jettrac.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": []
+}
