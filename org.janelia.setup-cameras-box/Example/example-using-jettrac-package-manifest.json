@@ -1,0 +1,5 @@
+[
+  "org.janelia.setup-cameras-box",
+  "org.janelia.radial-arm-maze",
+  "org.janelia.jettrac-collision"
+]

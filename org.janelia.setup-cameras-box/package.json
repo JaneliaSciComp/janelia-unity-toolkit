@@ -1,0 +1,9 @@
+{
+    "name": "org.janelia.setup-cameras-box",
+    "displayName": "Janelia Setup Cameras Box",
+    "version": "0.1.0",
+    "unity": "2018.3",
+    "description": "Set up VR cameras in four-sided box, with an optional projected floor.",
+    "keywords": ["VR"],
+    "dependencies": {}
+}
