@@ -46,16 +46,44 @@ namespace Janelia
         // rotation) for this subject object.
         public interface IKinematicUpdater
         {
-            // With C# 8.0, interfaces will be able to have default implementations.  But
-            // as of 2020, Unity is not using C# 8.0.  So classes implementing this interface
-            // must have `Start()` and `Update()` methods even if they do nothing.
+#if UNITY_2021_2_OR_NEWER
+            void Start() {}
+            void Update() {}
+
+            // These values are relative (displacements).
+            Vector3? Translation() => null;
+            Vector3? RotationDegrees() => null;
+#else
+            // With C# 8.0, interfaces can have default implementations.  But through Unity
+            // version 2021.2, Unity's C# does not support them.  So classes implementing this interface
+            // must implement all the interface methods (i.e., `Start`, `Update`, `Translation`,
+            // `Rotation`) even if they do nothing.
+
             void Start();
             void Update();
 
             // These values are relative (displacements).
             Vector3? Translation();
             Vector3? RotationDegrees();
+#endif
         };
+
+        // A base class for code to augment the logfile playback with changes other than
+        // those implemented by the standard `KinematicSubject`.
+
+        public abstract class PlaybackAugmenter
+        {
+            public PlaybackAugmenter() => _playbackAugmenters.Add(this);
+
+            public abstract void LoadLog(string playbackLogFilePath);
+
+            public abstract void AugmentPlayback(int frameCount, Transform transform);
+        }
+
+        public bool PlaybackActive
+        {
+            get => _playbackActive;
+        }
 
         // The object that provides the kinematic motion, to be set by the constructor of
         // the subclass of this class.
@@ -89,6 +117,15 @@ namespace Janelia
         public bool limitTranslation = true;
 
         public bool debug = false;
+
+        public void Awake()
+        {
+            string[] args = System.Environment.GetCommandLineArgs();
+            if (args.Contains("-playback"))
+            {
+                Logger.enable = false;
+            }
+        }
 
         public void Start()
         {
@@ -190,9 +227,11 @@ namespace Janelia
 
                     transform.position = _currentTransformation.worldPosition;
                     transform.eulerAngles = _currentTransformation.worldRotationDegs;
+                }
 
-                    addToLog = true;
-                    _framesBeingStill = 0;
+                for (int i = 0; i < _playbackAugmenters.Count; ++i)
+                {
+                    _playbackAugmenters[i].AugmentPlayback(Time.frameCount, transform);
                 }
             }
 
@@ -345,6 +384,11 @@ namespace Janelia
                 _playbackLogEntries = Logger.Read<Transformation>(_playbackLogFile);
                 _playbackLogEntries = Filter(_playbackLogEntries);
 
+                for (int i = 0; i < _playbackAugmenters.Count; ++i)
+                {
+                    _playbackAugmenters[i].LoadLog(_playbackLogFile);
+                }
+
                 _playbackLogIndex = 0;
                 _playbackStartFrame = Time.frameCount;
                 _playbackActive = true;
@@ -377,9 +421,12 @@ namespace Janelia
                     }
                 }
             }
-            _playbackActive = false;
+
+            // End the session when the playback ends.
+            Application.Quit();
             return null;
         }
+
 
         private KinematicCollisionHandler _collisionHandler;
 
@@ -430,5 +477,7 @@ namespace Janelia
         private int _playbackStartFrame;
 
         private List<GameObject> _translationLimiters = new List<GameObject>();
+
+        internal static List<PlaybackAugmenter> _playbackAugmenters = new List<PlaybackAugmenter>();
     }
 }

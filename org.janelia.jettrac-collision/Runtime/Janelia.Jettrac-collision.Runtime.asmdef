@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Jettrac-collision.Runtime",
+    "references": ["Janelia.Collision-handling.Runtime", "Janelia.Jettrac.Runtime", "Janelia.Logging.Runtime"],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
