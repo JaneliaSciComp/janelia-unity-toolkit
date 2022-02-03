@@ -18,7 +18,7 @@ Once the packages are installed, the host computer should recognize the jETTrac 
 
 To use the output of the jETTrac ball tracker in a Unity application, there must be a calibration scale to map the ball tracker's native measurements (the raw pixel displacements in the `JetTracParser.BallMessage` fields `x1`, `y1`, `x2`, `y2`) to Unity distance units.  By default, the code has a calibration scale that should be about right for a ball with 20 cm diameter and Unity units where 1 unit is 10 cm (0.1 m).  These Unity units seem to work better with jETTrac than the Unity default of 1 unit being 1 m.
 
-To recalibrate the ball tracker, choose the `jETTrac Manual Calibration` menu item from the Unity editor's `Window/jETTrac` menu.  Enter the ball diameter (in Unity units) and press the `Start calibration` button.  Then manually rotate the ball once around as smoothly and precisely as possible.  Once set, the calibration scale is stored (i.e., in the Windows registry) and reused for all future sessions.
+To recalibrate the ball tracker, choose the "jETTrac Manual Calibration" menu item from the Unity editor's "Window/jETTrac" menu.  Enter the ball diameter (in Unity units) and press the "Start calibration" button.  Then manually rotate the ball once around as smoothly and precisely as possible.  Once set, the calibration scale is stored (i.e., in the Windows registry) and reused for all future sessions.
 
 The jETTrac head encoder measures rotation in degrees, and needs no calibration.
 
