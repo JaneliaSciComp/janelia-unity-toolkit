@@ -19,6 +19,8 @@
 // 2. shared data stored in resources
 // Uncomment one of the following definitions to choose the persistence method.
 
+#if UNITY_EDITOR
+
 // #define PERSIST_AS_EDITOR_PREFS
 #define PERSIST_AS_RESOURCE
 
@@ -628,3 +630,5 @@ namespace Janelia
         }
     }
 }
+
+#endif
