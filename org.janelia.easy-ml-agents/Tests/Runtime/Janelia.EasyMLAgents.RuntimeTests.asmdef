@@ -1,0 +1,11 @@
+{
+  "name": "Janelia.Easy-ml-agents.RuntimeTests",
+  "references": [
+    "Janelia.Easy-ml-agents.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": []
+}

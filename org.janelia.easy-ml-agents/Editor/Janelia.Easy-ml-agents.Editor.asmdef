@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Easy-ml-agents.Editor",
+    "references": ["Janelia.Easy-ml-agents.Runtime", "Unity.ML-Agents"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

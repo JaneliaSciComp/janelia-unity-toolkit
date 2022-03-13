@@ -1,0 +1,13 @@
+{
+  "name": "Janelia.Easy-ml-agents.EditorTests",
+  "references": [
+    "Janelia.Easy-ml-agents.Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
