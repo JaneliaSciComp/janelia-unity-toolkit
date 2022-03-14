@@ -100,12 +100,21 @@ namespace Janelia
                     arena = arenaObject.AddComponent(arenaType) as EasyMLArena;
                 }
 
-                GameObject agentObject = EasyMLRuntimeUtils.FindChildWithTag(arenaObject, EasyMLAgent.TAG_AGENT);
+                GameObject agentObject = null;
+                try
+                {
+                    agentObject = EasyMLRuntimeUtils.FindChildWithTag(arenaObject, EasyMLAgent.TAG_AGENT);
+                }
+                catch (Exception)
+                {
+                    // The tag has not been created yet.
+                }
                 if (agentObject == null)
                 {
                     // Create a new agent only if none exist already.
                     agentObject = new GameObject();
                 }
+
                 agentObject.transform.parent = arenaObject.transform;
                 EasyMLAgent agent = agentObject.GetComponent(agentType) as EasyMLAgent;
                 if (agent == null)
