@@ -125,6 +125,14 @@ Use the standard ML-Agents Python script, `mlagents-learn`, to start training.  
 
 If training indicates that the code needs to be refined, the next round of training can begin immediately after changes to the following methods: `PlaceRandomly`, `OnActionReceived`, `Heuristic`, `CollectObservations`, and `OnCollisionEnter`.  Changes to the `Setup` methods or the [properties](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties) mentioned above take effect only after the "GameObject/Create Easy ML Arena and Agent" menu item is chosen again.
 
+## Training Performance
+
+The simplest approach to training is to use the Unity editor, but that approach is also the slowest.  Training goes many times faster using a stand-alone executable (built in the editor), especially if it can be run with no display (`--no-graphics`, which is possible when the observations do not involve any rendering).
+
+The ML-Agents documentation gives a good description of the approach, which it call ["Using an environment executable"](https://github.com/Unity-Technologies/ml-agents/blob/main/docs/Learning-Environment-Executable.md).
+
+Although ML-Agents supports [training with multiple instances of the executable](https://github.com/Unity-Technologies/ml-agents/blob/main/docs/Training-ML-Agents.md#training-using-concurrent-unity-instances), using the `--num_envs=`_n_ argument to `mlagents-learn`, it seems to be much faster to use one executable that contains _n_ instances of the arena.
+
 ## Testing
 
 To run this package's unit tests, use the following steps:
