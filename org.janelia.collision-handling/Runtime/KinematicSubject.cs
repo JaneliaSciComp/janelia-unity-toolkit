@@ -33,6 +33,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 #endif
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Janelia
 {
@@ -150,7 +151,7 @@ namespace Janelia
 
             if (ConfigurePlayback())
             {
-                StartPlayback();
+                _playbackRequested = true;
             }
 
 #if LOG_ALL_MESHES
@@ -171,6 +172,15 @@ namespace Janelia
 
             _currentTransformation.Clear();
             bool addToLog = false;
+
+            if (_playbackRequested)
+            {
+                if (SplashScreen.isFinished)
+                {
+                    _playbackRequested = false;
+                    StartPlayback();
+                }
+            }
 
             if (!_playbackActive)
             {
@@ -224,6 +234,7 @@ namespace Janelia
                 if (transformation != null)
                 {
                     _currentTransformation.Set(transformation);
+                    SaveFrames.SetFrame((int)transformation.frame);
 
                     transform.position = _currentTransformation.worldPosition;
                     transform.eulerAngles = _currentTransformation.worldRotationDegs;
@@ -391,6 +402,7 @@ namespace Janelia
 
                 _playbackLogIndex = 0;
                 _playbackStartFrame = Time.frameCount;
+                Debug.Log("Playing back start frame " + Time.frameCount);
                 _playbackActive = true;
             }
         }
@@ -407,13 +419,13 @@ namespace Janelia
                 int adjustedFrame = Time.frameCount - _playbackStartFrame;
                 while (_playbackLogIndex < _playbackLogEntries.Count)
                 {
-                    if (_playbackLogEntries[_playbackLogIndex].frame < adjustedFrame)
+                    if (_playbackLogEntries[_playbackLogIndex].frameAfterSplash < adjustedFrame)
                     {
                         _playbackLogIndex++;
                     }
                     else
                     {
-                        if (_playbackLogEntries[_playbackLogIndex].frame == adjustedFrame)
+                        if (_playbackLogEntries[_playbackLogIndex].frameAfterSplash == adjustedFrame)
                         {
                             return _playbackLogEntries[_playbackLogIndex];
                         }
@@ -470,6 +482,7 @@ namespace Janelia
         private int _framesSinceLogWrite = 0;
         private int _framesBeingStill = 0;
 
+        private bool _playbackRequested = false;
         private bool _playbackActive = false;
         private string _playbackLogFile = "";
         private List<Transformation> _playbackLogEntries;
