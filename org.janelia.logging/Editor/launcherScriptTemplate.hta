@@ -26,6 +26,10 @@
         <input type='text' id='id_logFilenameExtra' size='45'>
       </div>
       <div>
+        <label for='id_checkboxSaveFrames'>Save frames in the log directory</label>
+        <input type='checkbox' id='id_checkboxSaveFrames' style='width:40px; height:40px;'>
+      </div>
+      <div>
         <input type='submit' value='Continue' />
         <input type='button' value='Cancel' onClick='self.close()' />
       </div>
@@ -54,6 +58,11 @@
           var value = filenameExtra.value.replace(' ', '');
           args += " -logFilenameExtra " + value;
         }
+        var checkboxSaveFrames = document.getElementById('id_checkboxSaveFrames');
+        if (checkboxSaveFrames.checked) {
+          args += " -saveFrames ";
+        }
+
         var sh = new ActiveXObject('Shell.Application');
         var exe = 'STANDALONE_PATH';
         sh.ShellExecute(exe, args, '', 'open', '1');
