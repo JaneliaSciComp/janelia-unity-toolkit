@@ -4,12 +4,13 @@
 
 This package (org.janelia.logging) adds functionality for logging what happens during application execution.  The log is structured text in the [JSON](https://en.wikipedia.org/wiki/JSON) format, and the log file is stored in the same [place where Unity stores its own "player" log](https://docs.unity3d.com/Manual/LogFiles.html) (which includes, for example, the output of any `Debug.Log()` calls).  Each entry in the log includes details of when the entry was added: the current frame number (starting at 1) and the elapsed time (in seconds) since the application began running.  Logging starts automatically in any application using this package, and the log is written to the log file automatically when the application finishes or if the log reaches a maximum size.
 
-Any script included in the application can add custom entries to the log.  See the section below for details.  For an example of adding to the log and reading from the log file, see the `KinematicSubject` object in the package [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling).
+Any script included in the application can add custom entries to the log.  See the section below for details.  For an example of adding to the log and reading from the log file, see the [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in the package [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling).
 
 This package also creates a _launcher script_, which first presents a dialog box for configuring the application and then runs the application when the user closes the dialog. The launcher script is created in the main project directory and its name has the suffix "Launcher.hta".  The dialog appears on the "console" display (i.e., the display where the script is run, not the external displays where the application's content appear).  By default, the dialog contains a text input for adding "header notes" to be saved at the beginning of the log.  Optionally, other packages can add more user interface to the launcher with the `Logger.AddLauncherRadioButtonPlugin` and `Logger.AddLauncherOtherPlugin` functions.
 
-There is an example of this plugin usage in the [Janelia.ExampleKinematicSubject](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) class from the [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package.  The launcher script is implemented as a Microsoft ["HTML Application"](https://en.wikipedia.org/wiki/HTML_Application) ("HTA") using JScript (Javascript) and HTML.  The advantage is that this implementation runs on any modern Windows system without the installation of any additional software.  (If double-clicking on the launcher script raises a dialog asking how to run the script, choose "Microsoft (R) HTML Application host" and check the box to use the choice in the future.)  The disadvantage is that at least currently, there is no implementation on other platforms.
+There is an example of this plugin usage in the [`ExampleKinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/ExampleKinematicSubject.cs) class from the [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package.  The launcher script is implemented as a Microsoft ["HTML Application"](https://en.wikipedia.org/wiki/HTML_Application) ("HTA") using JScript (Javascript) and HTML.  The advantage is that this implementation runs on any modern Windows system without the installation of any additional software.  (If double-clicking on the launcher script raises a dialog asking how to run the script, choose "Microsoft (R) HTML Application host" and check the box to use the choice in the future.)  The disadvantage is that at least currently, there is no implementation on other platforms.
 
+The launcher dialog also has a checkbox to enable the saving of rendered frames.  The frames for each session are stored in their own subdirectory of the log directory.  Saving frames reduces performance, so it is most useful during the playback of the log file from an earlier session, as implemented by the [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling).
 
 ## Installation
 
@@ -81,9 +82,13 @@ public class Example : MonoBehaviour
 ]
 ```
 
-### Janelia.LogOptions
+### `Janelia.LogOptions`
 
 By default, installing this package makes logging run automatically, without the need for adding any script to any Unity `GameObject`.  Optionally, the `Janelia.LogOptions` component can be added to a `GameObject` to give additional controls over logging:
 
 - `EnableLogging` [default: `true`]: when `false`, all logging is disabled.
 - `LogTotalMemory` [defaut: `false`]: when `true`, the value of `System.GC.GetTotalMemory(false)` is logged at each frame.
+
+### `Janelia.SaveFrames`
+
+This class adds the functionality for saving rendered frames.  It is a static class, so there is no need to manually add it to a scene.  It initiates a [coroutine](https://docs.unity3d.com/Manual/Coroutines.html) for saving the frames when a stand-alone executable is run with the `-saveFrames` commandline option.
