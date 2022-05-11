@@ -2,7 +2,9 @@
 
 ## Summary
 
-This package (org.janelia.package-installer) overcomes a weakness of the standard [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html): for a local package installed from local files (e.g., from a cloned Github repository), the packages it depends on must be installed manually in the correct order.  This package adds a "Install Package and Dependencies" item in the Unity editor's "Window" menu, which launches a user interface to install the dependencies of a package along with the package, or a list of packages from a "manifest" file.
+This package (org.janelia.package-installer) overcomes a weakness of the standard [Unity Package Manager user interface](https://docs.unity3d.com/Manual/upm-ui.html): for a local package installed from local files (e.g., from a cloned Github repository), the packages it depends on must be installed manually in the correct order.  This package adds a "Install Package and Dependencies" item in the Unity editor's "Window" menu, which launches a user interface to install the dependencies of a package along with the package, or a list of packages from a "manifest" file.
+
+Another feature of this package is a class that scripts can use to programmatically load local packages.  This class, `Janelia.AssetPackageImporter`, hides the complexities loading packages with the standard  [`AssetDatabase`](https://docs.unity3d.com/ScriptReference/AssetDatabase-importPackageStarted.html) class.  This feature is most useful for [local asset packages](https://docs.unity3d.com/Manual/AssetPackages.html) stored in local `.unitypackage` files.
 
 ## Installation
 
@@ -10,7 +12,7 @@ The [installation instructions in the main repository](https://github.com/Janeli
 
 ## Details
 
-This package also can install multiple packages (and their dependencies) at once.  After selecting "Install Package and Dependencies" from the Unity editor's "Window" menu, use the file chooser that appears to choose a "manifest" file listing multiple packages in a [JSON](https://en.wikipedia.org/wiki/JSON) array.  An example `manifest.json` file might be:
+The user interface added by this package can install multiple packages (and their dependencies) at once.  After selecting "Install Package and Dependencies" from the Unity editor's "Window" menu, use the file chooser that appears to choose a "manifest" file listing multiple packages in a [JSON](https://en.wikipedia.org/wiki/JSON) array.  An example `manifest.json` file might be:
 ```
 [
     "org.janelia.general",
