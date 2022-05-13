@@ -1,0 +1,69 @@
+{
+  "xWidth10cm": 20.0,
+  "zWidth10cm": 20.0,
+  "xNumClutterCells": 30,
+  "zNumClutterCells": 30,
+  "clutterJitterFraction": 0.35,
+  "clutterItems": [
+    {
+      "lods": [
+        {
+            "pkgFilePath": "../Plants/Daisy/Color/daisyA_noFlower_u10cm.unitypackage",
+            "minScreenHeight": 0.4
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Color/daisyA_noFlower_u10cm_tri_decim05.unitypackage",
+            "minScreenHeight": 0.3
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Color/daisyA_noFlower_u10cm_tri_decim025.unitypackage",
+            "minScreenHeight": 0.2
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Color/daisyA_noFlower_u10cm_tri_decim01.unitypackage",
+            "minScreenHeight": 0.15
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Color/daisyA_noFlower_u10cm_tri_decim005.unitypackage",
+            "minScreenHeight": 0.01
+        }
+      ],
+      "probability": 0.3
+    },
+    {
+      "lods": [
+        {
+
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm.unitypackage",
+            "minScreenHeight": 0.45
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm_tri_decim05.unitypackage",
+            "minScreenHeight": 0.35
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm_tri_decim025.unitypackage",
+            "minScreenHeight": 0.25
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm_tri_decim01.unitypackage",
+            "minScreenHeight": 0.175
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm_tri_decim005.unitypackage",
+            "minScreenHeight": 0.1
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Color/grass_clumpA_u10cm_tri_decim001.unitypackage",
+            "minScreenHeight": 0.01
+        }
+      ],
+      "probability": 0.3
+    }
+  ],
+  "groundColor": "#806230",
+  "groundGlossiness": 0,
+  "groundTextureFilePath" : "exampleGround_whiteNoise_verydark.jpg",
+  "ambientColorHDR": [0.211, 0.227, 0.258],
+  "ambientIntensity": 0.8
+}

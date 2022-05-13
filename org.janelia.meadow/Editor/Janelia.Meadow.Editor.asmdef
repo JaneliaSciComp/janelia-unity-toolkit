@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Meadow.Editor",
+    "references": ["Janelia.Package-installer.Editor"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
