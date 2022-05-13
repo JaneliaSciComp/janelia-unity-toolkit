@@ -14,7 +14,7 @@ Examples of the functionality supported in this toolkit include:
 * communication with [Univeral Robots](https://www.universal-robots.com) devices, like the [UR10e](https://www.universal-robots.com/products/ur10-robot/) arm, using the [Real Time Data Exchange (RTDE)](https://www.universal-robots.com/articles/ur/interface-communication/real-time-data-exchange-rtde-guide/) interface ([org.janelia.ur](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.ur))
 * communication over sockets and serial ports without triggering excess garbage collection ([org.janelia.io](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.io))
 * background images ([org.janelia.background](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.background))
-* generation of simple maze environments ([org.janelia.radial-arm-maze](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.radial-arm-maze))
+* generation of simple maze environments ([org.janelia.radial-arm-maze](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.radial-arm-maze)) and meadow environments ([org.janelia.meadow](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.meadow))
 * simplified setup of reinforcement learning with [Unity ML-Agents](https://github.com/Unity-Technologies/ml-agents) ([org.janelia.easy-ml-agents](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.easy-ml-agents))
 * other general capabilities, like making a standalone executable end automatically after running for a specified period ([org.janelia.general](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.general))
 

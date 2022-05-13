@@ -1,0 +1,39 @@
+{
+  "xWidth10cm": 20.0,
+  "zWidth10cm": 20.0,
+  "xNumClutterCells": 30,
+  "zNumClutterCells": 30,
+  "clutterJitterFraction": 0.35,
+  "clutterItems": [
+    {
+      "lods": [
+        {
+            "pkgFilePath": "../Plants/Daisy/Grayscale/daisyA_noFlower_grayscale_u10cm.unitypackage",
+            "minScreenHeight": 0.4
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Grayscale/daisyA_noFlower_grayscale_u10cm_tri_decim05.unitypackage",
+            "minScreenHeight": 0.3
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Grayscale/daisyA_noFlower_grayscale_u10cm_tri_decim025.unitypackage",
+            "minScreenHeight": 0.2
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Grayscale/daisyA_noFlower_grayscale_u10cm_tri_decim01.unitypackage",
+            "minScreenHeight": 0.15
+        },
+        {
+            "pkgFilePath": "../Plants/Daisy/Grayscale/daisyA_noFlower_grayscale_u10cm_tri_decim005.unitypackage",
+            "minScreenHeight": 0.07
+        }
+      ],
+      "probability": 0.5
+    }
+  ],
+  "groundColor": "#202020",
+  "groundGlossiness": 0,
+  "groundTextureFilePath" : "exampleGround_whiteNoise_verydark.jpg",
+  "ambientColorHDR": [0.211, 0.227, 0.258],
+  "ambientIntensity": 0.8
+}

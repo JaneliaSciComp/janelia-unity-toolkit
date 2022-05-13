@@ -1,0 +1,43 @@
+{
+  "xWidth10cm": 20.0,
+  "zWidth10cm": 20.0,
+  "xNumClutterCells": 30,
+  "zNumClutterCells": 30,
+  "clutterJitterFraction": 0.35,
+  "clutterItems": [
+    {
+      "lods": [
+        {
+
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm.unitypackage",
+            "minScreenHeight": 0.45
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm_tri_decim05.unitypackage",
+            "minScreenHeight": 0.35
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm_tri_decim025.unitypackage",
+            "minScreenHeight": 0.25
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm_tri_decim01.unitypackage",
+            "minScreenHeight": 0.175
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm_tri_decim005.unitypackage",
+            "minScreenHeight": 0.1
+        },
+        {
+            "pkgFilePath": "../Plants/Grass/Grayscale/grass_clumpA_grayscale_u10cm_tri_decim001.unitypackage",
+            "minScreenHeight": 0.01
+        }
+      ],
+      "probability": 0.5
+    }
+  ],
+  "groundColor": "#080808",
+  "groundGlossiness" : 0.15,
+  "ambientColorHDR": [0.211, 0.227, 0.258],
+  "ambientIntensity": 0.8
+}
