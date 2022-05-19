@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.background",
     "displayName": "Janelia Background Displays",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "unity": "2019.3",
     "description": "Support for background displays.",
     "keywords": ["VR"],

@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.jettrac-collision",
     "displayName": "Collision Handling for Janelia Experimental Technology's Trackball (jETTrac)",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "unity": "2019.2",
     "description": "Code for collision handling with kinematics from the jETTrac tracking system.",
     "keywords": ["VR"],
