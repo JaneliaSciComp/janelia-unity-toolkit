@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.radial-arm-maze",
     "displayName": "Janelia Radial-Arm Maze Generator",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "unity": "2019.2",
     "description": "An editor window for creating radial-arm mazes from JSON specs.",
     "keywords": ["VR"],
