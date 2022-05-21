@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.easy-ml-agents",
     "displayName": "Janelia Easy ML-Agents",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "unity": "2021.2",
     "description": "Simplify the setup of reinforcement learning with ML-Agents (vers. 2).",
     "keywords": ["VR"],

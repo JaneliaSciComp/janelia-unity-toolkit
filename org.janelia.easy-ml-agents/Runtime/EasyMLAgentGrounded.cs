@@ -60,6 +60,15 @@ namespace Janelia
         }
         private float _groundedDynamicFriction = 0.15f;
 
+        /// <summary>
+        /// The direction of the force on the agent for forward movement.
+        /// </summary>
+        public virtual Vector3 MoveForwardDirection
+        {
+            get { return transform.forward; }
+        }
+
+
         // New parameters that appear in the Unity Inspector (to allow interactive
         // modification) and so cannot be properties.
 
@@ -160,9 +169,10 @@ namespace Janelia
             }
 
             float moveChange = actions.ContinuousActions[0];
-            _agentRigidbody.AddForce(moveChange * moveForce * transform.forward);
+            Vector3 dir = (moveChange > 0) ? MoveForwardDirection : transform.forward;
+            _agentRigidbody.AddForce(moveChange * moveForce * dir);
 
-            // Changes to yaw (Y rotation) are smoothed over multiple frames.
+            // Changes to yaw (Y rotation) are smoothed over multi)ple frames.
 
             float yawChange = actions.ContinuousActions[1];
             Vector3 rotationVector = transform.rotation.eulerAngles;
@@ -183,20 +193,20 @@ namespace Janelia
             float moveChange = 0.0f;
             float yawChange = 0.0f;
 
-            if (Input.GetKey(KeyCode.UpArrow))
+            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
                 moveChange = 1.0f;
             }
-            else if (Input.GetKey(KeyCode.DownArrow))
+            else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
                 moveChange = -1.0f;
             }
 
-            if (Input.GetKey(KeyCode.LeftArrow))
+            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
             {
                 yawChange = -1.0f;
             }
-            else if (Input.GetKey(KeyCode.RightArrow))
+            else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
                 yawChange = 1.0f;
             }
