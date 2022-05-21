@@ -13,6 +13,19 @@ namespace Janelia
     public class EasyMLSetupHelper : IEasyMLSetupHelper
     {
         /// <summary>
+        /// Displays an editor dialog.  
+        /// </summary>
+        /// <param name="title">The dialog's title</param>
+        /// <param name="message">The dialog's message</param>
+        /// <param name="ok">The label for the button with the "ok" role</param>
+        /// <param name="cancel">The label for the button with the "cancel" role</param>
+        /// <returns>True if the user presses the ok button</returns>
+        public bool DisplayDialog(string title, string message, string ok = "OK", string cancel = "Cancel")
+        {
+            return EditorUtility.DisplayDialog(title, message, ok, cancel);
+        }
+
+        /// <summary>
         /// Gives the GameObject a polyhedral mesh asset.
         /// </summary>
         /// <param name="assignedTo">The object the mesh is assigned to</param>

@@ -8,6 +8,7 @@ namespace Janelia
     /// </summary>
     public interface IEasyMLSetupHelper
     {
+        public bool DisplayDialog(string title, string message, string ok = "OK", string cancel = "Cancel");
         public void CreateMeshFilter(GameObject assignedTo, string objFilename);
         public void CreateTag(string tag);
         public void CreateColorMaterial(GameObject assignedTo, string color);
