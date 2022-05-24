@@ -100,6 +100,14 @@ namespace Janelia
         }
         private Vector3 _groundedColliderSize;
 
+        public override Vector3 ChildSensorSourceOffset
+        {
+            get { return _groundedChildSensorSourceOffset; }
+            protected set { _groundedChildSensorSourceOffset = value; }
+        }
+        private Vector3 _groundedChildSensorSourceOffset = new Vector3(0, 0.05f, 0);
+
+
         /// <summary>
         /// Called after the Setup function for the arena (the class derived from <see cref="EasyMLArena"/>).
         /// If a derived class needs to override this function for further setup, it should call base.Setup.

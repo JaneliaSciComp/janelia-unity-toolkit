@@ -95,6 +95,16 @@ namespace Janelia
         }
         private List<string> _baseChildSensorForwardDetectableTags = new List<string>() { "Untagged" };
 
+        /// <summary>
+        /// A displacement from the agent's position for the source of the rays.
+        /// </summary>
+        public virtual Vector3 ChildSensorSourceOffset
+        {
+            get { return _baseChildSensorSourceOffset; }
+            protected set { _baseChildSensorSourceOffset = value; }
+        }
+        private Vector3 _baseChildSensorSourceOffset = Vector3.zero;
+
         [Tooltip("Camera showing what the agent sees")]
         public Camera agentCamera;
 
@@ -189,6 +199,8 @@ namespace Janelia
 
                     // TODO: Detect if `ChildSensorDectableTags` is overriden, and issue a warning if not?
                     sensor.DetectableTags = ChildSensorForwardDetectableTags;
+
+                    raySensorObject.transform.localPosition = ChildSensorSourceOffset;
                 }
                 else
                 {
