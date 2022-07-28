@@ -35,10 +35,14 @@ namespace Janelia
         public abstract int VectorObservationSize { get; protected set; }
 
         /// <summary>
-        /// The number of observations added in <see cref="CollectObservations(VectorSensor)"/>
-        /// (and remember that one <see cref="Vector3"/> counts as 3 observations).
+        /// The number of continous actions.
         /// </summary>
         public abstract int VectorActionSize { get; protected set; }
+
+        /// <summary>
+        /// The number of discrete actions.
+        /// </summary>
+        public abstract int[] DiscreteBranchSize { get; protected set; }
 
         /// <summary>
         /// The size of the BoxCollider given to the agent by default.  Note that a value S in 
@@ -167,7 +171,7 @@ namespace Janelia
             {
                 behavior.BehaviorName = BehaviorName;
                 behavior.BrainParameters.VectorObservationSize = VectorObservationSize;
-                behavior.BrainParameters.ActionSpec = new ActionSpec(VectorActionSize);
+                behavior.BrainParameters.ActionSpec = new ActionSpec(VectorActionSize, DiscreteBranchSize);
 
                 const string SENSOR_OBJECT_NAME = "RaysForward";
 

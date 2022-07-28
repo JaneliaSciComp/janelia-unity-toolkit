@@ -107,6 +107,12 @@ namespace Janelia
         }
         private Vector3 _groundedChildSensorSourceOffset = new Vector3(0, 0.05f, 0);
 
+        public virtual string BodyName
+        {
+            get { return _groundedBodyName; }
+            protected set { _groundedBodyName = value; }
+        }
+        private string _groundedBodyName = "Body";
 
         /// <summary>
         /// Called after the Setup function for the arena (the class derived from <see cref="EasyMLArena"/>).
@@ -122,13 +128,13 @@ namespace Janelia
             base.Setup(helper);
             gameObject.name = "AgentGrounded";
 
-            const string BODY_NAME = "Body";
-            Transform bodyTransform = transform.Find(BODY_NAME);
+            
+            Transform bodyTransform = transform.Find(BodyName);
             GameObject body;
             if (bodyTransform == null)
             {
                 body = new GameObject();
-                body.name = BODY_NAME;
+                body.name = BodyName;
                 body.transform.parent = transform;
             }
             else
@@ -221,9 +227,9 @@ namespace Janelia
 
             Debug.Assert(VectorActionSize == 2, "Incorrect vector action size");
 
-            ActionSegment<float> continuouActions = actionsOut.ContinuousActions;
-            continuouActions[0] = moveChange;
-            continuouActions[1] = yawChange;
+            ActionSegment<float> continuousActions = actionsOut.ContinuousActions;
+            continuousActions[0] = moveChange;
+            continuousActions[1] = yawChange;
         }
     }
 }
