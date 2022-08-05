@@ -51,6 +51,13 @@ namespace Janelia
             _lodBias = EditorGUILayout.FloatField("LOD bias (more quality)", _lodBias);
             EditorPrefs.SetFloat(EDITOR_PREF_KEY_LOD_BIAS, _lodBias);
 
+            if (EditorPrefs.HasKey(EDITOR_PREF_KEY_CREATE_GROUND))
+            {
+                _createGround = EditorPrefs.GetBool(EDITOR_PREF_KEY_CREATE_GROUND);
+            }
+            _createGround = EditorGUILayout.Toggle("Create ground plane", _createGround);
+            EditorPrefs.SetBool(EDITOR_PREF_KEY_CREATE_GROUND, _createGround);
+
             if (GUILayout.Button("Create instances"))
             {
                 CreateInstances();
@@ -67,8 +74,11 @@ namespace Janelia
         private void DeleteInstances()
         {
             Delete(CLUTTER_NAME);
-            AssetDatabase.DeleteAsset("Assets/Materials/" + GROUND_NAME + ".mat");
-            Delete(GROUND_NAME);
+            if (_createdGround)
+            {
+                AssetDatabase.DeleteAsset("Assets/Materials/" + GROUND_NAME + ".mat");
+                Delete(GROUND_NAME);
+            }
         }
 
         private static void Delete(string name)
@@ -283,20 +293,30 @@ namespace Janelia
 
         private void CreateGround()
         {
-            _ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            _ground.name = GROUND_NAME;
-            float scale = 0.2f;
-            _ground.transform.localScale = new Vector3(_spec.xWidth10cm * scale, 1, _spec.zWidth10cm * scale);
-
-            if (_spec.groundTextureFilePath.Length > 0)
+            if (_createGround)
             {
-                string jsonDir = Path.GetDirectoryName(_jsonPath);
-                string textureFilePath = Path.Combine(jsonDir, _spec.groundTextureFilePath);
-                MaterialUtils.AddStandardTextured(_ground, textureFilePath, _spec.groundColor, _spec.groundGlossiness);
+                _ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                _ground.name = GROUND_NAME;
+                float scale = 0.2f;
+                _ground.transform.localScale = new Vector3(_spec.xWidth10cm * scale, 1, _spec.zWidth10cm * scale);
+
+                if (_spec.groundTextureFilePath.Length > 0)
+                {
+                    string jsonDir = Path.GetDirectoryName(_jsonPath);
+                    string textureFilePath = Path.Combine(jsonDir, _spec.groundTextureFilePath);
+                    MaterialUtils.AddStandardTextured(_ground, textureFilePath, _spec.groundColor, _spec.groundGlossiness);
+                }
+                else
+                {
+                    MaterialUtils.AddStandard(_ground, _spec.groundColor, _spec.groundGlossiness);
+                }
+
+                // Keep track of whether this script created the ground, to know whether to delete it.
+                _createdGround = true;
             }
             else
             {
-                MaterialUtils.AddStandard(_ground, _spec.groundColor, _spec.groundGlossiness);
+                _createdGround = false;
             }
         }
 
@@ -412,12 +432,16 @@ namespace Janelia
 
         private Spec _spec;
 
-        AssetPackageImporter _importer = new AssetPackageImporter();
+        private AssetPackageImporter _importer = new AssetPackageImporter();
 
         private List<Master> _clutterMasters;
 
         private const string CLUTTER_NAME = "Clutter";
         private GameObject _clutter;
+
+        private bool _createGround = true;
+        private const string EDITOR_PREF_KEY_CREATE_GROUND = "MeadowLayoutCreateGround";
+        private bool _createdGround = false;
 
         private const string GROUND_NAME = "Ground";
         private GameObject _ground;
