@@ -50,11 +50,13 @@ namespace Janelia
         }
 
         public const int JOINT_ANGLE_COUNT = 6;
+        public const int TCP_POSTION_COUNT = 6;
 
         public class Message
         {
             public long timestampMs;
             public double[] jointAngles = new double[JOINT_ANGLE_COUNT];
+            public double[] tcpPositions = new double[TCP_POSTION_COUNT];
         }
 
         public bool GetNextMessage(ref Message message)
@@ -84,6 +86,11 @@ namespace Janelia
                 for (int i = 0; i < JOINT_ANGLE_COUNT; ++i)
                 {
                     offset = Unpack(_replyBytes, ref message.jointAngles[i], offset);
+                }
+
+                for (int i = 0; i < TCP_POSTION_COUNT; ++i)
+                {
+                    offset = Unpack(_replyBytes, ref message.tcpPositions[i], offset);
                 }
 
                 return true;
@@ -170,11 +177,10 @@ namespace Janelia
 
             UInt16 offset = PackRequestStart(RTDE_CONTROL_PACKAGE_SETUP_OUTPUTS, ref _requestBytes);
             // Request output of the actual joint rotations (as opposed to the target rotations).
-            String varNames = "actual_q";
+            String varNames = "actual_q,actual_TCP_pose";
             offset = Pack(updateFrequencyHz, ref _requestBytes, offset);
             offset = Pack(varNames, ref _requestBytes, offset);
             UInt16 requestSize = PackRequestEnd(offset, ref _requestBytes);
-
             _socketClient.Write(_requestBytes, requestSize);
 
             ReadSync(ref _replyBytes);
@@ -186,8 +192,7 @@ namespace Janelia
             offset = Unpack(_replyBytes, ref _recipeId, offset);
             UInt16 varTypesByteCount = (UInt16)(replySize - offset);
             offset = Unpack(_replyBytes, ref varTypes, offset, varTypesByteCount);
-
-            bool ok = ((_recipeId != 0) && (varTypes == "VECTOR6D"));
+            bool ok = ((_recipeId != 0) && (varTypes == "VECTOR6D,VECTOR6D"));
             return ok;
         }
 

@@ -171,7 +171,7 @@ namespace Janelia
         private void ParseJointAngleOffsets()
         {
             string offsetsNoWhite = Regex.Replace(jointAngleOffsets.ToLower(), @"\s+", "");
-            string[] offsets = offsetsNoWhite.Split(",");
+            string[] offsets = offsetsNoWhite.Split(',');
             for (int i = 0; i < RtdeClient.JOINT_ANGLE_COUNT; ++i)
             {
                 if (i < offsets.Length)
@@ -184,7 +184,7 @@ namespace Janelia
         private void ParseJointAngleScales()
         {
             string scalesNoWhite = Regex.Replace(jointAngleScales.ToLower(), @"\s+", "");
-            string[] scales = scalesNoWhite.Split(",");        
+            string[] scales = scalesNoWhite.Split(',');        
             for (int i = 0; i < RtdeClient.JOINT_ANGLE_COUNT; ++i)
             {
                 if (i < scales.Length)
