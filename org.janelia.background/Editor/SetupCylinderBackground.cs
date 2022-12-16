@@ -11,8 +11,8 @@ namespace Janelia
         [MenuItem("Window/Set Up Background Cylinder")]
         public static void ShowWindow()
         {
-            GetWindow(typeof(SetupCylinderBackground));
             InitializeResourceFolders();
+            GetWindow(typeof(SetupCylinderBackground));
         }
 
         public void OnEnable()
