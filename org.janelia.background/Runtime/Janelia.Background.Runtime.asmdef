@@ -1,6 +1,6 @@
 {
     "name": "Janelia.Background.Runtime",
-    "references": ["Janelia.General.Runtime"],
+    "references": ["Janelia.General.Runtime", "Janelia.Logging.Runtime"],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
