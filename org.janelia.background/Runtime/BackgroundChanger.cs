@@ -60,18 +60,7 @@ namespace Janelia
                     foreach (string texturePath in _spec.textures)
                     {
                         string texturePathFull = Path.Combine(jsonDir, texturePath);
-                        Texture2D texture = LoadTexture(texturePathFull);
-                        if (texture != null)
-                        {
-                            _textures.Add(texture);
-                            _texturePaths.Add(texturePathFull);
-                        }
-                        else
-                        {
-                            Debug.LogError("Could not create texture from file '" + texturePath +"'");
-                            _textures.Add(SolidTexture(Color.red));
-                            _texturePaths.Add("error");
-                        }
+                        LoadTextures(texturePathFull);
                     }
                     _separatorTexture = SolidTexture(Color.black);
                     if (_spec.separatorTexture != null)
@@ -87,6 +76,45 @@ namespace Janelia
                 else
                 {
                     Debug.LogError("Could not load material '" + CylinderBackgroundResources.MaterialName + "'");
+                }
+            }
+
+            private void LoadTextures(string pathFull)
+            {
+                if (File.Exists(pathFull))
+                {
+                    AddTexture(pathFull);
+                }
+                else if (Directory.Exists(pathFull))
+                {
+                    string[] supported = new string[] {".bmp", ".gif", ".jpg", ".jpeg", ".png", ".psd", ".tga", ".tif", ".tiff"};
+                    string[] files = Directory.GetFiles(pathFull);
+                    Array.Sort(files);
+                    foreach (string file in files)
+                    {
+                        string ext = Path.GetExtension(file).ToLower();
+                        if (supported.Contains(ext))
+                        {
+                            string texturePathFull = Path.Combine(pathFull, file);
+                            AddTexture(texturePathFull);
+                        }
+                    }
+                }
+            }
+
+            private void AddTexture(string pathFull)
+            {
+                Texture2D texture = LoadTexture(pathFull);
+                if (texture != null)
+                {
+                    _textures.Add(texture);
+                    _texturePaths.Add(pathFull);
+                }
+                else
+                {
+                    Debug.LogError("Could not create texture from file '" + pathFull +"'");
+                    _textures.Add(SolidTexture(Color.red));
+                    _texturePaths.Add("error");
                 }
             }
 
@@ -145,7 +173,7 @@ namespace Janelia
 
                 UseSeparatorTexture();
                 yield return new WaitForSeconds(_spec.separatorDurationSecs);
-                
+
                 Application.Quit();
             }
         }
