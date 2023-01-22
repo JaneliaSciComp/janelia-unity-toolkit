@@ -56,6 +56,8 @@ With this specification, the session will proceed as follows:
 8. the separator texture, `S.png`, will be visible for 5 seconds;
 9. the session will end.
 
+An element in the `"textures"` array can be a path to directory, in which case all the image files in that directory will be used in sorted order (and non-image files will be skipped).
+
 If `"separatorTexture"` is ommitted, a plain black texture will be used as the separator.  The textures may be specified as full paths (e.g., the separator texture in the example, above), or as paths relative to the location of the JSON file itself (e.g., the other textures in the example, above).
 
 Each time the background texture is changed, an entry is written to the log file, with the form of these examples:
