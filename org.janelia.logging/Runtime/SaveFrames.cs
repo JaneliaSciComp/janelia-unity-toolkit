@@ -27,12 +27,25 @@ namespace Janelia
             string[] args = System.Environment.GetCommandLineArgs();
             if (args.Contains("-saveFrames"))
             {
+                int i = Array.IndexOf(args, "-saveFrames");
+                _savingPeriod = 1;
+                if (i + 1 < args.Length)
+                {
+                    int period;
+                    if (int.TryParse(args[i + 1], out period))
+                    {
+                        _savingPeriod = period;
+                    }
+                }
+                Debug.Log("Saving period: " + _savingPeriod.ToString());
+
                 _object = new GameObject("SaveFrames");
                 _object.hideFlags = HideFlags.HideAndDontSave;
                 _object.AddComponent<SaveFramesInternal>();
             }
         }
 
+        private static int _savingPeriod = 1;
         private static GameObject _object;
         internal static string _frame = "";
 
@@ -73,10 +86,11 @@ namespace Janelia
 
             private IEnumerator CaptureFrames()
             {
+                int i = 0;
                 while (_capturing)
                 {
                     yield return new WaitForEndOfFrame();
-                    if (_frame.Length > 0)
+                    if ((_frame.Length > 0) && (i % _savingPeriod == 0))
                     {
                         // A more sophisticated approach would use `ScreenCapture.CaptureScreenshotIntoRenderTexture`
                         // and `AsyncGPUReadback.Request`.  But improving performance on the main thread is not so
@@ -94,6 +108,7 @@ namespace Janelia
                         string pathname = _path + "/" + filename;
                         File.WriteAllBytes(pathname, pngBytes);
                     }
+                    i++;
                 }
             }
 

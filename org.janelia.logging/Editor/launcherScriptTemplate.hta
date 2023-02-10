@@ -28,6 +28,8 @@
       <div>
         <label for='id_checkboxSaveFrames'>Save frames in the log directory</label>
         <input type='checkbox' id='id_checkboxSaveFrames' style='width:40px; height:40px;'>
+        <label for='id_periodSaveFrames'>Save every N frames</label>
+        <input type='number' id='id_periodSaveFrames' size='4' min='1' max='9999' value='1'>
       </div>
       <div>
         <input type='submit' value='Continue' />
@@ -61,6 +63,8 @@
         var checkboxSaveFrames = document.getElementById('id_checkboxSaveFrames');
         if (checkboxSaveFrames.checked) {
           args += " -saveFrames ";
+          var period = document.getElementById('id_periodSaveFrames');
+          args += period.value;
         }
 
         var sh = new ActiveXObject('Shell.Application');
