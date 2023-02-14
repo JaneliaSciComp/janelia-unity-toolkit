@@ -39,6 +39,12 @@ namespace Janelia
                 }
                 Debug.Log("Saving period: " + _savingPeriod.ToString());
 
+                if (args.Contains("-numbers"))
+                {
+                    _showFrameNumbers = true;
+                }
+                Debug.Log("Show frame numbers: " + _showFrameNumbers);
+
                 _object = new GameObject("SaveFrames");
                 _object.hideFlags = HideFlags.HideAndDontSave;
                 _object.AddComponent<SaveFramesInternal>();
@@ -46,6 +52,7 @@ namespace Janelia
         }
 
         private static int _savingPeriod = 1;
+        private static bool _showFrameNumbers = false;
         private static GameObject _object;
         internal static string _frame = "";
 
@@ -65,7 +72,10 @@ namespace Janelia
                     now.ToString("ss");
                 EnsureDirectory(_path);
 
-                SetupTextWidget();
+                if (_showFrameNumbers)
+                {
+                    SetupTextWidget();
+                }
 
                 _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
                 StartCoroutine(CaptureFrames());
@@ -168,7 +178,7 @@ namespace Janelia
             }
 
             private bool _capturing = false;
-            private Text _textWidget;
+            private Text _textWidget = null;
             private Texture2D _texture;
             private string _path;
         }

@@ -30,6 +30,8 @@
         <input type='checkbox' id='id_checkboxSaveFrames' style='width:40px; height:40px;'>
         <label for='id_periodSaveFrames'>Save every N frames</label>
         <input type='number' id='id_periodSaveFrames' size='4' min='1' max='9999' value='1'>
+        <label for='id_checkboxShowFrameNumbers'>Show frame numbers</label>
+        <input type='checkbox' id='id_checkboxShowFrameNumbers' checked style='width:40px; height:40px;'>
       </div>
       <div>
         <input type='submit' value='Continue' />
@@ -65,6 +67,10 @@
           args += " -saveFrames ";
           var period = document.getElementById('id_periodSaveFrames');
           args += period.value;
+          var checkboxShowFrameNumbers = document.getElementById('id_checkboxShowFrameNumbers');
+          if (checkboxShowFrameNumbers.checked) {
+            args += " -numbers"
+          }
         }
 
         var sh = new ActiveXObject('Shell.Application');
