@@ -10,7 +10,13 @@ This package also creates a _launcher script_, which first presents a dialog box
 
 There is an example of this plugin usage in the [`ExampleKinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/ExampleKinematicSubject.cs) class from the [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package.  The launcher script is implemented as a Microsoft ["HTML Application"](https://en.wikipedia.org/wiki/HTML_Application) ("HTA") using JScript (Javascript) and HTML.  The advantage is that this implementation runs on any modern Windows system without the installation of any additional software.  (If double-clicking on the launcher script raises a dialog asking how to run the script, choose "Microsoft (R) HTML Application host" and check the box to use the choice in the future.)  The disadvantage is that at least currently, there is no implementation on other platforms.
 
-The launcher dialog also has a checkbox to enable the saving of rendered frames, with an additional input to specify saving a subset of the frames (every _n_-th).  The frames for each session are stored in their own subdirectory of the log directory.  Saving frames reduces performance, so it is most useful during the playback of the log file from an earlier session, as implemented by the [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling).
+The launcher dialog also has a checkbox to enable the saving of rendered frames, with additional controls for several options:
+* include frame numbers
+* save only every _n_-th frame
+* downsample saved frames to the specified height (and width preserving aspect ratio)
+
+The frames for each session are stored in their own subdirectory of the log directory.  Saving frames reduces performance, so it is most useful during the playback of the log file from an earlier session, as imp
+lemented by the [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling).
 
 ## Installation
 

@@ -28,10 +28,12 @@
       <div>
         <label for='id_checkboxSaveFrames'>Save frames in the log directory</label>
         <input type='checkbox' id='id_checkboxSaveFrames' style='width:40px; height:40px;'>
-        <label for='id_periodSaveFrames'>Save every N frames</label>
-        <input type='number' id='id_periodSaveFrames' size='4' min='1' max='9999' value='1'>
         <label for='id_checkboxShowFrameNumbers'>Show frame numbers</label>
         <input type='checkbox' id='id_checkboxShowFrameNumbers' checked style='width:40px; height:40px;'>
+        <label for='id_periodSaveFrames'>Save every N frames</label>
+        <input type='number' id='id_periodSaveFrames' size='3' min='1' max='9999' value='1'>
+        <label for='id_heightSaveFrames'>Downsampled height</label>
+        <input type='number' id='id_heightSaveFrames' size='3' min='1' max='9999'>
       </div>
       <div>
         <input type='submit' value='Continue' />
@@ -70,6 +72,11 @@
           var checkboxShowFrameNumbers = document.getElementById('id_checkboxShowFrameNumbers');
           if (checkboxShowFrameNumbers.checked) {
             args += " -numbers"
+          }
+          var height = document.getElementById('id_heightSaveFrames');
+          if (height.value > 0) {
+            args += " -height "
+            args += height.value;
           }
         }
 

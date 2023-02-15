@@ -45,6 +45,22 @@ namespace Janelia
                 }
                 Debug.Log("Show frame numbers: " + _showFrameNumbers);
 
+                if (args.Contains("-height")) {
+                    i = Array.IndexOf(args, "-height");
+                    if (i + 1 < args.Length)
+                    {
+                        int height;
+                        if (int.TryParse(args[i + 1], out height))
+                        {
+                            _downsampleHeight = height;
+                        }
+                    }
+                    if (_downsampleHeight > 0)
+                    {
+                        Debug.Log("Downsampled height: " + _downsampleHeight);
+                    }
+                }
+
                 _object = new GameObject("SaveFrames");
                 _object.hideFlags = HideFlags.HideAndDontSave;
                 _object.AddComponent<SaveFramesInternal>();
@@ -53,6 +69,7 @@ namespace Janelia
 
         private static int _savingPeriod = 1;
         private static bool _showFrameNumbers = false;
+        private static int _downsampleHeight = 0;
         private static GameObject _object;
         internal static string _frame = "";
 
@@ -77,7 +94,14 @@ namespace Janelia
                     SetupTextWidget();
                 }
 
-                _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+                _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false); // HEY!! RGB24, false);
+                if (_downsampleHeight > 0)
+                {
+                    float ratio = _downsampleHeight / (float)Screen.height;
+                    int downsampleWidth = Mathf.RoundToInt(ratio * Screen.width);
+                    _textureDownsampled = new Texture2D(downsampleWidth, _downsampleHeight, TextureFormat.ARGB32, false); 
+                }
+
                 StartCoroutine(CaptureFrames());
             }
 
@@ -110,10 +134,29 @@ namespace Janelia
                         _texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
                         _texture.Apply();
 
-                        uint width = (uint)Screen.width;
-                        uint height = (uint)Screen.height;
-                        byte[] pngBytes = ImageConversion.EncodeArrayToPNG(_texture.GetRawTextureData(), _texture.graphicsFormat, width, height);
-
+                        byte[] pngBytes;
+                        if (_downsampleHeight > 0)
+                        {
+                            int width = _textureDownsampled.width;
+                            int height = _textureDownsampled.height;
+                            RenderTexture wasActive = RenderTexture.active;
+                            RenderTexture renderTextureDownsampled = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32);
+                            RenderTexture.active = renderTextureDownsampled;
+                            Graphics.Blit(_texture, renderTextureDownsampled);
+                            _textureDownsampled.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                            _textureDownsampled.Apply();
+                            RenderTexture.active = wasActive;
+                            RenderTexture.ReleaseTemporary(renderTextureDownsampled);
+                            uint widthUint = (uint)_textureDownsampled.width;
+                            uint heightUint = (uint)_textureDownsampled.height;
+                            pngBytes = ImageConversion.EncodeArrayToPNG(_textureDownsampled.GetRawTextureData(), _textureDownsampled.graphicsFormat, widthUint, heightUint);
+                        }
+                        else
+                        {
+                            uint width = (uint)Screen.width;
+                            uint height = (uint)Screen.height;
+                            pngBytes = ImageConversion.EncodeArrayToPNG(_texture.GetRawTextureData(), _texture.graphicsFormat, width, height);
+                        }
                         string filename = _frame + ".png";
                         string pathname = _path + "/" + filename;
                         File.WriteAllBytes(pathname, pngBytes);
@@ -180,6 +223,7 @@ namespace Janelia
             private bool _capturing = false;
             private Text _textWidget = null;
             private Texture2D _texture;
+            private Texture2D _textureDownsampled;
             private string _path;
         }
     }
