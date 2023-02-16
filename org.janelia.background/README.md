@@ -12,7 +12,7 @@ Follow the [installation instructions in the main repository](https://github.com
 
 ### Janelia.SetupCylinderBackground
 
-Adds the `Window/Set Up Background Cylinder` menu item in the Unity editor.  This menu item launches a dialog for placing a background cylinder around a subject `GameObject`.
+Adds the `Window/Set Up Background Cylinder` menu item in the Unity editor.  This menu item launches a dialog for placing a background cylinder around a subject `GameObject`.  The cylinder is constrained to translate along with the subject, but note that this behavior occurs only in a stand-alone executable or when the "play" button is pressed in the Unity editor.  The cylinder's rotation does not change as the subject moves, but the dialog does give an option for setting its initial rotation around its spine (_y_ axis), which controls the orientation of the texture on the cylinder.
 
 ### Janelia.StartupCylinderBackground
 
