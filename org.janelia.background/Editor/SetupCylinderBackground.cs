@@ -42,6 +42,8 @@ namespace Janelia
 
             _radius = EditorGUILayout.FloatField("Cylinder radius", _radius);
             _height = EditorGUILayout.FloatField("Cylinder height", _height);
+            string tooltip = "Angle in degrees, with -90 making the +X axis point at the texture seam.";
+            _rotationY = EditorGUILayout.FloatField(new GUIContent("Cylinder Y (spine) angle", tooltip), _rotationY);
 
             if (GUILayout.Button("Update"))
             {
@@ -80,6 +82,7 @@ namespace Janelia
 
                     cylinder = Instantiate(master);
                     cylinder.name = cylinderName;
+                    cylinder.transform.localEulerAngles = new Vector3(0, _rotationY, 0);
 
                     if (AddMaterial(cylinder))
                     {
@@ -189,6 +192,7 @@ namespace Janelia
             _saved.subjectPath = _subjectPath;
             _saved.radius = _radius;
             _saved.height = _height;
+            _saved.rotationY = _rotationY;
             AssetDatabase.Refresh();
             EditorUtility.SetDirty(_saved);
             AssetDatabase.SaveAssets();
@@ -202,6 +206,7 @@ namespace Janelia
                 _subjectPath = _saved.subjectPath;
                 _radius = _saved.radius;
                 _height = _saved.height;
+                _rotationY = _saved.rotationY;
             }
             else
             {
@@ -226,6 +231,7 @@ namespace Janelia
         private string _subjectPath;
         private float _radius = 1.0f;
         private float _height = 0.6f;
+        private float _rotationY = 0.0f;
 
         private SetupCylinderBackgroundSaved _saved;
     }
