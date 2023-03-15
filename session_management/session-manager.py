@@ -31,13 +31,21 @@ def normalize_key(key):
     return key.lower().replace("_", "")
 
 def get_key_value(json_session, json_all, is_key_func):
-    for key in json_session:
-        if is_key_func(key):
-            return json_session[key]
+    val = None
     for key in json_all:
         if is_key_func(key):
-            return json_all[key]
-    return None
+            val = json_all[key]
+    for key in json_session:
+        if is_key_func(key):
+            session_val = json_session[key]
+            # overwrite dictionary values with those from json_session version if json_all[key] and json_session[key] are both dicts
+            if isinstance(session_val, dict) and isinstance(val, dict):
+                val = val.copy()
+                val.update(session_val)
+            # if either the json_all or the json_session value are not dictionaries, simply set the return value to the session value
+            else:
+                val = session_val
+    return val
 
 def is_executable_key(key):
     key = normalize_key(key)
