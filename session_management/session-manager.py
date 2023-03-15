@@ -1,3 +1,8 @@
+# Usage:
+# python session-manager.py -ip /path/to/paradigm_input.json -it /path/to/trial_input.json
+# python session-manager.py -ip /path/to/paradigm_input.json -it /path/to/trial_input.json --start 3
+# python session-manager.py -ip /path/to/paradigm_input.json -it /path/to/trial_input.json --dry-run
+
 import argparse
 import json
 import os
