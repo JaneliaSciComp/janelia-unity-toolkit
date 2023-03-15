@@ -78,14 +78,14 @@ def is_log_filename_extra_key(key):
     return key.startswith("logfilenameextra")
 
 def get_log_filename_extra(json_session, json_all):
-    return get_key_value(json_session, json_all, is_log_filename_extra_key)
+    return get_key_value(json_session, json_all, is_log_filename_extra_key) or ""
 
 def is_log_header_key(key):
     key = normalize_key(key)
     return key.startswith("logheader")
 
 def get_log_header(json_session, json_all):
-    return get_key_value(json_session, json_all, is_log_header_key)
+    return get_key_value(json_session, json_all, is_log_header_key) or ""
 
 def is_log_dir_key(key):
     key = normalize_key(key)
