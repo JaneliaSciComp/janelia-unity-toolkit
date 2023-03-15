@@ -1,15 +1,9 @@
-# Usage:
-# python session-manager.py -i /path/to/input.json
-# python session-manager.py -i /path/to/input.json --start 3
-# python session-manager.py -i /path/to/input.json --dry-run
-
-# Note: when pasting a Windows location in the input JSON, it is necessary to change `\` to `/`.
-
 import argparse
 import json
 import os
 import platform
 import time
+import sys
 
 def remove_comments(file):
     output = ""
@@ -17,8 +11,7 @@ def remove_comments(file):
         for line in f:
             line_stripped = line.lstrip()
             if line_stripped.startswith("#") or line_stripped.startswith("//"):
-                # Replace a comment line with a blank line, so the line count stays the same
-                # in error messages.
+                # Replace a comment line with a blank line, so the line count stays the same in error messages.
                 output += "\n"
             else:
                 output += line
@@ -57,8 +50,8 @@ def is_executable_key(key):
     key = normalize_key(key)
     return key.startswith("exe") or key.startswith("bin") or key.startswith("prog")
 
-def get_executable(json_session, json_all):
-    exe = get_key_value(json_session, json_all, is_executable_key)
+def get_executable(paradigm_json_session, paradigm_json_all):
+    exe = get_key_value(paradigm_json_session, paradigm_json_all, is_executable_key)
 
     if not os.path.exists(exe):
         if platform.system() == "Windows":
@@ -91,23 +84,23 @@ def is_log_dir_key(key):
     key = normalize_key(key)
     return key.startswith("logdir")
 
-def get_log_dir(json_session, json_all):
-    log_dir = get_key_value(json_session, json_all, is_log_dir_key)
+def get_log_dir(paradigm_json_session, paradigm_json_all):
+    log_dir = get_key_value(paradigm_json_session, paradigm_json_all, is_log_dir_key)
     return absolutize_path(log_dir)
 
 def is_session_parameters_key(key):
     key = normalize_key(key)
     return key.startswith("sessionparam")
 
-def get_session_parameters(json_session, json_all):
-    return get_key_value(json_session, json_all, is_session_parameters_key)
+def get_session_parameters(paradigm_json_session, paradigm_json_all):
+    return get_key_value(paradigm_json_session, paradigm_json_all, is_session_parameters_key)
 
 def is_pause_key(key):
     key = normalize_key(key)
     return key.startswith("pause")
 
-def get_pause(json_session, json_all):
-    return get_key_value(json_session, json_all, is_pause_key)
+def get_pause(paradigm_json_session, paradigm_json_all):
+    return get_key_value(paradigm_json_session, paradigm_json_all, is_pause_key)
 
 def process_log_dir(log_dir, dry_run):
     if not os.path.exists(log_dir):
@@ -166,42 +159,56 @@ def process_missing_exe(exe):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", "-i", dest="input_json_file", help="path to the JSON file describing the session")
+    parser.add_argument("--input-paradigm", "-ip", dest="input_paradigm_json_file", help="path to the JSON file describing the paradigm(s)s")
+    parser.add_argument("--input-trial", "-it", dest="input_trial_json_file", help="path to the JSON file describing the trial(s)")
     parser.set_defaults(start=1)
     parser.add_argument("--start", "-s", type=int, dest="start", help="session to start at (1 is the first)")
     parser.set_defaults(dry_run=False)
     parser.add_argument("--dry-run", "-dry-run", dest="dry_run", action="store_true", help="only print what would be run")
     args = parser.parse_args()
 
-    print("Using input JSON file: {}".format(args.input_json_file))
+    print("Using input paradigm JSON file: {}".format(args.input_paradigm_json_file))
+    print("Using input trial JSON file: {}".format(args.input_trial_json_file))
     print("Dry run: {}".format(args.dry_run))
 
-    json_all = json.loads(remove_comments(args.input_json_file))
-    if json_all == None:
-        print("Loading JSON file {} failed".format(args.json_input_file))
-        quit()
+    paradigm_json_all = json.loads(remove_comments(args.input_paradigm_json_file))
+    trial_json_all = json.loads(remove_comments(args.input_trial_json_file))
 
-    json_sessions = get_sessions(json_all)
-    for i in range(args.start - 1, len(json_sessions)):
-        print("Session {} / {}: ".format(i + 1, len(json_sessions)))
-        json_session = json_sessions[i]
+    paradigm_json_sessions = get_sessions(paradigm_json_all)
+    trial_json_sessions = get_sessions(trial_json_all)
 
-        exe = get_executable(json_session, json_all)
+    if len(paradigm_json_sessions) != len(trial_json_sessions):
+        print("the input-paradigm and input-trial files must have the same number of sessions!")
+        print(f"the input-paradigm file has {len(paradigm_json_sessions)} sessions")
+        print(f"the input-trial file has {len(trial_json_sessions)} sessions")
+        sys.exit()
+
+    for i in range(args.start - 1, len(paradigm_json_sessions)):
+        print(f"Session {i+1} / {len(paradigm_json_sessions)}: ")
+
+        paradigm_json_session = paradigm_json_sessions[i]
+        trial_json_session = trial_json_sessions[i]
+
+        exe = get_executable(paradigm_json_session, paradigm_json_all)
         cmd = exe
 
-        log_dir = get_log_dir(json_session, json_all)
+        log_dir = get_log_dir(paradigm_json_session, paradigm_json_all)
         process_log_dir(log_dir, args.dry_run)
 
-        log_filename_extra = get_log_filename_extra(json_session, json_all)
-        cmd = process_log_filename_extra(log_filename_extra, cmd, args.dry_run)
+        paradigm_log_filename_extra = get_log_filename_extra(paradigm_json_session, paradigm_json_all)
+        trial_log_filename_extra = get_log_filename_extra(trial_json_session, trial_json_all)
+        full_log_filename_extra = paradigm_log_filename_extra + trial_log_filename_extra
+        cmd = process_log_filename_extra(full_log_filename_extra, cmd, args.dry_run)
 
-        log_header = get_log_header(json_session, json_all)
-        cmd = process_log_header(log_header, cmd, args.dry_run)
+        paradigm_log_header = get_log_header(paradigm_json_session, paradigm_json_all)
+        trial_log_header = get_log_header(trial_json_session, trial_json_all)
+        full_log_header = paradigm_log_header + "\n" + trial_log_header
+        cmd = process_log_header(full_log_header, cmd, args.dry_run)
 
-        session_params = get_session_parameters(json_session, json_all)
+        session_params = get_session_parameters(paradigm_json_session, paradigm_json_all)
         cmd = process_session_params(session_params, cmd, args.dry_run)
 
-        pause_secs = get_pause(json_session, json_all)
+        pause_secs = get_pause(paradigm_json_session, paradigm_json_all)
         cmd = process_pause(pause_secs, cmd, args.dry_run)
 
         print(cmd)
@@ -218,4 +225,3 @@ if __name__ == "__main__":
         print("")
 
     print("Done")
-
