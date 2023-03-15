@@ -30,6 +30,12 @@ def get_sessions(json_all):
 def normalize_key(key):
     return key.lower().replace("_", "")
 
+def absolutize_path(path):
+    if os.path.isabs(path):
+        return path
+    else:
+        return os.path.join(os.path.dirname(__file__), path)
+
 def get_key_value(json_session, json_all, is_key_func):
     val = None
     for key in json_all:
@@ -59,13 +65,13 @@ def get_executable(json_session, json_all):
             if not exe.endswith(".lnk"):
                 exe2 = exe + ".lnk"
                 if os.path.exists(exe2):
-                    return exe2
+                    exe = exe2
             if not exe.endswith(".exe"):
                 exe2 = exe + ".exe"
                 if os.path.exists(exe2):
-                    return exe2
+                    exe = exe2
 
-    return exe
+    return absolutize_path(exe)
 
 def is_log_filename_extra_key(key):
     key = normalize_key(key)
@@ -86,7 +92,8 @@ def is_log_dir_key(key):
     return key.startswith("logdir")
 
 def get_log_dir(json_session, json_all):
-    return get_key_value(json_session, json_all, is_log_dir_key)
+    log_dir = get_key_value(json_session, json_all, is_log_dir_key)
+    return absolutize_path(log_dir)
 
 def is_session_parameters_key(key):
     key = normalize_key(key)
