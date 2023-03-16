@@ -13,19 +13,25 @@ The Python script itself has no dependencies and requires no special installatio
 
 To run an experiment described by the file `experiment.json`:
 ```
-python session-manager.py --input experiment.json
+python session-manager.py --input-paradigm experiment.json
 ```
-The `--input` argument can be abbreviated as `-i`.
+The `--input-paradigm` argument can be abbreviated as `-ip`.
+
+To make trial-specific additions to the log filename and/or header:
+```
+python session-manager.py --input-paradigm experiment.json --input-trial trial.json
+```
+The `--input-trial` argument can be abbreviated as `-it`.
 
 To start in the middle of an experiment, at session 3 for example (where the first experiment is 1):
 ```
-python session-manager.py --input experiment.json --start 3
+python session-manager.py -ip experiment.json --start 3
 ```
 The `--start` argument can be abbreviated as `-s`.
 
 To print what would be done in an experiment without actually doing it:
 ```
-python session-manager.py --input experiment.json --dry-run
+python session-manager.py -ip experiment.json --dry-run
 ```
 
 ## JSON Spec File
