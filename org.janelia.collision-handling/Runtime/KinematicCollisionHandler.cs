@@ -97,7 +97,7 @@ namespace Janelia
         private bool ClosestHit(Vector3 translationWorld, ref RaycastHit closestHit, ref float contactDistance, bool checkLast)
         {
             Ray ray = new Ray(_transform.position, translationWorld);
-            float maxDistance = translationWorld.magnitude + radius;
+            float maxDistance = translationWorld.magnitude;
 
             bool limited = false;
             RaycastHit limitHit = new RaycastHit();
@@ -107,8 +107,7 @@ namespace Janelia
                 closestHit = limitHit;
             }
 
-            bool collided = Physics.Raycast(ray, out RaycastHit colliderHit, maxDistance);
-
+            bool collided = Physics.SphereCast(ray, radius, out RaycastHit colliderHit, maxDistance);
             if (collided)
             {
                 if (!limited || (colliderHit.distance < limitHit.distance))
@@ -122,7 +121,7 @@ namespace Janelia
                 contactDistance = (closestHit.point - _transform.position).magnitude;
                 contactDistance -= radius;
 
-                // Move back an extra little bit, because Unity's `Physics.Raycast` function will ignore
+                // Move back an extra little bit, because Unity's `Physics.SphereCast` function will ignore
                 // a collider that contains the ray's origin.
 
                 float extra = Vector3.Project(closestHit.normal, ray.direction).magnitude * _touchDistance;
