@@ -39,6 +39,11 @@ namespace Janelia
             limitDistance = limitDist;
             limitCenter = (limitCtr != null) ? (Vector3)limitCtr : limitCenter;
             _touchDistance = radius / 1000.0f;
+
+            // This collider is used only at the very end of the collision handling, to add extra insurance
+            // against a quirk in the Unity intersection detection.
+            _insuranceCollider = _transform.gameObject.AddComponent<SphereCollider>();
+            _insuranceCollider.radius = radius;
         }
 
         // Correct the specified translation to account for collisions, and apply it to
@@ -53,8 +58,9 @@ namespace Janelia
             // with a collider in the scene.
 
             RaycastHit closestHit = default;
-            float contactDistance = 0;
-            if (ClosestHit(translationWorld, ref closestHit, ref contactDistance, true))
+            float contactDistance;
+            Collider collider;
+            if (ClosestHit(translationWorld, ref closestHit, out contactDistance, out collider))
             {
                 validTranslation = contactDistance * translation.normalized;
 
@@ -70,8 +76,9 @@ namespace Janelia
                     // This sliding translation can itself intersect another collider, so check for another
                     // ray interesection.
 
-                    float contactDistance2 = 0;
-                    if (ClosestHit(validTranslationWorld, ref closestHit, ref contactDistance2, false))
+                    float contactDistance2;
+                    Collider collider2;
+                    if (ClosestHit(validTranslationWorld, ref closestHit, out contactDistance2, out collider2))
                     {
                         // If there is such a "secondary" intersection, just clip the translation and don't
                         // try to do another level of sliding.
@@ -91,13 +98,25 @@ namespace Janelia
                 validTranslation = Vector3.ProjectOnPlane(validTranslation, normal);
             }
 
+            if (collider != null)
+            {
+                // The Unity `Physics.SphereCast` (and related) routine(s) have the quirk that they will
+                // not detect intersections with any colliders that contain the initial sphere at the
+                // starting point of the casting.  The code that tries to clip the translation so that the
+                // bounding sphere is just contacting a collider can inadvertently cause this situation,
+                // perhaps due to the inaccuracy of floating point computations.  So add an extra insurance
+                // step meant to fix this problem.
+                validTranslation = insured(validTranslation, collider);
+            }
+
             return validTranslation;
         }
 
-        private bool ClosestHit(Vector3 translationWorld, ref RaycastHit closestHit, ref float contactDistance, bool checkLast)
+        private bool ClosestHit(Vector3 translationWorld, ref RaycastHit closestHit, out float contactDistance, out Collider collider)
         {
             Ray ray = new Ray(_transform.position, translationWorld);
             float maxDistance = translationWorld.magnitude;
+            collider = null;
 
             bool limited = false;
             RaycastHit limitHit = new RaycastHit();
@@ -107,6 +126,7 @@ namespace Janelia
                 closestHit = limitHit;
             }
 
+            // TODO: Try SphereCastNonAlloc?
             bool collided = Physics.SphereCast(ray, radius, out RaycastHit colliderHit, maxDistance);
             if (collided)
             {
@@ -128,13 +148,40 @@ namespace Janelia
                 contactDistance -= extra;
 
                 contactDistance = Math.Max(contactDistance, 0);
+                collider = closestHit.collider;
                 return true;
             }
 
+            contactDistance = maxDistance;
             return false;
+        }
+
+        private Vector3 insured(Vector3 translation, Collider collider)
+        {
+            Vector3 translationWorld = _transform.rotation * translation;
+            Vector3 thisPosition = _transform.position + translationWorld;
+            Quaternion thisRotation = _transform.rotation;
+            Vector3 otherPosition = collider.gameObject.transform.position;
+            Quaternion otherRotation = collider.gameObject.transform.rotation;
+            Vector3 insuranceDirection;
+            float insuranceDistance;
+
+            // From the Unity documenation: this function will "compute the minimal translation required to 
+            // separate the given colliders apart at specified poses."  This translation thus will provide the
+            // necessary insurance that the bounding sphere does not end up slightly inside the collider,
+            // which would make the next `Physics.SphereCast` operation miss the collider.
+            if (Physics.ComputePenetration(_insuranceCollider, thisPosition, thisRotation, collider, otherPosition, otherRotation, 
+                    out insuranceDirection, out insuranceDistance)) 
+            {
+                translationWorld += insuranceDistance * insuranceDirection;
+                translation = Quaternion.Inverse(_transform.rotation) * translationWorld;
+            }
+
+            return translation;
         }
 
         private Transform _transform;
         private float _touchDistance;
+        private SphereCollider _insuranceCollider;
     }
 }
