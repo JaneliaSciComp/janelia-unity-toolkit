@@ -36,6 +36,7 @@ namespace Janelia
         private float _rotationY = 0;
         private float _offsetX = 0;
         private float _offsetZ = 0;
+        private float _tilt = 0;
         private float _near = 0.1f;
         private float _far = 1000.0f;
 
@@ -89,6 +90,8 @@ namespace Janelia
             _offsetX = EditorGUILayout.FloatField("Offset X (mm)", _offsetX);
             _offsetZ = EditorGUILayout.FloatField("Offset Z (mm)", _offsetZ);
 
+            _tilt = EditorGUILayout.FloatField("Tilt X (deg)", _tilt);
+
             _near = EditorGUILayout.FloatField("Near", _near);
             _far = EditorGUILayout.FloatField("Far", _far);
 
@@ -137,6 +140,22 @@ namespace Janelia
             int numSides = _numCameras + _numEmptySides;
             float fovDeg = 360.0f / numSides;
             return -(_numCameras - 1) * fovDeg / 2.0f + 90.0f;
+        }
+
+        private Vector3 ScreenTranslationWithTilt(float fovRad)
+        {
+            float viewDirTransNoTilt = (_screenWidth / 2.0f) / Mathf.Tan(fovRad / 2.0f);
+            float viewDirTrans = viewDirTransNoTilt / Mathf.Cos(Mathf.Deg2Rad * _tilt);
+            Vector3 trans1 = new Vector3(0, 0, viewDirTrans);
+
+            float heightDirTransNoTilt = 0.5f * _screenHeight - _fractionalHeight * _screenHeight;
+            float heightDirTransTilt = viewDirTransNoTilt * Mathf.Tan(Mathf.Deg2Rad * _tilt);
+            float heightDirTrans = heightDirTransNoTilt + heightDirTransTilt;
+            Vector3 trans2a = new Vector3(0, heightDirTrans, 0);
+            Vector3 trans2b = Quaternion.AngleAxis(-_tilt, Vector3.right) * trans2a;
+
+            Vector3 trans = trans1 + trans2b;
+            return trans;
         }
 
         private void UpdateCameras()
@@ -218,10 +237,8 @@ namespace Janelia
             float fovDeg = 360.0f / numSides;
             float fovRad = Mathf.PI * 2.0f / numSides;
 
+            Vector3 screenTrans = ScreenTranslationWithTilt(fovRad);
             float camYRot = _rotationY;
-
-            float viewDirTrans = (_screenWidth / 2.0f) / Mathf.Tan(fovRad / 2.0f);
-            float heightDirTrans = _screenHeight / 2.0f - _fractionalHeight * _screenHeight;
 
             for (int i = 0; i < _cameraScreens.Count; i++)
             {
@@ -235,9 +252,10 @@ namespace Janelia
                 _cameraScreens[i].camera.farClipPlane = _far;
 
                 cameraXform.localPosition = new Vector3(0, 0, 0);
-                cameraXform.Rotate(0, camYRot, 0);
+                cameraXform.Rotate(_tilt, camYRot, 0);
 
-                screenXform.localPosition = new Vector3(0, heightDirTrans, viewDirTrans);
+                screenXform.localPosition = screenTrans;
+                screenXform.localEulerAngles = new Vector3(-_tilt, 0, 0);
                 screenXform.localScale = new Vector3(_screenWidth, _screenHeight, 1);
 
                 // One way of making the screens invisible to their cameras.
@@ -271,6 +289,7 @@ namespace Janelia
             _saved.rotationY = _rotationY;
             _saved.offsetX = _offsetX;
             _saved.offsetZ = _offsetZ;
+            _saved.tilt = _tilt;
             _saved.near = _near;
             _saved.far = _far;
 
