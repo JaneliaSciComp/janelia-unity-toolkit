@@ -57,7 +57,9 @@ namespace Janelia
         public SetupCamerasNGon()
         {
             _cameraScreens = new List<CameraScreen>();
-            _rotationY = rotationYCentered();
+            _rotationY = RotationYCentered();
+
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnSceneSaved;
         }
 
         public void OnEnable()
@@ -115,7 +117,7 @@ namespace Janelia
                 if ((_numCameras != numCamerasBefore) || (_numEmptySides != numEmptySidesBefore))
                 {
                     // Recompute _rotationY only when a manually set value might no longer make sense.
-                    _rotationY = rotationYCentered();
+                    _rotationY = RotationYCentered();
                 }
             }
 
@@ -127,12 +129,17 @@ namespace Janelia
             EditorGUILayout.EndVertical();
         }
 
+        private void OnSceneSaved(UnityEngine.SceneManagement.Scene scene)
+        {
+            Save();
+        }
+
         private void OnDestroy()
         {
             Save();
         }
 
-        private float rotationYCentered()
+        private float RotationYCentered()
         {
             // Rotates the screen so the positive X axis points to:
             // the middle of the middle screen for an odd number of screens
@@ -149,9 +156,7 @@ namespace Janelia
             Vector3 trans1 = new Vector3(0, 0, viewDirTrans);
 
             float heightDirTransNoTilt = 0.5f * _screenHeight - _fractionalHeight * _screenHeight;
-            float heightDirTransTilt = viewDirTransNoTilt * Mathf.Tan(Mathf.Deg2Rad * _tilt);
-            float heightDirTrans = heightDirTransNoTilt + heightDirTransTilt;
-            Vector3 trans2a = new Vector3(0, heightDirTrans, 0);
+            Vector3 trans2a = new Vector3(0, heightDirTransNoTilt, 0);
             Vector3 trans2b = Quaternion.AngleAxis(-_tilt, Vector3.right) * trans2a;
 
             Vector3 trans = trans1 + trans2b;
@@ -171,9 +176,14 @@ namespace Janelia
 
             // Create the objects if they are not specified.
 
+            string name = "Fly";
             if (_fly == null)
             {
-                _fly = new GameObject("Fly");
+                _fly = GameObject.Find(name);
+            }
+            if (_fly == null)
+            {
+                _fly = new GameObject(name);
                 _fly.transform.localPosition = new Vector3(0, 0, 0);
 
                 // For some reason, creating objects in this routine does not seem to
@@ -198,9 +208,17 @@ namespace Janelia
 
             for (int i = 0; i < _cameraScreens.Count; i++)
             {
+                name = "FlyCamera" + (i + 1);
                 if (_cameraScreens[i].camera == null)
                 {
-                    GameObject cameraObj = new GameObject("FlyCamera" + (i + 1));
+                    GameObject obj = GameObject.Find(name);
+                    if (obj != null) {
+                        _cameraScreens[i].camera = obj.GetComponent<Camera>();
+                    }
+                }
+                if (_cameraScreens[i].camera == null)
+                {
+                    GameObject cameraObj = new GameObject(name);
                     SetObjectDirty(cameraObj);
                     _cameraScreens[i].camera = cameraObj.AddComponent(typeof(Camera)) as Camera;
 
@@ -208,11 +226,16 @@ namespace Janelia
                 }
                 _cameraScreens[i].camera.transform.localRotation = Quaternion.identity;
                 _cameraScreens[i].camera.transform.localPosition = Vector3.zero;
+                name = "FlyCamera" + (i + 1) + "Screen";
+                if (_cameraScreens[i].screen == null)
+                {
+                    _cameraScreens[i].screen = GameObject.Find(name);
+                }
                 if (_cameraScreens[i].screen == null)
                 {
                     _cameraScreens[i].screen = GameObject.CreatePrimitive(PrimitiveType.Quad);
                     SetObjectDirty(_cameraScreens[i].screen);
-                    _cameraScreens[i].screen.name = "FlyCamera" + (i + 1) + "Screen";
+                    _cameraScreens[i].screen.name = name;
                 }
                 _cameraScreens[i].screen.transform.localRotation = Quaternion.identity;
                 _cameraScreens[i].screen.transform.localPosition = Vector3.zero;
@@ -264,6 +287,13 @@ namespace Janelia
                 screenXform.position += new Vector3(_offsetX, 0, _offsetZ);
 
                 camYRot += fovDeg;
+            }
+
+            if (!Application.isPlaying)
+            {
+                // Make sure that even if only parameters were changed but no new objects created,
+                // still the scene is marked dirty and in need of saving.
+                EditorSceneManager.MarkSceneDirty(_fly.scene);
             }
         }
 
@@ -323,6 +353,7 @@ namespace Janelia
                     _rotationY = _saved.rotationY;
                     _offsetX = _saved.offsetX;
                     _offsetZ = _saved.offsetZ;
+                    _tilt = _saved.tilt;
                     _near = _saved.near;
                     _far = _saved.far;
                 }
@@ -340,6 +371,8 @@ namespace Janelia
                 AssetDatabase.CreateAsset(_saved, "Assets/Resources/Editor/savedCamerasNGon.asset");
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+
+                Save();
             }
         }
 
