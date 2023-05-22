@@ -17,6 +17,11 @@ namespace Janelia
         public float ficTracBallRadius = 0.5f;
         public int smoothingCount = 3;
 
+        // The size in bytes of one item in the buffer of FicTrac messages.
+        public int ficTracBufferSize = 1024;
+        // The number of items in the buffer of FicTrac messages.
+        public int ficTracBufferCount = 240;
+
         public bool logFicTracMessages = false;
 
         // Setting this flag to `true` will reduce performance.
@@ -32,7 +37,8 @@ namespace Janelia
             _currentFicTracParametersLog.ficTracSmoothingCount = smoothingCount;
             Logger.Log(_currentFicTracParametersLog);
 
-            _socketMessageReader = new SocketMessageReader(HEADER, ficTracServerAddress, ficTracServerPort);
+            _socketMessageReader = new SocketMessageReader(HEADER, ficTracServerAddress, ficTracServerPort,
+                                                           ficTracBufferSize, ficTracBufferCount);
             _socketMessageReader.Start();
         }
 
