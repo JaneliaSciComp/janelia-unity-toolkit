@@ -20,6 +20,7 @@ namespace Janelia
         public int ficTracServerPort = 2000;
         public float ficTracBallRadius = 0.5f;
         public int smoothingCount = 3;
+        public int ficTracBufferCount = 240;
         public bool logFicTracMessages = false;
 
         public new void Start()
@@ -30,6 +31,7 @@ namespace Janelia
                 ficTracServerPort = ficTracServerPort,
                 ficTracBallRadius = ficTracBallRadius,
                 smoothingCount = smoothingCount,
+                ficTracBufferCount = ficTracBufferCount,
                 logFicTracMessages = logFicTracMessages
             };
             updater = _typedUpdater;
