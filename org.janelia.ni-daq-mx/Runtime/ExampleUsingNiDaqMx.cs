@@ -42,6 +42,8 @@ namespace Janelia
                 ChannelNames = new string[] { "ai0", "ai3" }
             };
 
+            Debug.Log("Device name: '" + _inputParams.DeviceName + "'");
+
             // Create parameters that are the default values except the specified values.
             _outputParams = new Janelia.NiDaqMx.OutputParams()
             {
