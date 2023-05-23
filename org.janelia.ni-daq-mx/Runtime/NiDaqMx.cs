@@ -27,7 +27,7 @@ namespace Janelia
             internal string deviceName = "Dev1";
             public string DeviceName
             {
-                get => deviceName;
+                get { return deviceName; }
                 set { Restrict(); deviceName = value; }
             }
 
@@ -36,7 +36,7 @@ namespace Janelia
             internal string[] channelNames = { "ai0" };
             public string[] ChannelNames
             {
-                get => channelNames;
+                get { return channelNames; }
                 set { Restrict(); channelNames = value; }
             }
 
@@ -48,21 +48,21 @@ namespace Janelia
             internal double voltageMin = -10.0;
             public double VoltageMin
             {
-                get => voltageMin;
+                get { return voltageMin; }
                 set { Restrict(); voltageMin = value; }
             }
 
             internal double voltageMax = 10.0;
             public double VoltageMax
             {
-                get => voltageMax;
+                get { return voltageMax; }
                 set { Restrict(); voltageMax = value; }
             }
 
             internal double samplesPerSec = 1000.0;
             public double SamplesPerSec
             {
-                get => samplesPerSec;
+                get { return samplesPerSec; }
                 set { Restrict(); samplesPerSec = value; }
             }
 
@@ -71,14 +71,14 @@ namespace Janelia
             internal ulong sampleBufferSize = 1000;
             public ulong SampleBufferSize
             {
-                get => sampleBufferSize;
+                get { return sampleBufferSize; }
                 set { Restrict(); sampleBufferSize = value; }
             }
 
             internal double timeoutSecs = 10.0;
             public double TimeoutSecs
             {
-                get => timeoutSecs;
+                get { return timeoutSecs; }
                 set { Restrict(); timeoutSecs = value; }
             }
 
@@ -102,7 +102,7 @@ namespace Janelia
             public string deviceName = "Dev1";
             public string DeviceName
             {
-                get => deviceName;
+                get { return deviceName; }
                 set { Restrict(); deviceName = value; }
             }
 
@@ -111,7 +111,7 @@ namespace Janelia
             internal string[] channelNames = { "ao0" };
             public string[] ChannelNames
             {
-                get => channelNames;
+                get { return channelNames; }
                 set { Restrict(); channelNames = value; }
             }
 
@@ -123,14 +123,14 @@ namespace Janelia
             internal double voltageMin = -10.0;
             public double VoltageMin
             {
-                get => voltageMin;
+                get { return voltageMin; }
                 set { Restrict(); voltageMin = value; }
             }
 
             internal double voltageMax = 10.0;
             public double VoltageMax
             {
-                get => voltageMax;
+                get { return voltageMax; }
                 set { Restrict(); voltageMax = value; }
             }
 
