@@ -44,6 +44,10 @@ namespace Janelia
         public int displayWidth = 480;
         public int displayHeight = 854;
 
+
+        public int leftDisplayIndex = 2;
+        public static int leftDisplayIndexStatic = 2;
+
         public bool mirror = false;
 
         public enum ProgressBoxLocation
@@ -79,6 +83,28 @@ namespace Janelia
         public static void PerformBuild()
         {
             Janelia.AdjoiningDisplaysCameraBuilder.PerformBuild();
+        }
+#endif
+
+#if UNITY_EDITOR
+        // The following three functions are part of the complicated pattern necessary for
+        // a leftDisplayIndex value set in the Inspector to be acessible by AdjoiningDisplaysCameraBuilder
+        // at build time, when this value isu sed as an argument in the Windows shortcut file.
+
+        private void OnValidate()
+        {
+            leftDisplayIndexStatic = leftDisplayIndex;
+        }
+
+        private static int GetMonitorIndex()
+        {
+            return leftDisplayIndexStatic;
+        }
+
+        [InitializeOnLoadMethod]
+        public static void SetupDelegate()
+        {
+            Janelia.AdjoiningDisplaysCameraBuilder.getMonitorIndexDelegate = GetMonitorIndex;
         }
 #endif
 

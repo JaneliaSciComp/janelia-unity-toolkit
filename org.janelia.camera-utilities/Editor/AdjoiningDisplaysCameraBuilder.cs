@@ -120,10 +120,15 @@ namespace Janelia {
             process.StandardInput.Close();
         }
 
+        public delegate int GetMonitorIndexDelegate();
+        public static GetMonitorIndexDelegate getMonitorIndexDelegate;
+
         private static string MakeShortcutScript(string shortcutPath, string targetPath)
         {
             shortcutPath = shortcutPath.Replace("\\", "\\\\");
             targetPath = targetPath.Replace("\\", "\\\\");
+            int monitor = (getMonitorIndexDelegate != null) ? getMonitorIndexDelegate() : 2;
+            UnityEngine.Debug.Log("Left monitor: " + monitor);
             string[] lines = {
                 "main();",
                 "function main() {",
@@ -131,7 +136,7 @@ namespace Janelia {
                 "  var shortcut = ws.CreateShortcut('" + shortcutPath + ".lnk');",
                 "  shortcut.WindowStyle = 4;",
                 "  shortcut.TargetPath = '" + targetPath + "';",
-                "  shortcut.Arguments = '-popupwindow -screen-fullscreen 0 -monitor 2';",
+                "  shortcut.Arguments = '-popupwindow -screen-fullscreen 0 -monitor " + monitor + "';",
                 "  shortcut.Save();",
                 "}"
             };
