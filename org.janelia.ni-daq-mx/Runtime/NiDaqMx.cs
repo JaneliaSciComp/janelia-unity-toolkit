@@ -234,7 +234,7 @@ namespace Janelia
         {
             if (_outputParamsToTaskHandle.ContainsKey(p))
             {
-                _latestError = "Input(s) already created for parameters";
+                _latestError = "Outputs(s) already created for parameters";
                 return false;
                 ;
             }
@@ -255,6 +255,46 @@ namespace Janelia
             IntPtr customScaleNames = IntPtr.Zero;
             int status = DAQmxCreateAOVoltageChan(taskHandle, physicalChannels, namesToAssignToChannels, p.voltageMin, p.voltageMax, DAQmx_Val_Volts, customScaleNames);
 
+            if (!StatusIndicatesSuccess(status))
+            {
+                return false;
+            }
+
+            // Note there is no call to `DAQmxCfgSampClkTiming`.
+            // So does writing use "on demand" timing?
+            // http://zone.ni.com/reference/en-XX/help/370466AH-01/mxcncpts/smpletimingtype/
+
+            p.inUse = true;
+
+            status = DAQmxStartTask(taskHandle);
+            return StatusIndicatesSuccess(status);
+        }
+
+        public static bool CreateDigitalOutputs(OutputParams p)
+        {
+            if (_outputParamsToTaskHandle.ContainsKey(p))
+            {
+                _latestError = "Digital output(s) already created for parameters";
+                return false;
+                ;
+            }
+
+            ulong taskHandle = 0;
+            if (!Init(p.deviceName, ref taskHandle))
+            {
+                return false;
+            }
+            _outputParamsToTaskHandle.Add(p, taskHandle);
+
+            // A list of channels is one string, with list elements separated by ', '.
+            // https://zone.ni.com/reference/en-XX/help/370466AH-01/mxcncpts/physchannames/
+            string fullChannelNames = String.Join(", ", p.channelNames.Select(c => p.deviceName + "/" + c));
+
+            byte[] physicalChannels = MakeCString(fullChannelNames);
+            byte[] namesToAssignToChannels = MakeCString("");
+            IntPtr customScaleNames = IntPtr.Zero;
+            int lineGrouping = DAQmx_Val_ChanPerLine;
+            int status = DAQmxCreateDOChan(taskHandle, physicalChannels, namesToAssignToChannels, lineGrouping);
             if (!StatusIndicatesSuccess(status))
             {
                 return false;
@@ -294,6 +334,64 @@ namespace Janelia
 
             return StatusIndicatesSuccess(status);
         }
+
+        public static bool WriteToDigitalOutputs(OutputParams p, byte[] data, ref int numWrittenPerChannel)
+        {
+            if (!_outputParamsToTaskHandle.ContainsKey(p))
+            {
+                _latestError = "Cannot write before outputs are created";
+                return false;
+            }
+
+            ulong taskHandle = _outputParamsToTaskHandle[p];
+
+            numWrittenPerChannel = 0;
+            IntPtr reserved = IntPtr.Zero;
+            int numSampsPerChan = data.Length / p.channelNames.Length;
+            bool dataLayout = Convert.ToBoolean(DAQmx_Val_GroupByChannel);
+            int status = DAQmxWriteDigitalU8(taskHandle, numSampsPerChan, false, 0, dataLayout, data, ref numWrittenPerChannel, reserved);
+
+            return StatusIndicatesSuccess(status);
+        }
+
+        public static bool WriteToDigitalOutputs(OutputParams p, ushort[] data, ref int numWrittenPerChannel)
+        {
+            if (!_outputParamsToTaskHandle.ContainsKey(p))
+            {
+                _latestError = "Cannot write before outputs are created";
+                return false;
+            }
+
+            ulong taskHandle = _outputParamsToTaskHandle[p];
+
+            numWrittenPerChannel = 0;
+            IntPtr reserved = IntPtr.Zero;
+            int numSampsPerChan = data.Length / p.channelNames.Length;
+            bool dataLayout = Convert.ToBoolean(DAQmx_Val_GroupByChannel);
+            int status = DAQmxWriteDigitalU16(taskHandle, numSampsPerChan, false, 0, dataLayout, data, ref numWrittenPerChannel, reserved);
+
+            return StatusIndicatesSuccess(status);
+        }
+
+        public static bool WriteToDigitalOutputs(OutputParams p, uint[] data, ref int numWrittenPerChannel)
+        {
+            if (!_outputParamsToTaskHandle.ContainsKey(p))
+            {
+                _latestError = "Cannot write before outputs are created";
+                return false;
+            }
+
+            ulong taskHandle = _outputParamsToTaskHandle[p];
+
+            numWrittenPerChannel = 0;
+            IntPtr reserved = IntPtr.Zero;
+            int numSampsPerChan = data.Length / p.channelNames.Length;
+            bool dataLayout = Convert.ToBoolean(DAQmx_Val_GroupByChannel);
+            int status = DAQmxWriteDigitalU32(taskHandle, numSampsPerChan, false, 0, dataLayout, data, ref numWrittenPerChannel, reserved);
+
+            return StatusIndicatesSuccess(status);
+        }
+
 
         // Get the index for a particular channel's data item in the `data` argument to `WriteToOutputs`.
 
@@ -427,6 +525,10 @@ namespace Janelia
 
         private const uint DAQmx_Val_GroupByChannel = 0;
 
+        private const int DAQmx_Val_ChanPerLine = 0;
+
+        private const int DAQmx_Val_ChanForAllLines = 1;
+
         // Return value 0 means no error.
 
         [DllImport("nicaiu")]
@@ -468,5 +570,17 @@ namespace Janelia
 
         [DllImport("nicaiu")]
         private static extern int DAQmxWriteAnalogF64(ulong taskHandle, int numSampsPerChan, bool autoStart, double timeout, uint dataLayout, double[] writeArray, ref int sampsPerChanWritten, IntPtr reserved);
+
+        [DllImport("nicaiu")]
+        private static extern int DAQmxCreateDOChan(ulong taskHandle, byte[] lines, byte[] nameToAssignToLines, int lineGrouping);
+
+        [DllImport("nicaiu")]
+        private static extern int DAQmxWriteDigitalU8(ulong taskHandle, int numSampsPerChan, bool autoStart, double timeout, bool dataLayout, byte[] writeArray, ref int sampsPerChanWritten, IntPtr reserved);
+
+        [DllImport("nicaiu")]
+        private static extern int DAQmxWriteDigitalU16(ulong taskHandle, int numSampsPerChan, bool autoStart, double timeout, bool dataLayout, ushort[] writeArray, ref int sampsPerChanWritten, IntPtr reserved);
+
+        [DllImport("nicaiu")]
+        private static extern int DAQmxWriteDigitalU32(ulong taskHandle, int numSampsPerChan, bool autoStart, double timeout, bool dataLayout, uint[] writeArray, ref int sampsPerChanWritten, IntPtr reserved);
     }
 }
