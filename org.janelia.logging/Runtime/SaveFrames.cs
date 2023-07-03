@@ -45,7 +45,8 @@ namespace Janelia
                 }
                 Debug.Log("Show frame numbers: " + _showFrameNumbers);
 
-                if (args.Contains("-height")) {
+                if (args.Contains("-height"))
+                {
                     i = Array.IndexOf(args, "-height");
                     if (i + 1 < args.Length)
                     {
@@ -61,6 +62,16 @@ namespace Janelia
                     }
                 }
 
+                if (args.Contains("-output"))
+                {
+                    i = Array.IndexOf(args, "-output");
+                    if (i + 1 < args.Length)
+                    {
+                        _outputPath = args[i + 1];
+                    }
+                    Debug.Log("Output: " + _outputPath);
+                }
+
                 _object = new GameObject("SaveFrames");
                 _object.hideFlags = HideFlags.HideAndDontSave;
                 _object.AddComponent<SaveFramesInternal>();
@@ -70,6 +81,7 @@ namespace Janelia
         private static int _savingPeriod = 1;
         private static bool _showFrameNumbers = false;
         private static int _downsampleHeight = 0;
+        private static string _outputPath;
         private static GameObject _object;
         internal static string _frame = "";
 
@@ -82,12 +94,17 @@ namespace Janelia
             {
                 _capturing = true;
 
-                _path = Logger.logDirectory + "/Frames";
-                DateTime now = DateTime.Now;
-                _path += "_" + now.ToString("yyyy") + "-" + now.ToString("MM") + "-" +
-                    now.ToString("dd") + "_" + now.ToString("HH") + "-" + now.ToString("mm") + "-" +
-                    now.ToString("ss");
-                EnsureDirectory(_path);
+                if (string.IsNullOrEmpty(_outputPath))
+                {
+                    _outputPath = Logger.logDirectory + "/Frames";
+                    DateTime now = DateTime.Now;
+                    _outputPath += "_" + now.ToString("yyyy") + "-" + now.ToString("MM") + "-" +
+                        now.ToString("dd") + "_" + now.ToString("HH") + "-" + now.ToString("mm") + "-" +
+                        now.ToString("ss");
+                }
+                EnsureDirectory(_outputPath);
+
+                Debug.Log("Saving frames to folder: " + _outputPath);
 
                 if (_showFrameNumbers)
                 {
@@ -158,7 +175,7 @@ namespace Janelia
                             pngBytes = ImageConversion.EncodeArrayToPNG(_texture.GetRawTextureData(), _texture.graphicsFormat, width, height);
                         }
                         string filename = _frame + ".png";
-                        string pathname = _path + "/" + filename;
+                        string pathname = _outputPath + "/" + filename;
                         File.WriteAllBytes(pathname, pngBytes);
                     }
                     i++;
@@ -224,7 +241,6 @@ namespace Janelia
             private Text _textWidget = null;
             private Texture2D _texture;
             private Texture2D _textureDownsampled;
-            private string _path;
         }
     }
 }

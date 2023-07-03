@@ -98,3 +98,16 @@ By default, installing this package makes logging run automatically, without the
 ### `Janelia.SaveFrames`
 
 This class adds the functionality for saving rendered frames.  It is a static class, so there is no need to manually add it to a scene.  It initiates a [coroutine](https://docs.unity3d.com/Manual/Coroutines.html) for saving the frames when a stand-alone executable is run with the `-saveFrames` commandline option.
+
+The saving of frames can be tuned with several commandline options:
+
+* `-saveFrames N`: save only every _N_-th frame.  If _N_ is omitted, then every frame is saved.
+
+* `-numbers`: include the frame number in red letters in the bottom-left corner of each saved image.
+
+* `-height H`: rescale each saved image to have height _H_ (and width chosen to preserve the original aspect ratio).
+
+* `-output F`: write the saved frames to the folder, _F_, which can be relative to the directory where the executable is launched, or an absolute path.  If this option is omitted, then frames will be saved in the standard log folder, in a subfolder `Frames_D`, where _D_ is the current date and time.
+
+It is particularly useful to save the frames when playing back a log file, and remember that the log file, _L_, to play is specified by the `-playback L` commandline option (as implemented in the 
+ [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in the package [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package).
