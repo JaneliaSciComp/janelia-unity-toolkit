@@ -125,17 +125,19 @@ namespace Janelia
             // spill over onto other displays that are adjacent in the Windows extended desktop.
             Screen.SetResolution(displayWidth * displayCameras.Count(), displayHeight, false);
 
-            SetupPackingSubject();
-            SetupPackingSubjectCopies();
-            SetupPackingMaterial();
-
-            foreach (Camera displayCamera in displayCameras)
+            if (SetupPackingSubject())
             {
-                SetupRenderTextures(displayCamera);
-            }
+                SetupPackingSubjectCopies();
+                SetupPackingMaterial();
 
-            SaveUpdateForPacking();
-            SaveUpdateForPacking();
+                foreach (Camera displayCamera in displayCameras)
+                {
+                    SetupRenderTextures(displayCamera);
+                }
+
+                SaveUpdateForPacking();
+                SaveUpdateForPacking();
+            }
         }
 
         private void Update()
@@ -201,7 +203,7 @@ namespace Janelia
             GL.PopMatrix();
         }
 
-        private void SetupPackingSubject()
+        private bool SetupPackingSubject()
         {
             if (packFrames)
             {
@@ -213,7 +215,12 @@ namespace Janelia
                 List<Transform> parents = new List<Transform>();
                 foreach (Camera displayCamera in displayCameras)
                 {
-                    parents.Add(displayCamera.transform);
+                    if (displayCamera.transform.parent == null)
+                    {
+                        Debug.Log("Frame packing requires that display camera '" + displayCamera.name + "' have a parent.");
+                        return false;
+                    }
+                    parents.Add(displayCamera.transform.parent);
                 }
                 List<Transform> currents;
                 do
@@ -252,6 +259,7 @@ namespace Janelia
                 }
                 while (currents.Count == parents.Count);
             }
+            return true;
         }
 
         private bool DoPackFrames()
