@@ -111,3 +111,68 @@ The saving of frames can be tuned with several commandline options:
 
 It is particularly useful to save the frames when playing back a log file, and remember that the log file, _L_, to play is specified by the `-playback L` commandline option (as implemented in the 
  [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in the package [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package).
+
+ ### `simplify.py`
+
+ This Python script can be used to post process a log file, making it simpler by combining entries having the same time stamp (i.e., frame).  For example, say the original log file is the following:
+ ```json
+[
+{
+    "timeSecs": 0.88304,
+    "frame": 100.0,
+    "timeSecsAfterSplash": 0.88304,
+    "frameAfterSplash": 100.0,
+    "a": 1
+},
+{
+    "timeSecs": 0.88304,
+    "frame": 100.0,
+    "timeSecsAfterSplash": 0.88304,
+    "frameAfterSplash": 100.0,
+    "b": 1.0
+},
+{
+    "timeSecs": 0.88304,
+    "frame": 100.0,
+    "timeSecsAfterSplash": 0.88304,
+    "frameAfterSplash": 100.0,
+    "c": {
+        "x": 1.0,
+        "y": 1.1,
+        "z": 1.2
+    }
+},
+{
+    "timeSecs": 0.88612,
+    "frame": 101.0,
+    "timeSecsAfterSplash": 0.88612,
+    "frameAfterSplash": 101.0,
+    "a": 2
+}
+]
+ ```
+The simplified version would be:
+ ```json
+[
+{
+    "timeSecs": 0.88304,
+    "frame": 100.0,
+    "timeSecsAfterSplash": 0.88304,
+    "frameAfterSplash": 100.0,
+    "a": 1,
+    "b": 1.0,
+    "c": {
+        "x": 1.0,
+        "y": 1.1,
+        "z": 1.2
+    }
+},
+{
+    "timeSecs": 0.88612,
+    "frame": 101.0,
+    "timeSecsAfterSplash": 0.88612,
+    "frameAfterSplash": 101.0,
+    "a": 2
+}
+]
+ ```
