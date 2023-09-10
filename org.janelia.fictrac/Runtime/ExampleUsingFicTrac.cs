@@ -8,6 +8,7 @@ namespace Janelia
     {
         public string ficTracServerAddress = "127.0.0.1";
         public int ficTracServerPort = 2000;
+        public float ficTracBallRadius = 0.5f;
 
         public void Start()
         {
@@ -32,12 +33,12 @@ namespace Janelia
                 // Rotation about `a_y` is forward/backward translation
                 // Rotation about `a_z` is heading change
 
-                float forward = _ficTracMessage.deltaRotLab.y * Mathf.Rad2Deg;
-                float sideways = _ficTracMessage.deltaRotLab.x * Mathf.Rad2Deg;
+                float forward = _ficTracMessage.deltaRotLab.y * ficTracBallRadius;
+                float sideways = _ficTracMessage.deltaRotLab.x * ficTracBallRadius;
                 _translation.Set(forward, 0, sideways);
 
-                float heading = _ficTracMessage.deltaRotLab.z * Mathf.Rad2Deg;
-                _rotation.Set(0, -heading, 0);
+                float headingChangeDegrees = _ficTracMessage.deltaRotLab.z * Mathf.Rad2Deg;
+                _rotation.Set(0, -headingChangeDegrees, 0);
 
                 transform.Translate(_translation);
                 transform.Rotate(_rotation);
