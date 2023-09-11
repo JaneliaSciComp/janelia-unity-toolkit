@@ -9,7 +9,7 @@ namespace Janelia
     //   https://github.com/rjdmoore/fictrac/blob/master/doc/data_header.txt;
     // * it does not add collision handling;
     // * it does not support data smoothing or the `smoothingCount` field.
-    
+
     public class FicTracSubjectIntegrated : MonoBehaviour
     {
         public string ficTracServerAddress = "127.0.0.1";
@@ -20,6 +20,9 @@ namespace Janelia
         public int ficTracBufferSize = 1024;
         // The number of items in the buffer of FicTrac messages.
         public int ficTracBufferCount = 240;
+
+        // The number of frames between writes to the log file.
+        public int logWriteIntervalFrames = 100;
 
         public bool logFicTracMessages = false;
         public void Start()
@@ -36,6 +39,8 @@ namespace Janelia
 
         public void Update()
         {
+            LogUtilities.LogDeltaTime();
+
             Byte[] dataFromSocket = null;
             long timestampReadMs = 0;
             int i0 = -1;
@@ -110,6 +115,17 @@ namespace Janelia
                     Logger.Log(_currentFicTracMessageLog);
                 }
             }
+
+            _currentTransformation.worldPosition = transform.position;
+            _currentTransformation.worldRotationDegs = transform.eulerAngles;
+            Logger.Log(_currentTransformation);
+
+            _framesSinceLogWrite++;
+            if (_framesSinceLogWrite > logWriteIntervalFrames)
+            {
+                Logger.Write();
+                _framesSinceLogWrite = 0;
+            }
         }
 
         public void OnDisable()
@@ -143,5 +159,16 @@ namespace Janelia
             public float ficTracIntegratedAnimalHeadingLab;
         };
         private FicTracMessageLog _currentFicTracMessageLog = new FicTracMessageLog();
+
+        [Serializable]
+        internal class Transformation : Logger.Entry
+        {
+            public Vector3 worldPosition;
+            public Vector3 worldRotationDegs;
+        };
+
+        private Transformation _currentTransformation = new Transformation();
+
+        private int _framesSinceLogWrite = 0;
     }
 }
