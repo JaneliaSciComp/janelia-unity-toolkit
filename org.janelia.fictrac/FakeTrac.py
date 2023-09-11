@@ -13,7 +13,11 @@ import socket
 import sys
 import time
 
+integratedHeading = 0
+
 def message(i, args):
+    global integratedHeading
+
     # FicTrac format:
     # https://github.com/rjdmoore/fictrac/blob/master/doc/data_header.txt
     # COL     PARAMETER                       DESCRIPTION
@@ -21,6 +25,9 @@ def message(i, args):
     # 6-8     delta rotation vector (lab)     Change in orientation since last frame,
     #                                         represented as rotation angle/axis (radians)
     #                                         in laboratory coordinates.
+    # 17      integrated animal heading (lab) Integrated heading orientation (radians) of
+    #                                         the animal in laboratory coordinates. This
+    #                                         is the direction the animal is facing.
     # 22      timestamp                       Either position in video file (ms) or frame
     #                                         capture time (ms since epoch).
 
@@ -43,6 +50,10 @@ def message(i, args):
     msgNumeric[6] = 0
     msgNumeric[7] = forward
     msgNumeric[8] = rotationRad
+
+    # Empirically, it seems that the heading change SHOULD be negated here, to match the real FicTrac.
+    integratedHeading -= rotationRad
+    msgNumeric[17] = integratedHeading
 
     # Time (in milliseconds) since the Unix epoch.
     timestampMs = int(time.time() * 1000)
