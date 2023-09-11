@@ -90,7 +90,8 @@ namespace Janelia
 
                 float heading = d * Mathf.Rad2Deg;
                 Vector3 eulerAngles = transform.eulerAngles;
-                eulerAngles.y = -heading;
+                // Empirically, it seems that the heading should NOT be negated here.
+                eulerAngles.y = heading;
 
                 transform.eulerAngles = eulerAngles;
 
