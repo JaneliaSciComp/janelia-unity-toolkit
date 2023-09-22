@@ -3,6 +3,8 @@
 ## Summary
 This repository contains [packages](https://docs.unity3d.com/Manual/Packages.html) for the Unity game engine, with an emphasis on supporting animal studies in virtual reality (VR).  The packages are meant to be loosely coupled to promote flexible reuse.
 
+To get started with a setup that has been used in the [Jayaraman lab at Janelia](https://www.janelia.org/lab/jayaraman-lab), follow the directions for the [org.janelia.setup-etho-vr](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.setup-etho-vr) package.
+
 Examples of the functionality supported in this toolkit include:
 * frame rate management ([org.janelia.force-render-rate](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.force-render-rate))
 * extensible logging of activity during a session, with optional saving of rendered frames ([org.janelia.logging](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.logging))

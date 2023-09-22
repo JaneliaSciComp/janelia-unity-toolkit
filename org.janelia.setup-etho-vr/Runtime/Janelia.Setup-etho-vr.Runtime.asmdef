@@ -1,0 +1,16 @@
+{
+    "name": "Janelia.Setup-etho-vr.Runtime",
+    "references": [
+        "Janelia.Logging.Runtime",
+        "Janelia.Ni-daq-mx.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

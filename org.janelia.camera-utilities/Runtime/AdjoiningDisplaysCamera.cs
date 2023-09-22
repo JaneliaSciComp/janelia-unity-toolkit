@@ -42,7 +42,7 @@ namespace Janelia
         public Camera[] displayCameras = new Camera[4];
 
         public int displayWidth = 480;
-        public int displayHeight = 854;
+        public int displayHeight = 720;
 
 
         public int leftDisplayIndex = 2;
@@ -58,9 +58,9 @@ namespace Janelia
             LOWER_LEFT = 3,
             LOWER_RIGHT = 4
         }
-        public ProgressBoxLocation progressBoxLocation = ProgressBoxLocation.NONE;
-        public int progressBoxCamera = 0;
-        public int progressBoxSize = 50;
+        public ProgressBoxLocation progressBoxLocation = ProgressBoxLocation.LOWER_LEFT;
+        public int progressBoxCamera = 1;
+        public int progressBoxSize = 70;
 
         public bool packFrames = false;
 

@@ -1,0 +1,10 @@
+[
+  "org.janelia.background",
+  "org.janelia.camera-utilities",
+  "org.janelia.fictrac-collision",
+  "org.janelia.force-render-rate",
+  "org.janelia.general",
+  "org.janelia.ni-daq-mx",
+  "org.janelia.setup-cameras-n-gon",
+  "org.janelia.setup-etho-vr"
+]

@@ -15,6 +15,38 @@ namespace Janelia
 
     public class SetupCamerasNGon : EditorWindow
     {
+        [MenuItem("Window/Setup Cameras, N-gon")]
+        public static void ShowWindow()
+        {
+            SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
+        }
+
+        public SetupCamerasNGon()
+        {
+            _cameraScreens = new List<CameraScreen>();
+            _rotationY = RotationYCentered();
+
+            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnSceneSaved;
+        }
+
+        public static void Setup(int numCameras = 4, int numEmptySides = 1, float screenWidth = 5.8f, float screenHeight = 9.5f,
+                                 float fractionalHeight = 0.737f, float rotationY = -18, float offsetX = 0, float offsetZ = 0)
+        {
+            SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
+
+            window._numCameras = numCameras;
+            window._numEmptySides = numEmptySides;
+            window._screenWidth = screenWidth;
+            window._screenHeight = screenHeight;
+            window._fractionalHeight = fractionalHeight;
+            window._rotationY = rotationY;
+            window._offsetX = offsetX;
+            window._offsetZ = offsetZ;
+
+            window.OnGUI();
+            window.UpdateCameras();
+        }
+
         private GameObject _fly;
         private string _flyComponentExtra;
 
@@ -30,14 +62,14 @@ namespace Janelia
 
         private int _numCameras = 4;
         private int _numEmptySides = 1;
-        private float _screenWidth = 95.0f;
-        private float _screenHeight = 182.0f;
-        private float _fractionalHeight = 0.3333f;
-        private float _rotationY = 0;
+        private float _screenWidth = 5.8f; // cm
+        private float _screenHeight = 9.5f; // cm
+        private float _fractionalHeight = 0.737f;
+        private float _rotationY = -18;
         private float _offsetX = 0;
         private float _offsetZ = 0;
         private float _tilt = 0;
-        private float _near = 0.1f;
+        private float _near = 0.01f;
         private float _far = 1000.0f;
 
         // With GameObject.CreatePrimitive(), properties like these must be present somewhere
@@ -47,20 +79,6 @@ namespace Janelia
         private MeshFilter _preventStrippingMeshFilter;
         private MeshRenderer _preventStrippingMeshRenderer;
         private BoxCollider _preventStrippingBoxCollider;
-
-        [MenuItem("Window/Setup Cameras, N-gon")]
-        public static void ShowWindow()
-        {
-            SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
-        }
-
-        public SetupCamerasNGon()
-        {
-            _cameraScreens = new List<CameraScreen>();
-            _rotationY = RotationYCentered();
-
-            UnityEditor.SceneManagement.EditorSceneManager.sceneSaved += OnSceneSaved;
-        }
 
         public void OnEnable()
         {
@@ -101,9 +119,23 @@ namespace Janelia
             {
                 _cameraScreens.Add(new CameraScreen());
             }
-            if (_cameraScreens.Count > _numCameras)
+
+            int failSafe = _cameraScreens.Count;
+            while ((_cameraScreens.Count > _numCameras) && (failSafe-- > 0))
             {
-                _cameraScreens.RemoveRange(_numCameras - 1, _cameraScreens.Count - _numCameras);
+                foreach (CameraScreen cameraScreen in _cameraScreens)
+                {
+                    string suffix = cameraScreen.camera.name.Substring("FlyCamera".Length);
+                    int i;
+                    if (int.TryParse(suffix, out i))
+                    {
+                        if (i > _numCameras)
+                        {
+                            _cameraScreens.Remove(cameraScreen);
+                            break;
+                        }
+                    }
+                }
             }
 
             for (int i = 0; i < _cameraScreens.Count; i++)
@@ -165,9 +197,6 @@ namespace Janelia
 
         private void UpdateCameras()
         {
-            // TODO: Make the actions here undoable
-            // https://docs.unity3d.com/ScriptReference/Undo.html
-
             if (_cameraScreens.Count != _numCameras)
             {
                 Debug.Log("Exactly " + _numCameras + " camera/screen pairs are expected.");
@@ -184,7 +213,7 @@ namespace Janelia
             if (_fly == null)
             {
                 _fly = new GameObject(name);
-                _fly.transform.localPosition = new Vector3(0, 0, 0);
+                _fly.transform.localPosition = new Vector3(0, 0.01f, 0);
 
                 // For some reason, creating objects in this routine does not seem to
                 // mark the containing scene as dirty, so it is difficult to save the
@@ -287,6 +316,24 @@ namespace Janelia
                 screenXform.position += new Vector3(_offsetX, 0, _offsetZ);
 
                 camYRot += fovDeg;
+            }
+
+            Camera[] cameras = _fly.GetComponentsInChildren<Camera>();
+            foreach (Camera camera in cameras)
+            {
+                bool found = false;
+                for (int i = 0; i < _cameraScreens.Count; i++)
+                {
+                    if (_cameraScreens[i].camera == camera)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    DestroyImmediate(camera.gameObject);
+                }
             }
 
             if (!Application.isPlaying)
