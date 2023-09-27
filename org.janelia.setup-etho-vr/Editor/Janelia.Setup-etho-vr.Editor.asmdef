@@ -1,0 +1,21 @@
+{
+    "name": "Janelia.Setup-etho-vr.Editor",
+    "references": [
+        "Janelia.Camera-utilities.Runtime",
+        "Janelia.Collision-handling.Runtime",
+        "Janelia.Fictrac-collision.Runtime",
+        "Janelia.Force-render-rate.Runtime",
+        "Janelia.Logging.Runtime",
+        "Janelia.Setup-cameras-n-gon.Editor",
+        "Janelia.Setup-etho-vr.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
