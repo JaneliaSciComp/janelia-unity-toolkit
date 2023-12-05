@@ -28,6 +28,7 @@ namespace Janelia
 
         public static void Initialize(Spec spec, string specFilePath)
         {
+            Debug.Log("BackgroundChanger using spec file " + specFilePath);
             _spec = spec;
             _specFilePath = specFilePath;
             _object = new GameObject("BackgroundChanger");
@@ -39,7 +40,9 @@ namespace Janelia
         {
             public void Awake()
             {
-                LoadTextures();
+                LoadTexturePaths();
+                LoadSeparatorTexture();
+                _material = Resources.Load(CylinderBackgroundResources.MaterialName, typeof(Material)) as Material;
                 if (_material != null)
                 {
                     _material.SetTexture("_MainTex", _separatorTexture);
@@ -51,70 +54,47 @@ namespace Janelia
                 StartCoroutine(ChangeBackground());
             }
 
-            private void LoadTextures()
+            private void LoadTexturePaths()
             {
                 string jsonDir = Path.GetDirectoryName(_specFilePath);
-                _material = Resources.Load(CylinderBackgroundResources.MaterialName, typeof(Material)) as Material;
-                if (_material != null)
+                foreach (string texturePath in _spec.textures)
                 {
-                    foreach (string texturePath in _spec.textures)
+                    string pathFull = Path.Combine(jsonDir, texturePath);
+                    if (Directory.Exists(pathFull))
                     {
-                        string texturePathFull = Path.Combine(jsonDir, texturePath);
-                        LoadTextures(texturePathFull);
-                    }
-                    _separatorTexture = SolidTexture(Color.black);
-                    if (_spec.separatorTexture != null)
-                    {
-                        string separatorPathFull = Path.Combine(jsonDir, _spec.separatorTexture);
-                        _separatorTexture = LoadTexture(separatorPathFull);
-                    }
-                    if (_separatorTexture == null)
-                    {
-                        Debug.LogError("Could not create separator texture from file '" + _separatorTexture +"'");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("Could not load material '" + CylinderBackgroundResources.MaterialName + "'");
-                }
-            }
-
-            private void LoadTextures(string pathFull)
-            {
-                if (File.Exists(pathFull))
-                {
-                    AddTexture(pathFull);
-                }
-                else if (Directory.Exists(pathFull))
-                {
-                    string[] supported = new string[] {".bmp", ".gif", ".jpg", ".jpeg", ".png", ".psd", ".tga", ".tif", ".tiff"};
-                    string[] files = Directory.GetFiles(pathFull);
-                    Array.Sort(files);
-                    foreach (string file in files)
-                    {
-                        string ext = Path.GetExtension(file).ToLower();
-                        if (supported.Contains(ext))
+                        string[] supported = new string[] {".bmp", ".gif", ".jpg", ".jpeg", ".png", ".psd", ".tga", ".tif", ".tiff"};
+                        string[] files = Directory.GetFiles(pathFull);
+                        Array.Sort(files);
+                        foreach (string file in files)
                         {
-                            string texturePathFull = Path.Combine(pathFull, file);
-                            AddTexture(texturePathFull);
+                            string ext = Path.GetExtension(file).ToLower();
+                            if (supported.Contains(ext))
+                            {
+                                string texturePathFull = Path.Combine(pathFull, file);
+                                _texturePaths.Add(texturePathFull);
+                            }
                         }
                     }
+                    else
+                    {
+                        _texturePaths.Add(pathFull);
+                    }
                 }
             }
 
-            private void AddTexture(string pathFull)
+            private void LoadSeparatorTexture()
             {
-                Texture2D texture = LoadTexture(pathFull);
-                if (texture != null)
+                _separatorTexture = SolidTexture(Color.black);
+                if (_spec.separatorTexture != null)
                 {
-                    _textures.Add(texture);
-                    _texturePaths.Add(pathFull);
+                    string jsonDir = Path.GetDirectoryName(_specFilePath);
+                    string separatorPathFull = Path.Combine(jsonDir, _spec.separatorTexture);
+                    _separatorTexture = LoadTexture(separatorPathFull);
                 }
-                else
+                if (_separatorTexture == null)
                 {
-                    Debug.LogError("Could not create texture from file '" + pathFull +"'");
-                    _textures.Add(SolidTexture(Color.red));
-                    _texturePaths.Add("error");
+                    Debug.LogError("BackgroundChanger: cannot create separator texture from file '" + _separatorTexture +"'");
+                    _separatorTexture = SolidTexture(Color.red);
                 }
             }
 
@@ -131,28 +111,29 @@ namespace Janelia
             // TODO: Move to a utilities file so this code can be shared with StartupCylinderBackground.cs.
             private Texture2D LoadTexture(string texturePath)
             {
-                if (File.Exists(texturePath)) 
+                if (File.Exists(texturePath))
                 {
                     byte[] bytes = File.ReadAllBytes(texturePath);
                     const int ToBeReplacedByLoadImage = 2;
                     const bool MipMaps = false;
+                    // Create a new Texture2D each time, in case the images have different sizes.
                     Texture2D texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
                     if (texture.LoadImage(bytes))
                     {
                         return texture;
                     }
                 }
-                return null;
+                Debug.Log("BackgroundChanger: cannot find texture file " + texturePath);
+                return SolidTexture(Color.red);
             }
 
             private IEnumerator ChangeBackground()
             {
-                if (_material != null)
+                UseSeparatorTexture();
+                while (_current < _texturePaths.Count)
                 {
-                    _material.SetTexture("_MainTex", _separatorTexture);
-                }
-                while (_current < _textures.Count)
-                {
+                    long t0 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
                     if (!_splashIsFinished)
                     {
                         yield return new WaitForSeconds(Time.deltaTime);
@@ -163,11 +144,21 @@ namespace Janelia
                         if (_spec.separatorDurationSecs > 0)
                         {
                             UseSeparatorTexture();
-                            yield return new WaitForSeconds(_spec.separatorDurationSecs);
+
+                            long t1A = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                            float elapsedSecsA = (t1A - t0) / 1000.0f;
+                            float waitA = Mathf.Max(_spec.separatorDurationSecs - elapsedSecsA, 0);
+
+                            yield return new WaitForSeconds(waitA);
                         }
 
                         UseCurrentTexture();
-                        yield return new WaitForSeconds(_spec.durationSecs);
+
+                        long t1B = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        float elapsedSecsB = (t1B - t0) / 1000.0f;
+                        float waitB = Mathf.Max(_spec.durationSecs - elapsedSecsB, 0);
+
+                        yield return new WaitForSeconds(waitB);
                     }
                 }
 
@@ -176,36 +167,37 @@ namespace Janelia
 
                 Application.Quit();
             }
-        }
 
-        private static void UseSeparatorTexture()
-        {
-            if (_material != null)
+            private void UseSeparatorTexture()
             {
-                _material.SetTexture("_MainTex", _separatorTexture);
-
-                ChangingToSeparatorTextureLog entry = new ChangingToSeparatorTextureLog
+                if (_material != null)
                 {
-                    separatorTextureDurationSecs = _spec.separatorDurationSecs
-                };
-                Logger.Log(entry);
+                    _material.SetTexture("_MainTex", _separatorTexture);
+
+                    ChangingToSeparatorTextureLog entry = new ChangingToSeparatorTextureLog
+                    {
+                        separatorTextureDurationSecs = _spec.separatorDurationSecs
+                    };
+                    Logger.Log(entry);
+                }
             }
-        }
 
-        private static void UseCurrentTexture()
-        {
-            if (_material != null)
+            private void UseCurrentTexture()
             {
-                _material.SetTexture("_MainTex", _textures[_current]);
-                
-                ChangingTextureLog entry = new ChangingTextureLog
+                if (_material != null)
                 {
-                    backgroundTextureNowInUse = _texturePaths[_current],
-                    durationSecs = _spec.durationSecs
-                };
-                Logger.Log(entry);
+                    Texture2D texture = LoadTexture(_texturePaths[_current]);
+                    _material.SetTexture("_MainTex", texture);
 
-                _current++;
+                    ChangingTextureLog entry = new ChangingTextureLog
+                    {
+                        backgroundTextureNowInUse = _texturePaths[_current],
+                        durationSecs = _spec.durationSecs
+                    };
+                    Logger.Log(entry);
+
+                    _current++;
+                }
             }
         }
 
