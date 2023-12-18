@@ -223,4 +223,43 @@ extern "C" {
         }
         return obj->getAsyncOperationProgress();
     }
+
+    void
+    Ur_rtde_RTDEControlInterface_getInverseKinematics1(ur_rtde::RTDEControlInterface* obj,
+                                                       float* result0, float* result1, float* result2, float* result3, float* result4, float* result5,
+                                                       float x0, float x1, float x2, float x3, float x4, float x5,
+                                                       float qnear0, float qnear1, float qnear2, float qnear3, float qnear4, float qnear5,
+                                                       float maxPositionError, float maxOrientationError)
+    {
+        if (isValidControlInterface(obj)) {
+            std::vector<double> x{x0, x1, x2, x3, x4, x5};
+            std::vector<double> qnear{qnear0, qnear1, qnear2, qnear3, qnear4, qnear5};
+            std::vector<double> result = obj->getInverseKinematics(x, qnear, maxPositionError, maxOrientationError);
+            *result0 = (float)result[0];
+            *result1 = (float)result[1];
+            *result2 = (float)result[2];
+            *result3 = (float)result[3];
+            *result4 = (float)result[4];
+            *result5 = (float)result[5];
+        }
+    }
+
+    void
+    Ur_rtde_RTDEControlInterface_getInverseKinematics2(ur_rtde::RTDEControlInterface* obj,
+                                                       float* result0, float* result1, float* result2, float* result3, float* result4, float* result5,
+                                                       float x0, float x1, float x2, float x3, float x4, float x5,
+                                                       float maxPositionError, float maxOrientationError)
+    {
+        if (isValidControlInterface(obj)) {
+            std::vector<double> x{x0, x1, x2, x3, x4, x5};
+            std::vector<double> result = obj->getInverseKinematics(x, {}, maxPositionError, maxOrientationError);
+            *result0 = (float)result[0];
+            *result1 = (float)result[1];
+            *result2 = (float)result[2];
+            *result3 = (float)result[3];
+            *result4 = (float)result[4];
+            *result5 = (float)result[5];
+        }
+    }
+
 }

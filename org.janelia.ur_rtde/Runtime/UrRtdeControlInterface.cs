@@ -176,6 +176,38 @@ namespace Janelia
             return Ur_rtde_RTDEControlInterface_getAsyncOperationProgress(_controlInterface);
         }
 
+        public bool GetInverseKinematics(out float[] resultJoints, float[] x, float[] qnear = null, float maxPositionError = 1e-10f, float maxOrientationError = 1e-10f)
+        {
+            if (x.Length < 6) {
+                Debug.Log("UrRtdeControlInterface.GetInverseKinematics failed: x vector has length " + x.Length + " instead of length 6");
+                resultJoints = new float[] { 0, 0, 0, 0, 0, 0 };
+                return false;
+            }
+            if ((qnear != null) && (qnear.Length < 6)) {
+                Debug.Log("UrRtdeControlInterface.GetInverseKinematics failed: qnear vector has length " + qnear.Length + " instead of length 6");
+                resultJoints = new float[] { 0, 0, 0, 0, 0, 0 };
+                return false;
+            }
+            float res0, res1, res2, res3, res4, res5;
+            if (qnear != null)
+            {
+                Ur_rtde_RTDEControlInterface_getInverseKinematics1(_controlInterface,
+                                                                   out res0, out res1, out res2, out res3, out res4, out res5,
+                                                                   x[0], x[1], x[2], x[3], x[4], x[5],
+                                                                   qnear[0], qnear[1], qnear[2], qnear[3], qnear[4], qnear[5],
+                                                                   maxPositionError, maxOrientationError);
+            }
+            else
+            {
+                Ur_rtde_RTDEControlInterface_getInverseKinematics2(_controlInterface,
+                                                                   out res0, out res1, out res2, out res3, out res4, out res5,
+                                                                   x[0], x[1], x[2], x[3], x[4], x[5],
+                                                                   maxPositionError, maxOrientationError);
+            }
+            resultJoints = new float[] { res0, res1, res2, res3, res4, res5 };
+            return true;
+        }
+
         private static byte[] MakeCString(string s)
         {
             return Encoding.ASCII.GetBytes(s + '\0');
@@ -250,5 +282,18 @@ namespace Janelia
 
         [DllImport("ur_rtde_c")]
         private static extern int Ur_rtde_RTDEControlInterface_getAsyncOperationProgress(IntPtr obj);
+
+        [DllImport("ur_rtde_c")]
+        private static extern void Ur_rtde_RTDEControlInterface_getInverseKinematics1(IntPtr obj,
+                                                                                      out float result0, out float result1, out float result2, out float result3, out float result4, out float result5,
+                                                                                      float x0, float x1, float x2, float x3, float x4, float x5,
+                                                                                      float qnear0, float qnear1, float qnear2, float qnear3, float qnear4, float qnear5,
+                                                                                      float maxPositionError, float maxOrientationError);
+
+        [DllImport("ur_rtde_c")]
+        private static extern void Ur_rtde_RTDEControlInterface_getInverseKinematics2(IntPtr obj,
+                                                                                      out float result0, out float result1, out float result2, out float result3, out float result4, out float result5,
+                                                                                      float x0, float x1, float x2, float x3, float x4, float x5,
+                                                                                      float maxPositionError, float maxOrientationError);
     }
 }
