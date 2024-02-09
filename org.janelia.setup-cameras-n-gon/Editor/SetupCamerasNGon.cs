@@ -274,7 +274,12 @@ namespace Janelia
                 renderer.receiveShadows = false;
 
                 OffAxisPerspectiveCamera offAxisPerspectiveCamera =
-                    _cameraScreens[i].camera.gameObject.AddComponent<OffAxisPerspectiveCamera>() as OffAxisPerspectiveCamera;
+                    _cameraScreens[i].camera.gameObject.GetComponent<OffAxisPerspectiveCamera>();
+                if (offAxisPerspectiveCamera == null)
+                {
+                    offAxisPerspectiveCamera =
+                        _cameraScreens[i].camera.gameObject.AddComponent<OffAxisPerspectiveCamera>() as OffAxisPerspectiveCamera;
+                }
                 offAxisPerspectiveCamera.screen = _cameraScreens[i].screen;
             }
 
