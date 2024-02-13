@@ -22,6 +22,10 @@ namespace Janelia
         // The number of items in the buffer of FicTrac messages.
         public int ficTracBufferCount = 240;
 
+        // For detecting periods of free spinning from FicTrac, when the heading changes
+        // with an angular speed above a threshold.
+        public FicTracSpinThresholder thresholder;
+
         public bool logFicTracMessages = false;
 
         // Setting this flag to `true` will reduce performance.
@@ -91,9 +95,19 @@ namespace Janelia
                 if (!valid)
                     break;
 
-                _deltaRotationVectorLabToSmooth.Set(a, b, c);
-                Smooth();
-                _deltaRotationVectorLabUpdated += _deltaRotationVectorLabToSmooth;
+                float s = Mathf.Rad2Deg;
+                float heading = c * s;
+                thresholder.UpdateRelative(heading, Time.deltaTime);
+                if (thresholder.angularSpeed < thresholder.threshold)
+                {
+                    _deltaRotationVectorLabToSmooth.Set(a, b, c);
+                    Smooth();
+                    _deltaRotationVectorLabUpdated += _deltaRotationVectorLabToSmooth;
+                }
+                else
+                {
+                     thresholder.Log();
+                }
 
                 if (logFicTracMessages)
                 {

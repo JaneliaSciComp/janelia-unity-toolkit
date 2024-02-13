@@ -10,6 +10,10 @@ namespace Janelia
     // * it does not add collision handling;
     // * it does not support data smoothing or the `smoothingCount` field.
 
+    // For detecting periods of free spinning of the FicTrac trackball (when the fly has lifted its legs
+    // off the trackball), indicated by heading changes with an angular speed above a threshold.
+    [RequireComponent(typeof(FicTracSpinThresholder))]
+
     public class FicTracSubjectIntegrated : MonoBehaviour
     {
         public string ficTracServerAddress = "127.0.0.1";
@@ -35,6 +39,11 @@ namespace Janelia
             _socketMessageReader = new SocketMessageReader(HEADER, ficTracServerAddress, ficTracServerPort,
                                                            ficTracBufferSize, ficTracBufferCount);
             _socketMessageReader.Start();
+
+            // For detecting periods of free spinning from FicTrac, when the heading changes
+            // with an angular speed above a threshold.
+            _thresholder = gameObject.GetComponentInChildren<FicTracSpinThresholder>();
+            _dCorrection = _dCorrectionLatest = _dCorrectionBase = 0;
         }
 
         public void Update()
@@ -82,18 +91,43 @@ namespace Janelia
                 if (!valid)
                     break;
 
-                float forward = b * ficTracBallRadius;
-                float sideways = a * ficTracBallRadius;
-                Vector3 translation = new Vector3(forward, 0, sideways);
+                float headingRaw = d * Mathf.Rad2Deg;
+                _thresholder.UpdateAbsolute(headingRaw, Time.deltaTime);
+                if (_thresholder.angularSpeed < _thresholder.threshold)
+                {
+                    // Correct the FicTrac `d` by removing changes during periods of free spinning.
+                    // The `_dCorrectionLatest` will be non-zero right after the latest period
+                    // of free spinning.
+                    _dCorrection = _dCorrection + _dCorrectionLatest;
+                    float dCorrected = d - _dCorrection;
 
-                transform.Translate(translation);
+                    // The `_dCorrectionBase` will be used to compute `_dCorrectionLatest` if
+                    // a period of free spinning starts with the next FicTrac update.
+                    _dCorrectionBase = dCorrected;
+                    _dCorrectionLatest = 0;
 
-                float heading = d * Mathf.Rad2Deg;
-                Vector3 eulerAngles = transform.eulerAngles;
-                // Empirically, it seems that the heading should NOT be negated here.
-                eulerAngles.y = heading;
+                    float forward = b * ficTracBallRadius;
+                    float sideways = a * ficTracBallRadius;
+                    Vector3 translation = new Vector3(forward, 0, sideways);
 
-                transform.eulerAngles = eulerAngles;
+                    float heading = dCorrected * Mathf.Rad2Deg;
+                    Vector3 eulerAngles = transform.eulerAngles;
+                    // Empirically, it seems that the heading should NOT be negated here.
+                    eulerAngles.y = heading;
+
+                    transform.Translate(translation);
+                    transform.eulerAngles = eulerAngles;
+                }
+                else
+                {
+                    // A period of free spinning.
+                    _thresholder.Log();
+                    _dCorrectionLatest = d - _dCorrection - _dCorrectionBase;
+
+                    // How the correction will be applied, in the preceding block.
+                    _currentCorrection.headingCorrectionDegs = (_dCorrection + _dCorrectionLatest) * Mathf.Rad2Deg;
+                    Logger.Log(_currentCorrection);
+                }
 
                 if (logFicTracMessages)
                 {
@@ -167,8 +201,20 @@ namespace Janelia
             public Vector3 worldPosition;
             public Vector3 worldRotationDegs;
         };
-
         private Transformation _currentTransformation = new Transformation();
+
+        private FicTracSpinThresholder _thresholder;
+
+        private float _dCorrectionBase;
+        private float _dCorrection;
+        private float _dCorrectionLatest;
+
+        [Serializable]
+        internal class Correction : Logger.Entry
+        {
+            public float headingCorrectionDegs;
+        };
+        private Correction _currentCorrection = new Correction();
 
         private int _framesSinceLogWrite = 0;
     }

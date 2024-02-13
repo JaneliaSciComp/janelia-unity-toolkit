@@ -18,7 +18,8 @@ namespace Janelia
 
         public void Update()
         {
-            while (_ficTracReader.GetNextMessage(ref _ficTracMessage))
+            long readTimestampMs = 0;
+            while (_ficTracReader.GetNextMessage(ref _ficTracMessage, ref readTimestampMs))
             {
                 // https://github.com/rjdmoore/fictrac/blob/master/doc/data_header.txt
                 // COL     PARAMETER                       DESCRIPTION
