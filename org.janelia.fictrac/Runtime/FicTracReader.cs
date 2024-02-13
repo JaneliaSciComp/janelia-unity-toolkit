@@ -36,10 +36,9 @@ namespace Janelia
             _socketMessageReader.Start();
         }
 
-        public bool GetNextMessage(ref Message message)
+        public bool GetNextMessage(ref Message message, ref long dataTimestampMs)
         {
             Byte[] dataFromSocket = null;
-            long dataTimestampMs = 0;
             int i0 = -1;
             if (_socketMessageReader.GetNextMessage(ref dataFromSocket, ref dataTimestampMs, ref i0))
             {

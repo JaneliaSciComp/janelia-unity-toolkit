@@ -10,6 +10,10 @@ namespace Janelia
     // * it does not add collision handling;
     // * it does not support data smoothing or the `smoothingCount` field.
 
+    // For detecting periods of chaotic motion from FicTrac, when the heading changes
+    // with an angular speed above a threshold.
+    [RequireComponent(typeof(FicTracSpinThresholder))]
+
     public class FicTracSubjectIntegrated : MonoBehaviour
     {
         public string ficTracServerAddress = "127.0.0.1";
@@ -35,6 +39,13 @@ namespace Janelia
             _socketMessageReader = new SocketMessageReader(HEADER, ficTracServerAddress, ficTracServerPort,
                                                            ficTracBufferSize, ficTracBufferCount);
             _socketMessageReader.Start();
+
+            // For detecting periods of chaotic motion from FicTrac, when the heading changes
+            // with an angular speed above a threshold.
+            _thresholder = gameObject.GetComponentInChildren<FicTracSpinThresholder>();
+            _correction = new FicTracState(0, 0, 0);
+            _correctionLatest = new FicTracState(0, 0, 0);
+            _correctionBase = new FicTracState(0, 0, 0);
         }
 
         public void Update()
@@ -82,18 +93,39 @@ namespace Janelia
                 if (!valid)
                     break;
 
-                float forward = b * ficTracBallRadius;
-                float sideways = a * ficTracBallRadius;
-                Vector3 translation = new Vector3(forward, 0, sideways);
+                float headingRaw = d * Mathf.Rad2Deg;
+                _thresholder.UpdateAbsolute(headingRaw, Time.deltaTime);
+                if (_thresholder.angularSpeed < _thresholder.threshold)
+                {
+                    // Correct the FicTrac state by removing changes during periods of chaos.
+                    // The `_correctionLatest` will be non-zero right after the latest period
+                    // of chaos.
+                    _correction = _correction + _correctionLatest;
+                    FicTracState corrected = new FicTracState(a, b, d) - _correction;
 
-                transform.Translate(translation);
+                    // The `correctionBase` will be used to compute `_correctionLatest` if
+                    // a period of chaos starts with the next FicTrac update.
+                    _correctionBase = corrected;
+                    _correctionLatest = new FicTracState(0, 0, 0);
 
-                float heading = d * Mathf.Rad2Deg;
-                Vector3 eulerAngles = transform.eulerAngles;
-                // Empirically, it seems that the heading should NOT be negated here.
-                eulerAngles.y = heading;
+                    float forward = corrected.b * ficTracBallRadius;
+                    float sideways = corrected.a * ficTracBallRadius;
+                    Vector3 translation = new Vector3(forward, 0, sideways);
 
-                transform.eulerAngles = eulerAngles;
+                    float heading = corrected.d * Mathf.Rad2Deg;
+                    Vector3 eulerAngles = transform.eulerAngles;
+                    // Empirically, it seems that the heading should NOT be negated here.
+                    eulerAngles.y = heading;
+
+                    transform.Translate(translation);
+                    transform.eulerAngles = eulerAngles;
+                }
+                else
+                {
+                    // A period of chaos.
+                    _correctionLatest = new FicTracState(a, b, d) - _correction - _correctionBase;
+                    _thresholder.Log();
+                }
 
                 if (logFicTracMessages)
                 {
@@ -167,6 +199,27 @@ namespace Janelia
             public Vector3 worldPosition;
             public Vector3 worldRotationDegs;
         };
+
+        private FicTracSpinThresholder _thresholder;
+
+        internal struct FicTracState
+        {
+            internal FicTracState(float A, float B, float D)
+            {
+                a = A; b = B; d = D;
+            }
+            public static FicTracState operator+(FicTracState x, FicTracState y) =>
+                new FicTracState(x.a + y.a, x.b + y.b, x.d + y.d);
+            public static FicTracState operator-(FicTracState x, FicTracState y) =>
+                new FicTracState(x.a - y.a, x.b - y.b, x.d - y.d);
+            internal float a;
+            internal float b;
+            internal float d;
+        }
+
+        private FicTracState _correctionBase;
+        private FicTracState _correction;
+        private FicTracState _correctionLatest;
 
         private Transformation _currentTransformation = new Transformation();
 

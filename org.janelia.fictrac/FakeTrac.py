@@ -41,6 +41,11 @@ def message(i, args):
     rotationRad = args.rotationRate / (2 * math.pi)
     rotationRad += rotationRad * random.uniform(-args.noisePercentage, args.noisePercentage)
 
+    if args.chaotic:
+        d = i // 100
+        if d % 2 == 1:
+            rotationRad *= 100
+
     # https://www.researchgate.net/figure/Visual-output-from-the-FicTrac-software-see-supplementary-video-a-A-segment-of-the_fig2_260044337
     # Rotation about `a_x` is sideways translation.
     # Rotation about `a_y` is forwards/backwards translation.
@@ -95,6 +100,8 @@ if __name__ == "__main__":
     parser.add_argument("--rot", "-ro", type=float, dest="rotationRate", help="base rotate rate")
     parser.set_defaults(noisePercentage=0.1)
     parser.add_argument("--noise", "-no", type=float, dest="noisePercentage", help="noise percentage of actual value")
+    parser.set_defaults(chaotic=False)
+    parser.add_argument("--chaotic", "-ch", dest="chaotic", action="store_true", help="add occasional chaos to test thresholding")
     args = parser.parse_args()
 
     socketType = socket.SOCK_DGRAM if args.useUDP else socket.SOCK_STREAM

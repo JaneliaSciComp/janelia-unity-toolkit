@@ -11,6 +11,10 @@ namespace Janelia
 
     // Also binds the 'q' and Escape keys to quit the application.
 
+    // For detecting periods of chaotic motion from FicTrac, when the heading changes
+    // with an angular speed above a threshold.
+    [RequireComponent(typeof(FicTracSpinThresholder))]
+
     public class FicTracSubject : Janelia.KinematicSubject
     {
         // Remember that default values here are overridden by the values saved in the Unity scene.
@@ -32,6 +36,7 @@ namespace Janelia
                 ficTracBallRadius = ficTracBallRadius,
                 smoothingCount = smoothingCount,
                 ficTracBufferCount = ficTracBufferCount,
+                thresholder = gameObject.GetComponentInChildren<FicTracSpinThresholder>(),
                 logFicTracMessages = logFicTracMessages
             };
             updater = _typedUpdater;
