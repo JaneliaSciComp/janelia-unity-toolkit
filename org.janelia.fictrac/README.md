@@ -10,14 +10,14 @@ Follow the [installation instructions in the main repository](https://github.com
 
 ## Details
 
-### Janelia.ExampleUsingFicTrac
+### `Janelia.ExampleUsingFicTrac`
 
 A simple `MonoBehaviour` that reads FicTrac messages from a socket and updates the translation and rotation of the `Transform`.  Uses `Janelia.FicTracReader` to read and parse the messages.
 
-### Janelia.FicTracReader
+### `Janelia.FicTracReader`
 
 Provides the `GetNextMessage` function to copy the next message from FicTrac into a `FicTracReader.Message` struct.  The fields of this struct are filled without creating temporary `string` instances that would trigger garbage collection, using functions of the `IoUtilities` class from the [org.janelia.io package](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.io).  Messages waiting to be retrieved are stored in a ring buffer, to allow a client to consume messages at its own rate.  The buffer is filled by `Janelia.SocketReader` from the [org.janelia.io package](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.io), which reads from a socket asynchronously in a separate thread.
 
-### FakeTrac.py
+### `FakeTrac.py`
 
 A simple Python script that sends messages in the FicTrac format over a socket, for testing how a Unity application responds to the messages.  Supports UDP and TCP, with UDP being the default to match the real FicTrac code as of late 2020.  Note that with UDP, this scripts starts sending messages immediately (without waiting for a connection, since connections are a TCP concept), so be sure to start the message-receiving application (game) before starting this script.

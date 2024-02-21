@@ -1,6 +1,6 @@
 {
     "name": "Janelia.Fictrac-collision.Runtime",
-    "references": ["Janelia.Collision-handling.Runtime", "Janelia.Io.Runtime", "Janelia.Logging.Runtime"],
+    "references": ["Janelia.Collision-handling.Runtime", "Janelia.Io.Runtime", "Janelia.Logging.Runtime", "Janelia.General.Runtime"],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
