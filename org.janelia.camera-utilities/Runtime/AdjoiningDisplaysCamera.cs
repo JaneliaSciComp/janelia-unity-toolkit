@@ -89,7 +89,7 @@ namespace Janelia
 #if UNITY_EDITOR
         // The following three functions are part of the complicated pattern necessary for
         // a leftDisplayIndex value set in the Inspector to be acessible by AdjoiningDisplaysCameraBuilder
-        // at build time, when this value isu sed as an argument in the Windows shortcut file.
+        // at build time, when this value is used as an argument in the Windows shortcut file.
 
         private void OnValidate()
         {
