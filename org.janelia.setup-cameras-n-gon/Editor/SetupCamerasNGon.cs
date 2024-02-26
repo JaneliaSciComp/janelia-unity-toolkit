@@ -32,6 +32,12 @@ namespace Janelia
         public static void Setup(int numCameras = 4, int numEmptySides = 1, float screenWidth = 5.8f, float screenHeight = 9.5f,
                                  float fractionalHeight = 0.737f, float rotationY = -18, float offsetX = 0, float offsetZ = 0)
         {
+            // Remove the saved UI input values, so `OnEnable` does not load them and set `_cameraScreens`
+            // to the wrong size relative to the settings enabled in the rest of this routine.
+            AssetDatabase.Refresh();
+            bool success = AssetDatabase.DeleteAsset("Assets/Resources/Editor/savedCamerasNGon.asset");
+            AssetDatabase.Refresh();
+
             SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
 
             window._numCameras = numCameras;

@@ -1,9 +1,9 @@
 {
-    "name": "org.janelia.setup-haberkern",
-    "displayName": "Janelia Setup Haberkern Rig",
-    "version": "1.0.0",
+    "name": "org.janelia.setup-etho-vr",
+    "displayName": "Janelia Setup Etho VR",
+    "version": "1.1.0",
     "unity": "2020.1",
-    "description": "Set up a VR rig following Hannah Haberkern's pattern (ca 2023).",
+    "description": "Set up a VR rig following patterns common at Janelia (e.g., Hannah Haberkern ca 2023).",
     "keywords": ["VR"],
     "dependencies": {}
 }
