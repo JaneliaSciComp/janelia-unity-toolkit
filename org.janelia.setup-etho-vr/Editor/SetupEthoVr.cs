@@ -24,10 +24,24 @@ namespace Janelia
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
 
-            _twoScreenRig = EditorGUILayout.Toggle("Use two-screen behavioral rig", _twoScreenRig);
+            string[] screenChoices =
+            {
+                "Use a two-screen behavioral rig",
+                "Use three screens from a box",
+                "Use four screens from a pentagon"
+            };
+            for (int i = 0; i < screenChoices.Length; ++i)
+            {
+                if (EditorGUILayout.Toggle(screenChoices[i], (_screenChosen == i)))
+                {
+                    _screenChosen = i;
+                }
+            }
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
 
             _ficTracIntegratedHeading = EditorGUILayout.Toggle("Use FicTrac integrated heading", _ficTracIntegratedHeading);
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
 
             if (GUILayout.Button("Setup"))
@@ -52,7 +66,7 @@ namespace Janelia
 
         private void SetupCameraScreens()
         {
-            if (_twoScreenRig)
+            if (_screenChosen == 0)
             {
                 int numCameras = 2;
                 int numEmptySides = 2;
@@ -61,10 +75,23 @@ namespace Janelia
                 float fractionalHeight = 0.33f;
                 float rotationY = 45;
                 float offsetX = -0.32f;
-                SetupCamerasNGon.Setup(numCameras, numEmptySides, screenWidth, screenHeight, fractionalHeight, 
+                SetupCamerasNGon.Setup(numCameras, numEmptySides, screenWidth, screenHeight, fractionalHeight,
                                        rotationY, offsetX);
             }
-            else{
+            else if (_screenChosen == 1)
+            {
+                int numCameras = 3;
+                int numEmptySides = 1;
+                float screenWidth = 1.0f;
+                float screenHeight = 1.72f;
+                float fractionalHeight = 0.33f;
+                float rotationY = 0;
+                float offsetX = 0;
+                SetupCamerasNGon.Setup(numCameras, numEmptySides, screenWidth, screenHeight, fractionalHeight,
+                                       rotationY, offsetX);
+            }
+            else
+            {
                 SetupCamerasNGon.Setup();
             }
         }
@@ -172,7 +199,7 @@ namespace Janelia
             }
         }
 
-        private bool _twoScreenRig = false;
+        private int _screenChosen = 0;
         private bool _ficTracIntegratedHeading = false;
     }
 }
