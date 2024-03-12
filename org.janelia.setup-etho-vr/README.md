@@ -2,7 +2,7 @@
 
 ## Summary
 
-Sets up a Unity scene for etho VR following the pattern used by [Hannah Haberkern at Janelia](https://www.hannahhaberkern.com/ethoVR/getting-started).
+Sets up a Unity scene for etho VR following the pattern used by [Hannah Haberkern at Janelia](https://haberkern-lab.github.io/ethoVR).
 
 ## Installation
 
