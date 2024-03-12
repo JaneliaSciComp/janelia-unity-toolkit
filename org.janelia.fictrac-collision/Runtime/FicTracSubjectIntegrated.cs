@@ -14,6 +14,9 @@ namespace Janelia
     // off the trackball), indicated by heading changes with an angular speed above a threshold.
     [RequireComponent(typeof(FicTracSpinThresholder))]
 
+    // For recording and storing the moving average (in a window of frames) for the heading angle.
+    [RequireComponent(typeof(FicTracAverager))]
+
     public class FicTracSubjectIntegrated : MonoBehaviour
     {
         public string ficTracServerAddress = "127.0.0.1";
@@ -44,6 +47,8 @@ namespace Janelia
             // with an angular speed above a threshold.
             _thresholder = gameObject.GetComponentInChildren<FicTracSpinThresholder>();
             _dCorrection = _dCorrectionLatest = _dCorrectionBase = 0;
+
+            _averager = gameObject.GetComponentInChildren<FicTracAverager>();
         }
 
         public void Update()
@@ -155,6 +160,8 @@ namespace Janelia
             _currentTransformation.worldRotationDegs = transform.eulerAngles;
             Logger.Log(_currentTransformation);
 
+            _averager.RecordHeading(transform.eulerAngles.y);
+
             _framesSinceLogWrite++;
             if (_framesSinceLogWrite > logWriteIntervalFrames)
             {
@@ -166,6 +173,15 @@ namespace Janelia
         public void OnDisable()
         {
             _socketMessageReader.OnDisable();
+        }
+
+        private void RecordHeading(float heading)
+        {
+            FicTracAverager averager = GetComponent<FicTracAverager>();
+            if (averager != null)
+            {
+                averager.RecordHeading(heading);
+            }
         }
 
         private SocketMessageReader.Delimiter HEADER = SocketMessageReader.Header((Byte)'F');
@@ -215,6 +231,8 @@ namespace Janelia
             public float headingCorrectionDegs;
         };
         private Correction _currentCorrection = new Correction();
+
+        private FicTracAverager _averager;
 
         private int _framesSinceLogWrite = 0;
     }
