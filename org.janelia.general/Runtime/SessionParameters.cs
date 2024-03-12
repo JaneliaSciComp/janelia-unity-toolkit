@@ -61,9 +61,9 @@ namespace Janelia
             return (_keysValuesString.ContainsKey(key)) ? _keysValuesString[key] : "";
         }
 
-        public static float GetFloatParameter(string key)
+        public static float GetFloatParameter(string key, float defaultValue = 0)
         {
-            return (_keysValuesFloat.ContainsKey(key)) ? _keysValuesFloat[key] : 0;
+            return (_keysValuesFloat.ContainsKey(key)) ? _keysValuesFloat[key] : defaultValue;
         }
 
         // Using `BeforeSceneLoad` should make this method get called before methods with
