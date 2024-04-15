@@ -62,6 +62,7 @@ namespace Janelia
         [PostProcessBuildAttribute(Janelia.SessionParameters.POST_PROCESS_BUILD_ORDER + 2)]
         public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
         {
+            Janelia.SessionParameters.AddStringParameter("backgroundCylinderTexture2", "");
             Janelia.SessionParameters.AddStringParameter("backgroundCylinderTexture", "");
         }
 
@@ -94,11 +95,13 @@ namespace Janelia
 
         private bool AddMaterial(GameObject cylinder)
         {
-            string shaderName = "Unlit/Texture";
-            Shader shader = Shader.Find(shaderName);
+            // For the shader `org.janelia.background/Assets/Resources/TextureMix.shader`
+            // the name to use when loading is just `TextureMix`.
+            string shaderName = "TextureMix";
+            Shader shader = Resources.Load(shaderName, typeof(Shader)) as Shader;
             if (shader == null)
             {
-                Debug.LogError("org.janelia.background: Cannot find shader '" + shaderName + "'");
+                Debug.LogError("org.janelia.background: Could not load " + shaderName + ".shader");
                 return false;
             }
 
