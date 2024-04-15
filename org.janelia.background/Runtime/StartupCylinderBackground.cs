@@ -23,24 +23,46 @@ namespace Janelia
             }
             else
             {
-                Debug.LogError("Could not load cylinder background texture from file '" + path + "'");
+                Debug.Log("Did not load empty backgroundCylinderTexture");
+            }
+
+            string path2 = Janelia.SessionParameters.GetStringParameter("backgroundCylinderTexture2");
+            if (path2.Length != 0)
+            {
+                UseTextureFile(path2, 1);
+            }
+            else
+            {
+                Debug.Log("Did not load empty backgroundCylinderTexture2");
             }
         }
 
-        private static void UseTextureFile(string texturePath)
+        private static void UseTextureFile(string texturePath, int which = 0)
         {
-            Debug.Log("Using background cylinder texture file '" + texturePath + "'");
+            Debug.Log("Using background cylinder texture " + which + " file '" + texturePath + "'");
 
             byte[] bytes = File.ReadAllBytes(texturePath);
             const int ToBeReplacedByLoadImage = 2;
             const bool MipMaps = false;
             Texture2D texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
+            texture.filterMode = FilterMode.Bilinear;
             if (texture.LoadImage(bytes))
             {
                 Material material = Resources.Load(CylinderBackgroundResources.MaterialName, typeof(Material)) as Material;
                 if (material)
                 {
-                    material.SetTexture("_MainTex", texture);
+                    switch (which)
+                    {
+                        case 0:
+                            material.SetTexture("_MainTex", texture);
+                            break;
+                        case 1:
+                            material.SetTexture("_SecondTex", texture);
+                            break;
+                        default:
+                            Debug.LogError("UseTextureFile, which = " + which + " not supported");
+                            break;
+                    }
                 }
                 else
                 {

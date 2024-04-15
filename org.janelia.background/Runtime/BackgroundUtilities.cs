@@ -4,7 +4,7 @@ namespace Janelia
 {
     public static class BackgroundUtilities
     {
-        public static void SetCylinderTextureOffset(Vector2 offset)
+        public static void SetCylinderTextureOffset(Vector2 offset, int which = 0)
         {
             if (_cylinderMaterial == null)
             {
@@ -12,11 +12,23 @@ namespace Janelia
             }
             if (_cylinderMaterial != null)
             {
-                _cylinderMaterial.SetTextureOffset("_MainTex", offset);
+                switch (which)
+                {
+                    case 0:
+                    case 1:
+                        _cylinderMaterial.SetVector("_MainTex_ST", offset);
+                        break;
+                    case 2:
+                        _cylinderMaterial.SetVector("_SecondTex_ST", offset);
+                        break;
+                    default:
+                        Debug.LogError("SetCylinderTextureOffset, which = " + which + " not supported");
+                        break;
+                }
             }
             else
             {
-                Debug.LogError("Could not load material'" + Janelia.CylinderBackgroundResources.MaterialName + "'");
+                Debug.LogError("Could not load material '" + Janelia.CylinderBackgroundResources.MaterialName + "'");
             }
         }
 
