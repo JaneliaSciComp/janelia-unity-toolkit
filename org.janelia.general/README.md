@@ -11,7 +11,7 @@ Follow the [installation instructions in the main repository](https://github.com
 
 ## Details
 
-### Janelia.SessionParameters
+### `Janelia.SessionParameters`
 
 A static class supporting parameters that might need to be changed for different runs of a standalone application.  The user can change these parameters at the start of a run without rebuilding the application.
 
@@ -25,6 +25,17 @@ Editing this text updates a [JSON](https://en.wikipedia.org/wiki/JSON) file, sto
 
 It is simple for scripts to add custom session parameters.  See the `Janelia.Timeout` class for an example.
 
-### Janelia.Timeout
+### `Janelia.Timeout`
 
 A static class that adds a session parameter for a timeout period.  When this period ends, a standalone application automatically ends itself.  An automatic ending of this sort can be useful to limit an animal study.  The parameter is named `timeoutSecs`, and its value should be in seconds; a value of `0` (or less) means there is no timeout and the application will continue running until ended manually.
+
+
+### `Janelia.DistanceTeleporter`
+
+A `GameObject` with this component will teleport to a new position whenever the object moves to more than a specified distance from designated location.
+
+The component's `thresholdDistance` field specifies the distance. This value can be overridden at the start of a session with a session parameter named `"teleportAtDistance"`.
+
+The component's `distanceFrom` field is another `GameObject` (which can be an "empty" serving only to mark a position), and teleportation is triggered when the distance between the two `GameObjects` exceeds `thresholdDistance` (or `"teleportAtDistance"`).
+
+When teleporting is triggered, the component's `GameObject` moves to the position and orientation of its `teleportTo` field, another `GameObject` (which, again, can be an "empty").
