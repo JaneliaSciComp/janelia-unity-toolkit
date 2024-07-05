@@ -12,8 +12,10 @@ The [installation instructions in the main repository](https://github.com/Janeli
 
 ## Details
 
-The user interface added by this package can install multiple packages (and their dependencies) at once.  After selecting "Install Package and Dependencies" from the Unity editor's "Window" menu, use the file chooser that appears to choose a "manifest" file listing multiple packages in a [JSON](https://en.wikipedia.org/wiki/JSON) array.  An example `manifest.json` file might be:
-```
+To install one package and its dependencies, choose "Install Package and Dependencies" from the Unity editor's "Window" menu.  Then use the file chooser that appears to navigate to and choose the `package.json` file for that one package.  Another dialog will appear listing the package and dependent packages to be installed.  If the list is correct, press the "Install" button.
+
+To install multiple packages and their dependencies from a "manifest" file, choose the "Window/Install Package and Dependencies" menu item, and this time use the file chooser to select the manifest file listing multiple packages in a [JSON](https://en.wikipedia.org/wiki/JSON) array.  An example `manifest.json` file might be:
+```json
 [
     "org.janelia.general",
     "org.janelia.fictrac-collision"
@@ -21,20 +23,53 @@ The user interface added by this package can install multiple packages (and thei
 ```
 The packages may be listed in any order.  Choosing this manifest file would load a number of packages, including `org.janelia.collision-handling` (needed by `org.janelia.fictrac-collision`) and `org.janelia.logging` (needed by both  `org.janelia.general` and `org.janelia.fictrac-collision`), as well as `org.janelia.general` and `org.janelia.fictrac-collision` themselves.
 
-When a manifest file contains only the names of packages, as above, then a few rules are used to look for the code for the named packages.  The first rule is to check for a `janelia-unity-toolkit` directory that is sibling of the manifest file; this rule would resolve the name for the `manifest1.json` file in the following excerpt of a directory structure:
+When a manifest file contains only the names of packages, as above, then a heuristic search looks for the named packages on the local file system.  The search starts with the parent directory (folder) of the manifest file and progresses back towards the root directory.  The search checks for packages in each directory visited this way, and also in each of that directory's subdirectories whose names contain the string "unity" (e.g., "janelia-unity-toolkit", "more-unity-packages").  A package is loaded from the first such directory where it is found.
+
+Consider the following example file system:
 ```
 VR/
    janelia-unity-toolkit/
-                         org.janelia.camera-utilities/
-                         org.janelia.collision-handling/
-                         org.janelia.fictrac-collision/
                          org.janelia.general/
                          org.janelia.logging/
+   more-unity-packages/
+                       edu.university.main/
+                       edu.university.used-by-main/
    manifest1.json
    manifests/
              manifest2.json
+   testing/
+           janelia-unity-toolkit/
+                                 org.janelia.general/
+                                 org.janelia.logging/
+           manifest3.json
 ```
-The second rule is to look in the manifest file's parent directory; this rule would resolve `manifest2.json`.  A manifest file also can list full path names like `"C:\\Users\\hubbardp\\VR\\janelia-unity-toolkit\\org.janelia.general"`, for maximum flexibility.
+Each of the three manifest files is as follows:
+```json
+[
+    "org.janelia.general",
+    "edu.university.main"
+]
+```
+
+The specifc packages selected for `manifest1.json` will be:
+```
+VR/janelia-unity-toolkit/org.janelia.general
+VR/janelia-unity-toolkit/org.janelia.logging
+VR/more-unity-packages/edu.unversity.main
+VR/more-unity-packages/edu.unversity.used-by-main
+```
+The same specific packages will be selected for `manifest2.json`.
+
+But for `manifest3.json` the packages will be:
+```
+VR/testing/janelia-unity-toolkit/org.janelia.general
+VR/testing/janelia-unity-toolkit/org.janelia.logging
+VR/more-unity-packages/edu.unversity.main
+VR/more-unity-packages/edu.unversity.used-by-main
+```
+
+This heuristic for resolving packages is bypassed if the manifest file lists packages with full path names like:
+`"C:\\Users\\hubbardp\\VR\\janelia-unity-toolkit\\org.janelia.general"`.
 
 ## Testing
 

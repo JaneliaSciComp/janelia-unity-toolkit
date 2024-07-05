@@ -21,7 +21,8 @@ namespace Janelia
             setupDependency(pathRoot, "a/Runtime", new string[] { });
             setupDependency(pathRoot, "b/Runtime", new string[] { "A.Runtime" });
 
-            PackageNode nodeB = new PackageNode(pathRoot + Sep + "org.janelia.b");
+            List<string> rootDirs = new List<string>(){ pathRoot };
+            PackageNode nodeB = new PackageNode(pathRoot + Sep + "org.janelia.b", rootDirs);
             List<string> topoSort = PackageNode.TopoSort();
 
             Assert.AreEqual(2, topoSort.Count);
@@ -46,7 +47,8 @@ namespace Janelia
             setupDependency(pathRoot, "b/Runtime", new string[] { "A.Runtime" });
             setupDependency(pathRoot, "c/Runtime", new string[] { "A.Runtime", "B.Runtime" });
 
-            PackageNode nodeC = new PackageNode(pathRoot + Sep + "org.janelia.c");
+            List<string> rootDirs = new List<string>(){ pathRoot };
+            PackageNode nodeC = new PackageNode(pathRoot + Sep + "org.janelia.c", rootDirs);
             List<string> topoSort = PackageNode.TopoSort();
 
             Assert.AreEqual(3, topoSort.Count);
@@ -72,7 +74,8 @@ namespace Janelia
             setupDependency(pathRoot, "b/Editor", new string[] { "B.Runtime", "A.Editor" });
             setupDependency(pathRoot, "c/Runtime", new string[] { "B.Runtime" });
 
-            PackageNode nodeC = new PackageNode(pathRoot + Sep + "org.janelia.c");
+            List<string> rootDirs = new List<string>(){ pathRoot };
+            PackageNode nodeC = new PackageNode(pathRoot + Sep + "org.janelia.c", rootDirs);
             List<string> topoSort = PackageNode.TopoSort();
 
             Assert.AreEqual(3, topoSort.Count);
@@ -106,7 +109,8 @@ namespace Janelia
             setupDependency(pathRoot, "g/Runtime", new string[] { "E.Runtime" });
             setupDependency(pathRoot, "h/Runtime", new string[] { "A.Runtime", "F.Runtime", "G.Runtime" });
 
-            PackageNode nodeH = new PackageNode(pathRoot + Sep + "org.janelia.h");
+            List<string> rootDirs = new List<string>(){ pathRoot };
+            PackageNode nodeH = new PackageNode(pathRoot + Sep + "org.janelia.h", rootDirs);
             List<string> topoSort = PackageNode.TopoSort();
 
             string pre = pathRoot + Sep + "org.janelia.";

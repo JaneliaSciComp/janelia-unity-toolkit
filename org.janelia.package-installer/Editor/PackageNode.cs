@@ -10,7 +10,7 @@ namespace Janelia
         public readonly string PkgDir;
         public readonly HashSet<PackageNode> Deps;
 
-        public PackageNode(string pkgDir)
+        public PackageNode(string pkgDir, List<string> rootDirs)
         {
             if (!_pkgDirToNode.ContainsKey(pkgDir))
             {
@@ -18,8 +18,8 @@ namespace Janelia
 
                 PkgDir = pkgDir;
 
-                HashSet<string> depPkgDirs = GetDepPkgDirs(pkgDir, "Runtime");
-                depPkgDirs.UnionWith(GetDepPkgDirs(pkgDir, "Editor"));
+                HashSet<string> depPkgDirs = GetDepPkgDirs(pkgDir, "Runtime", rootDirs);
+                depPkgDirs.UnionWith(GetDepPkgDirs(pkgDir, "Editor", rootDirs));
 
                 Deps = new HashSet<PackageNode>();
                 foreach (string depPkgDir in depPkgDirs)
@@ -35,7 +35,7 @@ namespace Janelia
                     // U must be installed before V.
                     PackageNode other = _pkgDirToNode.ContainsKey(depPkgDir) ?
                         _pkgDirToNode[depPkgDir] :
-                        new PackageNode(depPkgDir);
+                        new PackageNode(depPkgDir, rootDirs);
                     other.Deps.Add(this);
                 }
             }
@@ -79,10 +79,9 @@ namespace Janelia
             }
         }
 
-        private HashSet<string> GetDepPkgDirs(string pkgDir, string subDir)
+        private HashSet<string> GetDepPkgDirs(string pkgDir, string subDir, List<string> rootDirs)
         {
             HashSet<string> result = new HashSet<string>();
-            string rootDir = Path.GetDirectoryName(pkgDir);
             string dir = pkgDir + Path.DirectorySeparatorChar + subDir;
             if (System.IO.Directory.Exists(dir))
             {
@@ -95,8 +94,16 @@ namespace Janelia
                     {
                         int i = reference.LastIndexOf(".");
                         string referencePkg = reference.Substring(0, i).ToLower();
-                        string referencePkgDir = rootDir + Path.DirectorySeparatorChar + "org." + referencePkg;
-                        result.Add(referencePkgDir);
+
+                        foreach (string rootDir in rootDirs)
+                        {
+                            string referencePkgDir = rootDir + Path.DirectorySeparatorChar + "org." + referencePkg;
+                            if (System.IO.Directory.Exists(referencePkgDir))
+                            {
+                                result.Add(referencePkgDir);
+                                break;
+                            }
+                        }
                     }
                 }
             }
