@@ -110,9 +110,15 @@ namespace Janelia
             if (choice.Length != 0)
             {
                 List<string> pkgDirs = PkgDirsFromFilePanelChoice(choice);
+                List<string> rootDirs = new List<string>();
                 foreach (string pkgDir in pkgDirs)
                 {
-                    PackageNode unused = new PackageNode(pkgDir);
+                   rootDirs.Add(Path.GetDirectoryName(pkgDir));
+                }
+                    
+                foreach (string pkgDir in pkgDirs)
+                {
+                    PackageNode unused = new PackageNode(pkgDir, rootDirs);
                 }
 
                 List<string> pkgPathsToInstall = PackageNode.TopoSort();
@@ -150,11 +156,13 @@ namespace Janelia
                     {
                         if (Path.GetFileName(choice) == "package.json")
                         {
-                            result.Add(Path.GetDirectoryName(path));
+                            string canonical = Path.GetDirectoryName(path).Replace("/", "\\");
+                            result.Add(canonical);
                         }
                         else if (File.Exists(Path.Combine(path, "package.json")))
                         {
-                            result.Add(path);
+                            string canonical = path.Replace("/", "\\");
+                            result.Add(canonical);
                         }
                     }
                 }
@@ -164,7 +172,8 @@ namespace Janelia
                 // The `choice` can be a package directory, containing a `package.json` file.
                 // TODO: Unfortunately, `EditorUtility.OpenFilePanel` cannot support allowing the choice of either
                 // a file or a folder, so this option cannot actually be invoked as of now.
-                result.Add(choice);
+                string canonical = choice.Replace("/", "\\");
+                result.Add(canonical);
             }
 
             return result;
@@ -187,43 +196,32 @@ namespace Janelia
 
         private static List<string> MakeFullPaths(List<string> paths, string chosenPkgListFile)
         {
-            // Try a heuristic for turning package names into full paths: check if the chosen file
-            // (listing the packages) is a sibling of the top-level directory for the toolkit source
-            // code, and if so, use package directories from that top-level directory.
-            string parent = Path.GetDirectoryName(chosenPkgListFile);
-            string sibling = Path.Combine(parent, "janelia-unity-toolkit");
-            string dir = Directory.Exists(sibling) ? sibling : "";
+            // When trying to resolve each path on `paths`, try these directories in turn.
+            List<string> dirs = new List<string>();
 
-            // If that does not work, try going up one more level.
-            if (dir.Length == 0)
+            // Start in the directory of the manifest file listing the chosen packages and
+            // work back up to the root directory.
+            string pathPrefix = chosenPkgListFile;
+            while (pathPrefix != null)
             {
-                string grandparent = Path.GetDirectoryName(parent);
-                string aunt = Path.Combine(grandparent, "janelia-unity-toolkit");
-                dir = Directory.Exists(aunt) ? aunt : "";
-            }
-
-            // If that does not work, see if the chosen file is in the some directory within
-            // the "janelia-unit-toolkit" repo itself.
-            if (dir.Length == 0)
-            {
-                string[] parts = chosenPkgListFile.Split('/');
-                string candidate = "";
-                foreach (string part in parts)
+                string parent = Path.GetDirectoryName(pathPrefix);
+                if (parent != null)
                 {
-                    if (candidate.EndsWith(Path.VolumeSeparatorChar.ToString()))
+                    // One candidate for resolving the paths is the current such directory.
+                    dirs.Add(parent);
+
+                    // Other candidates are any subdirectories of the current such directory containing "nity"
+                    // in their names (which would match "Unity" or "unity").
+                    string[] siblings = Directory.GetDirectories(parent, "*nity*");
+                    foreach (string sibling in siblings)
                     {
-                        // Necessary for older verisons of .NET that don't support `Path.Join`.
-                        candidate += Path.DirectorySeparatorChar;
-                    }
-                    candidate = Path.Combine(candidate, part);
-                    if (part == "janelia-unity-toolkit")
-                    {
-                        dir = candidate;
-                        break;
+                        string siblingFull = Path.Combine(parent, sibling);
                     }
                 }
+                pathPrefix = parent;
             }
 
+            // Now try that list of directories for resolving the paths.
             List<string> result = new List<string>();
             foreach (string path in paths)
             {
@@ -233,7 +231,18 @@ namespace Janelia
                 }
                 else
                 {
-                    result.Add(Path.Combine(dir, path));
+                    foreach (string dir in dirs)
+                    {
+                        string fullPath = Path.Combine(dir, path);
+                        if (Directory.Exists(fullPath))
+                        {
+                            result.Add(fullPath);
+                            // Do not try to find any other versions of `path` further along
+                            // in the directory list, thus giving priority to directories closer to
+                            // the original manifest.
+                            break;
+                        }
+                    }
                 }
             }
             return result;
@@ -249,9 +258,10 @@ namespace Janelia
         private void OnGUI()
         {
             GUILayout.Label("Install the following packages:");
+            int i0 = GetPrefix(_pkgPathsToInstall);
             foreach (string pkg in _pkgPathsToInstall)
             {
-                GUILayout.Label(GetDisplayName(pkg));
+                GUILayout.Label(GetDisplayName(pkg, i0));
             }
             GUI.enabled = (_state == State.AWAITNG_USER_TRIGGER);
             if (GUILayout.Button("Install"))
@@ -322,7 +332,9 @@ namespace Janelia
 
         private string GetDisplayName(string pkg)
         {
-            string[] pathElems = pkg.Split(Path.DirectorySeparatorChar);
+            // Split on either "\\" or "/".
+            char[] separators = new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+            string[] pathElems = pkg.Split(separators);
             int n = pathElems.Length;
             string pkgName = pathElems[n - 1];
             string repoName = pathElems[n - 2];
@@ -332,6 +344,63 @@ namespace Janelia
                 displayName = "(" + displayName + ")";
             }
             return displayName;
+        }
+
+        private string GetDisplayName(string pkg, int i0)
+        {
+            // Split on either "\\" or "/".
+            char[] separators = new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+            string[] pathElems = pkg.Split(separators);
+            int n = pathElems.Length;
+            string result = "";
+            for (int i = i0; i < n; ++i)
+            {
+                if (result.Length > 0)
+                    result += "/";
+                result += pathElems[i];
+            }
+            string pkgName = pathElems[pathElems.Length - 1];
+            if (_pkgNamesAlreadyInstalled.Contains(pkgName))
+            {
+                result = "(" + result + ")";
+            }
+            return result;
+        }
+
+        private int GetPrefix(List<string> paths)
+        {
+            List<string[]> splits = new List<string[]>();
+            char[] separators = new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+            foreach (string path in paths)
+            {
+                splits.Add(path.Split(separators));
+            }
+
+            if (splits.Count == 1)
+            {
+                return splits[0].Length - 1;
+            }
+
+            int n = 0;
+            while (true)
+            {
+                string template = "";
+                foreach (string[] split in splits)
+                {
+                    if (template.Length == 0)
+                    {
+                        template = split[n];
+                    }
+                    else
+                    {
+                        if (split[n] != template)
+                        {
+                            return n - 1;
+                        }
+                    }
+                }
+                n += 1;
+            }
         }
 
         private enum State
