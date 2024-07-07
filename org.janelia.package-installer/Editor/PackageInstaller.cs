@@ -216,6 +216,7 @@ namespace Janelia
                     foreach (string sibling in siblings)
                     {
                         string siblingFull = Path.Combine(parent, sibling);
+                        dirs.Add(sibling);
                     }
                 }
                 pathPrefix = parent;
