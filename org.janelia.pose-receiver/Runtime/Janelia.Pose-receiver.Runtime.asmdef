@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Pose-receiver.Runtime",
+    "references": ["Janelia.Io.Runtime", "Janelia.Logging.Runtime"],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
