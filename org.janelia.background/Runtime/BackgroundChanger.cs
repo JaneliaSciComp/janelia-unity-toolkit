@@ -63,15 +63,21 @@ namespace Janelia
                     if (Directory.Exists(pathFull))
                     {
                         string[] supported = new string[] {".bmp", ".gif", ".jpg", ".jpeg", ".png", ".psd", ".tga", ".tif", ".tiff"};
+
+                        // `Directory.GetFiles()` returns full paths.
                         string[] files = Directory.GetFiles(pathFull);
+
+                        // Does not do a "human" sort.  So sorting `f1`, `f2`, `f10`, `f11`, `f100`, `f101` will return
+                        // `f1`, `f10`, `f100`, `f101`, `f11`, `f2`, which probably is not desired.  The solution, for now,
+                        // is to use zero-padded file names, `f001`, `f002`, `f010`, `f011`, `f100`, `f101`.
                         Array.Sort(files);
+                        
                         foreach (string file in files)
                         {
                             string ext = Path.GetExtension(file).ToLower();
                             if (supported.Contains(ext))
                             {
-                                string texturePathFull = Path.Combine(pathFull, file);
-                                _texturePaths.Add(texturePathFull);
+                                _texturePaths.Add(file);
                             }
                         }
                     }
@@ -113,14 +119,25 @@ namespace Janelia
             {
                 if (File.Exists(texturePath))
                 {
-                    byte[] bytes = File.ReadAllBytes(texturePath);
-                    const int ToBeReplacedByLoadImage = 2;
-                    const bool MipMaps = false;
-                    // Create a new Texture2D each time, in case the images have different sizes.
-                    Texture2D texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
-                    if (texture.LoadImage(bytes))
+                    using (FileStream fs = new FileStream(texturePath, FileMode.Open, FileAccess.Read))
                     {
-                        return texture;
+                        int length = (int)fs.Length;
+                        if ((_textureBytes == null) || (length > _textureBytes.Length))
+                        {
+                            _textureBytes = new byte[length];
+                        }
+                        fs.Read(_textureBytes, 0, length);
+                    }
+
+                    if (_texture == null)
+                    {
+                        const int ToBeReplacedByLoadImage = 2;
+                        const bool MipMaps = false;
+                        _texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
+                    }
+                    if (_texture.LoadImage(_textureBytes))
+                    {
+                        return _texture;
                     }
                 }
                 Debug.Log("BackgroundChanger: cannot find texture file " + texturePath);
@@ -204,8 +221,9 @@ namespace Janelia
         private static Spec _spec;
         private static string _specFilePath;
         private static Material _material;
-        private static List<Texture2D> _textures = new List<Texture2D>();
         private static List<string> _texturePaths = new List<string>();
+        private static byte[] _textureBytes;
+        private static Texture2D _texture;
         private static Texture2D _separatorTexture;
         private static GameObject _object;
         private static bool _splashIsFinished = false;
