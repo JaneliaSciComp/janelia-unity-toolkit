@@ -71,7 +71,7 @@ namespace Janelia
                         // `f1`, `f10`, `f100`, `f101`, `f11`, `f2`, which probably is not desired.  The solution, for now,
                         // is to use zero-padded file names, `f001`, `f002`, `f010`, `f011`, `f100`, `f101`.
                         Array.Sort(files);
-                        
+
                         foreach (string file in files)
                         {
                             string ext = Path.GetExtension(file).ToLower();
@@ -191,11 +191,8 @@ namespace Janelia
                 {
                     _material.SetTexture("_MainTex", _separatorTexture);
 
-                    ChangingToSeparatorTextureLog entry = new ChangingToSeparatorTextureLog
-                    {
-                        separatorTextureDurationSecs = _spec.separatorDurationSecs
-                    };
-                    Logger.Log(entry);
+                    _currentChangingToSeparatorTextureLog.separatorTextureDurationSecs = _spec.separatorDurationSecs;
+                    Logger.Log(_currentChangingToSeparatorTextureLog);
                 }
             }
 
@@ -206,12 +203,9 @@ namespace Janelia
                     Texture2D texture = LoadTexture(_texturePaths[_current]);
                     _material.SetTexture("_MainTex", texture);
 
-                    ChangingTextureLog entry = new ChangingTextureLog
-                    {
-                        backgroundTextureNowInUse = _texturePaths[_current],
-                        durationSecs = _spec.durationSecs
-                    };
-                    Logger.Log(entry);
+                    _currentChangingTextureLog.backgroundTextureNowInUse = _texturePaths[_current];
+                    _currentChangingTextureLog.durationSecs = _spec.durationSecs;
+                    Logger.Log(_currentChangingTextureLog);
 
                     _current++;
                 }
@@ -235,12 +229,13 @@ namespace Janelia
             public string backgroundTextureNowInUse;
             public float durationSecs;
         };
+        private static ChangingTextureLog _currentChangingTextureLog = new ChangingTextureLog();
 
         [Serializable]
         private class ChangingToSeparatorTextureLog : Logger.Entry
         {
             public float separatorTextureDurationSecs;
         };
-
+        private static ChangingToSeparatorTextureLog _currentChangingToSeparatorTextureLog = new ChangingToSeparatorTextureLog();
     }
 }
