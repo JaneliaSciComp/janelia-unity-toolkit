@@ -64,7 +64,18 @@ With this specification, the session will proceed as follows:
 8. the separator texture, `S.png`, will be visible for 5 seconds;
 9. the session will end.
 
-An element in the `"textures"` array can be a path to directory, in which case all the image files in that directory will be used in sorted order (and non-image files will be skipped).
+An element in the `"textures"` array can be a path to directory, in which case all the image files in that directory will be used in sorted order (and non-image files will be skipped). The image files in the directory will be sorted, but note that to achieve a "human" sort it is necessary to pad any numbers with leading zeros (a common practice in graphics applications like [Blender](https://docs.blender.org/manual/en/latest/render/output/properties/output.html)).  For example, the naive file names might be:
+```
+f1, f2, f10, f11, f100, f101
+```
+Those names would be sorted as:
+```
+f1, f10, f100, f101, f11, f2
+```
+To get the more expected order use:
+```
+f001, f002, f010, f011, f100, f101
+```
 
 If `"separatorTexture"` is ommitted, a plain black texture will be used as the separator.  The textures may be specified as full paths (e.g., the separator texture in the example, above), or as paths relative to the location of the JSON file itself (e.g., the other textures in the example, above).
 
