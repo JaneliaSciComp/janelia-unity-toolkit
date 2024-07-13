@@ -83,5 +83,9 @@ Please position projector 2 at (9.97, 0.00, -5.76)
 Please make the cylinder 5.100435 units tall.
 ```
 
-
 Using a display surface other than a cylinder involves calling `PanoramicDisplayCamera.SetDisplaySurfaceData` with custom arrays that describe where the pixels of the projectors map to 3D positions on the display surface. Custom arrays are also useful for a cylindrical display surface if there is to be regions of overlap between the images from adjacent projectors.
+
+The `PanoramicDisplayCamera` optionally displays a _progress box_, a small square that changes from black to white on alternate frames.  The true frame rate can be verified by positioning a photodiode where the progress box appears on the display, and observing the photodiode's signal with an oscilloscope.  The related fields on `PanormaicDisplayCamera` are:
+* `showProgressBox`: set to `true` to make the progress box visible.  The `p` key interactively toggles this value, but the changes are not saved across sessions.
+* `progressBoxPosition`: a `Vector2Int` whose value is the position, in pixels, of the progress box.  The `w`, `a`, `s,` and ,`d` keys interactively change this position, but the changed position is not saved across sessions.
+* `progressBoxSize`: the box's width (and height, since the box is a square), in pixels.
