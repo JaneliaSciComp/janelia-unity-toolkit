@@ -1,3 +1,5 @@
+#define PROGRESS_BOX
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +36,12 @@ namespace Janelia
         // the left projector onto the others, to the right.
         public int leftProjectorIndex = 2;
         public static int leftProjectorIndexStatic = 2;
+
+#if PROGRESS_BOX
+        public bool showProgressBox = false;
+        public Vector2Int progressBoxPosition = new Vector2Int(100, 100);
+        public int progressBoxSize = 50;
+#endif
 
         // A client should call this function before any `Update` functions are called (e.g. call it in `Start`).
         // The arrays are a `dataWidth` by `dataHeight` grid of elements in row-major order, sized to match the
@@ -130,6 +138,29 @@ namespace Janelia
         {
             _material.SetFloat("_MaskScale", surfaceMaskScale);
             _material.SetFloat("_ColorCorrectionScale", surfaceColorCorrectionScale);
+
+#if PROGRESS_BOX
+            if (Input.GetKeyDown("p"))
+            {
+                showProgressBox = !showProgressBox;
+            }
+            if (Input.GetKey("w"))
+            {
+                progressBoxPosition.y -= 1;
+            }
+            else if (Input.GetKey("a"))
+            {
+                progressBoxPosition.x -= 1;
+            }
+            else if (Input.GetKey("s"))
+            {
+                progressBoxPosition.y += 1;
+            }
+            else if (Input.GetKey("d"))
+            {
+                progressBoxPosition.x += 1;
+            }
+#endif
         }
 
         public void OnRenderImage(RenderTexture input, RenderTexture output)
@@ -152,6 +183,10 @@ namespace Janelia
             GL.LoadPixelMatrix(0, finalWidth, finalHeight, 0);
 
             DrawFromSourceCameraTextures(finalWidth, finalHeight);
+
+#if PROGRESS_BOX
+            DrawProgressBox();
+#endif
 
             GL.PopMatrix();
         }
@@ -189,7 +224,6 @@ namespace Janelia
                 Debug.Log("Could not load PanoramicDisplay.shader");
             }
         }
-
 
         private bool SourceCamerasAreValid()
         {
@@ -309,6 +343,41 @@ namespace Janelia
         }
 #endif
 
+#if PROGRESS_BOX
+        private void DrawProgressBox()
+        {
+            if (showProgressBox)
+            {
+                InitializeProgressTexturesIfNeeded(progressBoxSize);
+                Texture2D progressTex = (Time.frameCount % 2 == 0) ? _progressTextureEven : _progressTextureOdd;
+                Rect r = new Rect(progressBoxPosition.x, progressBoxPosition.y, progressBoxSize, progressBoxSize);
+                Graphics.DrawTexture(r, progressTex);
+            }
+        }
+
+        private void InitializeProgressTexturesIfNeeded(int size)
+        {
+            if ((_progressTextureEven == null) || (_progressTextureEven.width != size))
+            {
+                _progressTextureEven = MakeProgressTexture(size, size, true);
+            }
+            if ((_progressTextureOdd == null) || (_progressTextureOdd.width != size))
+            {
+                _progressTextureOdd = MakeProgressTexture(size, size, false);
+            }
+        }
+
+        private Texture2D MakeProgressTexture(int width, int height, bool even)
+        {
+            Texture2D result = new Texture2D(width, height);
+            Color color = even ? new Color(0, 0, 0, 1) : new Color(1, 1, 1, 1);
+            Color[] pixels = Enumerable.Repeat(color, width * height).ToArray();
+            result.SetPixels(pixels);
+            result.Apply();
+            return result;
+        }
+#endif
+
         private Material _material;
 
         private Texture2D _projectorSurfaceXTexture;
@@ -318,5 +387,10 @@ namespace Janelia
         private Texture2D _projectorSurfaceColorCorrectionTexture;
 
         private bool _enableSixCameras = false;
+
+#if PROGRESS_BOX
+        private Texture2D _progressTextureEven;
+        private Texture2D _progressTextureOdd;
+#endif
     }
 }
