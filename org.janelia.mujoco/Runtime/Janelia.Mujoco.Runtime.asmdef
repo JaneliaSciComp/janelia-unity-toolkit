@@ -1,0 +1,13 @@
+{
+    "name": "Janelia.Mujoco.Runtime",
+    "references": ["Mujoco.Runtime"],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

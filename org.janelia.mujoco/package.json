@@ -1,0 +1,9 @@
+{
+    "name": "org.janelia.mujoco",
+    "displayName": "Janelia Utilities for MuJoCo",
+    "version": "1.1.0",
+    "unity": "2020.1",
+    "description": "Utilities to help import models for the MuJoCo physics simulator",
+    "keywords": ["physics"],
+    "dependencies": {}
+}

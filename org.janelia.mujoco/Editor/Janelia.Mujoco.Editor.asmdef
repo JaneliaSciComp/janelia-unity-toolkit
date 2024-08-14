@@ -1,0 +1,16 @@
+{
+    "name": "Janelia.Mujoco.Editor",
+    "references": [
+        "Mujoco.Editor",
+        "Mujoco.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
