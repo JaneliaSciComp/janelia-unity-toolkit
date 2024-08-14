@@ -18,6 +18,7 @@ Examples of the functionality supported in this toolkit include:
 * background images ([org.janelia.background](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.background))
 * generation of simple maze environments ([org.janelia.radial-arm-maze](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.radial-arm-maze)) and meadow environments ([org.janelia.meadow](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.meadow))
 * simplified setup of reinforcement learning with [Unity ML-Agents](https://github.com/Unity-Technologies/ml-agents) ([org.janelia.easy-ml-agents](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.easy-ml-agents))
+* precomputed kinematic animation of models from the [MuJoCo physics simulator](https://mujoco.org/) ([org.janelia.mujoco](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.mujoco))
 * other general capabilities, like making a standalone executable end automatically after running for a specified period ([org.janelia.general](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.general))
 
 ## Installation
