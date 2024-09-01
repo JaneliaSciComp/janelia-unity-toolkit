@@ -10,6 +10,9 @@ namespace Janelia
     // * it does not add collision handling;
     // * it does not support data smoothing or the `smoothingCount` field.
 
+    // An application using a `Janelia.KinematicSubjectIntegrated` can play back the motion
+    // captured in the log of a previous session.  See `PlaybackHandler.cs` in org.janelia.collison-handling.
+
     // For detecting periods of free spinning of the FicTrac trackball (when the fly has lifted its legs
     // off the trackball), indicated by heading changes with an angular speed above a threshold.
     [RequireComponent(typeof(FicTracSpinThresholder))]
@@ -32,6 +35,7 @@ namespace Janelia
         public int logWriteIntervalFrames = 100;
 
         public bool logFicTracMessages = false;
+
         public void Start()
         {
             _currentFicTracParametersLog.ficTracServerAddress = ficTracServerAddress;
@@ -49,10 +53,17 @@ namespace Janelia
             _dCorrection = _dCorrectionLatest = _dCorrectionBase = 0;
 
             _averager = gameObject.GetComponentInChildren<FicTracAverager>();
+
+            _playbackHandler.ConfigurePlayback();
         }
 
         public void Update()
         {
+            if (_playbackHandler.Update(ref _currentTransformation, transform))
+            {
+                return;
+            }
+
             LogUtilities.LogDeltaTime();
 
             Byte[] dataFromSocket = null;
@@ -212,10 +223,8 @@ namespace Janelia
         private FicTracMessageLog _currentFicTracMessageLog = new FicTracMessageLog();
 
         [Serializable]
-        internal class Transformation : Logger.Entry
+        internal class Transformation : PlayableLogEntry
         {
-            public Vector3 worldPosition;
-            public Vector3 worldRotationDegs;
         };
         private Transformation _currentTransformation = new Transformation();
 
@@ -235,5 +244,7 @@ namespace Janelia
         private FicTracAverager _averager;
 
         private int _framesSinceLogWrite = 0;
+
+        private PlaybackHandler<Transformation> _playbackHandler = new PlaybackHandler<Transformation>();
     }
 }

@@ -234,8 +234,8 @@ namespace Janelia
           return _logDirectorySuffix;
         }
 
-        // Executed after `Awake` methods and before `Start` methods.
-        [RuntimeInitializeOnLoadMethod]
+        // `AfterSceneLoad` is the latest runtime initialize method.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void OnRuntimeMethodLoad()
         {
             InitIfNeeded();

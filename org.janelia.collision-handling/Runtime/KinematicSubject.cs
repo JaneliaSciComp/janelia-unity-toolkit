@@ -5,11 +5,8 @@
 // interface.
 
 // An application using a `Janelia.KinematicSubject` can play back the motion
-// captured in the log of a previous session.  This playback is controlled by the
-// following command-line arguments
-// `-playback` : plays back the most recently saved log file
-// `-playback logFile` : plays back the specified log file from the standard log directory
-// `-playback logDir/logFile` : plays back the specified log file
+// captured in the log of a previous session.  See `Janelia.PlaybackHandler.cs` in
+// org.janelia.collison-handling.
 
 // This class has a post-build step that plugs user interface into the launcher script
 // created by the `Janelia.Logger` class from the  `org.janelia.logging` package.
@@ -69,21 +66,9 @@ namespace Janelia
 #endif
         };
 
-        // A base class for code to augment the logfile playback with changes other than
-        // those implemented by the standard `KinematicSubject`.
-
-        public abstract class PlaybackAugmenter
-        {
-            public PlaybackAugmenter() => _playbackAugmenters.Add(this);
-
-            public abstract void LoadLog(string playbackLogFilePath);
-
-            public abstract void AugmentPlayback(int frameCount, Transform transform);
-        }
-
         public bool PlaybackActive
         {
-            get => _playbackActive;
+            get => _playbackHandler.PlaybackActive;
         }
 
         // The object that provides the kinematic motion, to be set by the constructor of
@@ -119,15 +104,6 @@ namespace Janelia
 
         public bool debug = false;
 
-        public void Awake()
-        {
-            string[] args = System.Environment.GetCommandLineArgs();
-            if (args.Contains("-playback"))
-            {
-                Logger.enable = false;
-            }
-        }
-
         public void Start()
         {
             if (updater == null)
@@ -149,10 +125,7 @@ namespace Janelia
             // Set up the collision handler to act on this `GameObject`'s transform.
             _collisionHandler = new KinematicCollisionHandler(transform, collisionPlaneNormal, limitDistance, limitCenter, collisionRadius);
 
-            if (ConfigurePlayback())
-            {
-                _playbackRequested = true;
-            }
+            _playbackHandler.ConfigurePlayback();
 
 #if LOG_ALL_MESHES
             LogUtilities.LogAllMeshes();
@@ -161,89 +134,58 @@ namespace Janelia
 
         public void Update()
         {
-#if SUPPORT_KEYBOARD_SHORTCUTS
-            if (Input.GetKey("l"))
+            if (_playbackHandler.Update(ref _currentTransformation, transform))
             {
-                StartPlayback();
+                return;
             }
-#endif
 
             _framesBeingStill++;
 
             _currentTransformation.Clear();
             bool addToLog = false;
 
-            if (_playbackRequested)
+            updater.Update();
+
+            Vector3? translation = updater.Translation();
+            if (translation != null)
             {
-                if (SplashScreen.isFinished)
+                Vector3 postCollisionTranslation = (Vector3)translation;
+                if (detectCollisions)
                 {
-                    _playbackRequested = false;
-                    StartPlayback();
+                    // Let the collision handler correct the translation, with approximated sliding contact,
+                    // and apply it to this `GameObject`'s transform.  The corrected translation is returned.
+                    postCollisionTranslation = _collisionHandler.CorrectTranslation((Vector3)translation);
                 }
+
+                Vector3 actualTranslation = postCollisionTranslation;
+                if (limitTranslation)
+                {
+                    actualTranslation = LimitTranslation(postCollisionTranslation);
+                }
+
+                transform.Translate(actualTranslation);
+
+                _currentTransformation.attemptedTranslation = (Vector3)translation;
+                _currentTransformation.postCollisionTranslation = postCollisionTranslation;
+                _currentTransformation.actualTranslation = actualTranslation;
+
+                if (debug)
+                {
+                    Debug.Log("frame " + Time.frameCount + ": translation " + translation + " becomes " + actualTranslation);
+                }
+
+                addToLog = true;
+                _framesBeingStill = 0;
             }
 
-            if (!_playbackActive)
+            Vector3? rotation = updater.RotationDegrees();
+            if (rotation != null)
             {
-                updater.Update();
+                transform.Rotate((Vector3)rotation);
+                _currentTransformation.rotationDegs = (Vector3)rotation;
 
-                Vector3? translation = updater.Translation();
-                if (translation != null)
-                {
-                    Vector3 postCollisionTranslation = (Vector3)translation;
-                    if (detectCollisions)
-                    {
-                        // Let the collision handler correct the translation, with approximated sliding contact,
-                        // and apply it to this `GameObject`'s transform.  The corrected translation is returned.
-                        postCollisionTranslation = _collisionHandler.CorrectTranslation((Vector3)translation);
-                    }
-
-                    Vector3 actualTranslation = postCollisionTranslation;
-                    if (limitTranslation)
-                    {
-                        actualTranslation = LimitTranslation(postCollisionTranslation);
-                    }
-
-                    transform.Translate(actualTranslation);
-
-                    _currentTransformation.attemptedTranslation = (Vector3)translation;
-                    _currentTransformation.postCollisionTranslation = postCollisionTranslation;
-                    _currentTransformation.actualTranslation = actualTranslation;
-
-                    if (debug)
-                    {
-                        Debug.Log("frame " + Time.frameCount + ": translation " + translation + " becomes " + actualTranslation);
-                    }
-
-                    addToLog = true;
-                    _framesBeingStill = 0;
-                }
-
-                Vector3? rotation = updater.RotationDegrees();
-                if (rotation != null)
-                {
-                    transform.Rotate((Vector3)rotation);
-                    _currentTransformation.rotationDegs = (Vector3)rotation;
-
-                    addToLog = true;
-                    _framesBeingStill = 0;
-                }
-            }
-            else
-            {
-                Transformation transformation = CurrentPlaybackTransformation();
-                if (transformation != null)
-                {
-                    _currentTransformation.Set(transformation);
-                    SaveFrames.SetFrame((int)transformation.frame);
-
-                    transform.position = _currentTransformation.worldPosition;
-                    transform.eulerAngles = _currentTransformation.worldRotationDegs;
-                }
-
-                for (int i = 0; i < _playbackAugmenters.Count; ++i)
-                {
-                    _playbackAugmenters[i].AugmentPlayback(Time.frameCount, transform);
-                }
+                addToLog = true;
+                _framesBeingStill = 0;
             }
 
             if (addToLog)
@@ -357,103 +299,18 @@ namespace Janelia
         }
 #endif
 
-        private bool ConfigurePlayback()
-        {
-#if SUPPORT_COMMANDLINE_ARGUMENTS
-            _playbackLogFile = Logger.previousLogFile;
-            string[] args = System.Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "-playback")
-                {
-                    if (i + 1 < args.Length)
-                    {
-                        _playbackLogFile = args[i + 1];
-                        if (!_playbackLogFile.Contains('/') && !_playbackLogFile.Contains('\\'))
-                        {
-                            _playbackLogFile = Logger.logDirectory + "/" + _playbackLogFile;
-                        }
-                        if (!File.Exists(_playbackLogFile))
-                        {
-                            Debug.Log("Cannot find playback log file '" + _playbackLogFile + "'");
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
-#endif
-            return false;
-        }
-
-        private void StartPlayback()
-        {
-            if (!_playbackActive)
-            {
-                Debug.Log("Playing back log file '" + _playbackLogFile + "'");
-
-                _playbackLogEntries = Logger.Read<Transformation>(_playbackLogFile);
-                _playbackLogEntries = Filter(_playbackLogEntries);
-
-                for (int i = 0; i < _playbackAugmenters.Count; ++i)
-                {
-                    _playbackAugmenters[i].LoadLog(_playbackLogFile);
-                }
-
-                _playbackLogIndex = 0;
-                _playbackStartFrame = Time.frameCount;
-                Debug.Log("Playing back start frame " + Time.frameCount);
-                _playbackActive = true;
-            }
-        }
-
-        private List<Transformation> Filter(List<Transformation> l)
-        {
-            return l.Where(x => x.attemptedTranslation != Vector3.zero || x.rotationDegs != Vector3.zero).ToList();
-        }
-
-        private Transformation CurrentPlaybackTransformation()
-        {
-            if (_playbackActive && (_playbackLogEntries != null))
-            {
-                int adjustedFrame = Time.frameCount - _playbackStartFrame;
-                while (_playbackLogIndex < _playbackLogEntries.Count)
-                {
-                    if (_playbackLogEntries[_playbackLogIndex].frameAfterSplash < adjustedFrame)
-                    {
-                        _playbackLogIndex++;
-                    }
-                    else
-                    {
-                        if (_playbackLogEntries[_playbackLogIndex].frameAfterSplash == adjustedFrame)
-                        {
-                            return _playbackLogEntries[_playbackLogIndex];
-                        }
-                        return null;
-                    }
-                }
-            }
-
-            // End the session when the playback ends.
-            Application.Quit();
-            return null;
-        }
-
-
         private KinematicCollisionHandler _collisionHandler;
 
         // To make `Janelia.Logger.Log(entry)`'s call to JsonUtility.ToJson() work correctly,
         // the type of `entry` must be marked `[Serlializable]`, but its individual fields need not
         // be marked `[SerializeField]`.  The individual fields must be `public`, though.
         [Serializable]
-        internal class Transformation : Logger.Entry
+        internal class Transformation : PlayableLogEntry
         {
             public Vector3 attemptedTranslation;
             public Vector3 postCollisionTranslation;
             public Vector3 actualTranslation;
-            public Vector3 worldPosition;
             public Vector3 rotationDegs;
-            public Vector3 worldRotationDegs;
 
             public void Clear()
             {
@@ -465,7 +322,7 @@ namespace Janelia
                 worldRotationDegs.Set(0, 0, 0);
             }
 
-            // Needed only for `KinematicSubject`'s playback of the log.
+            // Needed only for playback of the log.
             public void Set(Transformation other)
             {
                 attemptedTranslation = other.attemptedTranslation;
@@ -475,22 +332,15 @@ namespace Janelia
                 rotationDegs = other.rotationDegs;
                 worldRotationDegs = other.worldRotationDegs;
             }
-        };
+        }
 
         private Transformation _currentTransformation = new Transformation();
 
         private int _framesSinceLogWrite = 0;
         private int _framesBeingStill = 0;
 
-        private bool _playbackRequested = false;
-        private bool _playbackActive = false;
-        private string _playbackLogFile = "";
-        private List<Transformation> _playbackLogEntries;
-        private int _playbackLogIndex;
-        private int _playbackStartFrame;
-
         private List<GameObject> _translationLimiters = new List<GameObject>();
 
-        internal static List<PlaybackAugmenter> _playbackAugmenters = new List<PlaybackAugmenter>();
+        private PlaybackHandler<Transformation> _playbackHandler = new PlaybackHandler<Transformation>();
     }
 }
