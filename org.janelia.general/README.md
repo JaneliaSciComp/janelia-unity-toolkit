@@ -29,6 +29,7 @@ It is simple for scripts to add custom session parameters.  See the `Janelia.Tim
 
 A static class that adds a session parameter for a timeout period.  When this period ends, a standalone application automatically ends itself.  An automatic ending of this sort can be useful to limit an animal study.  The parameter is named `timeoutSecs`, and its value should be in seconds; a value of `0` (or less) means there is no timeout and the application will continue running until ended manually.
 
+Running the application from a shell with the command-line argument `-timeoutSecs N` overrides the `"timeoutSecs"` session parameter.  For example, if the application is run once from the launcher script with `"timeoutSecs": 10` as a session parameter, then that timeout value is used when running the application from a shell with no command-line arguments.  But running from the shell with `-timeoutSecs 0` as command-line arguments means there is no timeout and the application will continue running until ended manually.
 
 ### `Janelia.DistanceTeleporter`
 
