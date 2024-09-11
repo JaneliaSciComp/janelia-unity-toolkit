@@ -135,7 +135,10 @@ namespace Janelia
                     SaveFrames.SetFrame((int)transformation.frame);
 
                     int frame = (int)Mathf.Round(transformation.frame);
-                    _droppedFrameCount += (frame - _previousFrame - 1);
+                    if (_previousFrame >= 0)
+                    {
+                        _droppedFrameCount += (frame - _previousFrame - 1);
+                    }
                     _previousFrame = frame;
 
                     transform.position = currentTransformation.worldPosition;
@@ -193,7 +196,7 @@ namespace Janelia
         private int _playbackLogIndex;
         private int _playbackStartFrame;
 
-        private int _previousFrame = 0;
+        private int _previousFrame = -1;
         private int _droppedFrameCount = 0;
 
         private static List<PlaybackAugmenter> _playbackAugmenters = new List<PlaybackAugmenter>();
