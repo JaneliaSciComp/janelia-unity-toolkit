@@ -134,6 +134,10 @@ namespace Janelia
                     currentTransformation.Set(transformation);
                     SaveFrames.SetFrame((int)transformation.frame);
 
+                    int frame = (int)Mathf.Round(transformation.frame);
+                    _droppedFrameCount += (frame - _previousFrame - 1);
+                    _previousFrame = frame;
+
                     transform.position = currentTransformation.worldPosition;
                     transform.eulerAngles = currentTransformation.worldRotationDegs;
                 }
@@ -175,6 +179,8 @@ namespace Janelia
                 }
             }
 
+            Debug.Log("PlaybackHandler dropped " + _droppedFrameCount + " frame" + (_droppedFrameCount == 1 ? "." : "s."));
+
             // End the session when the playback ends.
             Application.Quit();
             return null;
@@ -186,6 +192,9 @@ namespace Janelia
         private List<Transformation> _playbackLogEntries;
         private int _playbackLogIndex;
         private int _playbackStartFrame;
+
+        private int _previousFrame = 0;
+        private int _droppedFrameCount = 0;
 
         private static List<PlaybackAugmenter> _playbackAugmenters = new List<PlaybackAugmenter>();
     }
