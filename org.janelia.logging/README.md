@@ -109,6 +109,13 @@ The saving of frames can be tuned with several commandline options:
 
 * `-output F`: write the saved frames to the folder, _F_, which can be relative to the directory where the executable is launched, or an absolute path.  If this option is omitted, then frames will be saved in the standard log folder, in a subfolder `Frames_D`, where _D_ is the current date and time.
 
+* `-format F`: specifies the format of the output. The default format (used when `-format` is not specified) is RGB in a PNG file.  With `-format greytxt` (or `-format graytxt`) the output will be a text file with a single 0-255 value for each pixel (coming from the red channel), arranged to be read into a NumPy two-dimentional array of rows with the `np.loadtxt(filename)` function.  For example, an image of width 4 and height 3 that is half white and half black would produce a file containing:
+    ```
+    255 255 0 0
+    255 255 0 0
+    255 255 0 0
+    ```
+
 It is particularly useful to save the frames when playing back a log file, and remember that the log file, _L_, to play is specified by the `-playback L` commandline option (as implemented in the 
  [`KinematicSubject`](https://github.com/JaneliaSciComp/janelia-unity-toolkit/blob/master/org.janelia.collision-handling/Runtime/KinematicSubject.cs) object in the package [org.janelia.collision-handling](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.collision-handling) package).
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -72,6 +73,16 @@ namespace Janelia
                     Debug.Log("Output: " + _outputPath);
                 }
 
+                if (args.Contains("-format"))
+                {
+                    i = Array.IndexOf(args, "-format");
+                    if (i + 1 < args.Length)
+                    {
+                        _format = args[i + 1];
+                    }
+                    Debug.Log("Format: " + _format);
+                }
+
                 _object = new GameObject("SaveFrames");
                 _object.hideFlags = HideFlags.HideAndDontSave;
                 _object.AddComponent<SaveFramesInternal>();
@@ -82,6 +93,7 @@ namespace Janelia
         private static bool _showFrameNumbers = false;
         private static int _downsampleHeight = 0;
         private static string _outputPath;
+        private static string _format = "";
         private static GameObject _object;
         internal static string _frame = "";
 
@@ -111,7 +123,7 @@ namespace Janelia
                     SetupTextWidget();
                 }
 
-                _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false); // HEY!! RGB24, false);
+                _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false);
                 if (_downsampleHeight > 0)
                 {
                     float ratio = _downsampleHeight / (float)Screen.height;
@@ -124,6 +136,11 @@ namespace Janelia
 
             public void OnDisable()
             {
+                if (_capturing)
+                { 
+                    float elapsedMsAvg = (float)_elapsedMsSum / _elapsedMsCount;
+                    Debug.Log("SaveFrames: average time to save a frame: " + elapsedMsAvg + " ms");
+                }
                 _capturing = false;
             }
 
@@ -143,6 +160,8 @@ namespace Janelia
                     yield return new WaitForEndOfFrame();
                     if ((_frame.Length > 0) && (i % _savingPeriod == 0))
                     {
+                        long t1 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
                         // A more sophisticated approach would use `ScreenCapture.CaptureScreenshotIntoRenderTexture`
                         // and `AsyncGPUReadback.Request`.  But improving performance on the main thread is not so
                         // important here, because the most common use case involves saving frames being played back
@@ -151,7 +170,6 @@ namespace Janelia
                         _texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
                         _texture.Apply();
 
-                        byte[] pngBytes;
                         if (_downsampleHeight > 0)
                         {
                             int width = _textureDownsampled.width;
@@ -166,17 +184,22 @@ namespace Janelia
                             RenderTexture.ReleaseTemporary(renderTextureDownsampled);
                             uint widthUint = (uint)_textureDownsampled.width;
                             uint heightUint = (uint)_textureDownsampled.height;
-                            pngBytes = ImageConversion.EncodeArrayToPNG(_textureDownsampled.GetRawTextureData(), _textureDownsampled.graphicsFormat, widthUint, heightUint);
+                            SaveAsFormat(_textureDownsampled, widthUint, heightUint);
                         }
                         else
                         {
                             uint width = (uint)Screen.width;
                             uint height = (uint)Screen.height;
-                            pngBytes = ImageConversion.EncodeArrayToPNG(_texture.GetRawTextureData(), _texture.graphicsFormat, width, height);
+                            SaveAsFormat(_texture, width, height);
                         }
-                        string filename = _frame + ".png";
-                        string pathname = _outputPath + "/" + filename;
-                        File.WriteAllBytes(pathname, pngBytes);
+
+                        long t2 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        long elapsedMs = t2 - t1;
+                        if (elapsedMs >= 0)
+                        {
+                            _elapsedMsSum += elapsedMs;
+                            _elapsedMsCount += 1;
+                        }
                     }
                     i++;
                 }
@@ -237,10 +260,39 @@ namespace Janelia
                 rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, insetForHeight, height);
             }
 
+            private void SaveAsFormat(Texture2D texture, uint width, uint height)
+            {
+                if ((_format.ToLower() == "graytxt") || (_format.ToLower() == "greytxt"))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    Color32[] colors = texture.GetPixels32();
+                    for (int i = 0; i < colors.Length; ++i)
+                    {
+                        sb.Append($"{colors[i].r}");
+                        string s = ((i + 1) % width != 0) ? " " : "\n";
+                        sb.Append(s);
+                    }
+                    string filename = _frame + ".txt";
+                    string pathname = _outputPath + "/" + filename;
+                    File.WriteAllText(pathname, sb.ToString());
+                }
+                else
+                {
+                    byte[] data = texture.GetRawTextureData();
+                    byte[] pngBytes = ImageConversion.EncodeArrayToPNG(data, texture.graphicsFormat, width, height);
+                    string filename = _frame + ".png";
+                    string pathname = _outputPath + "/" + filename;
+                    File.WriteAllBytes(pathname, pngBytes);
+                }
+            }
+
             private bool _capturing = false;
             private Text _textWidget = null;
             private Texture2D _texture;
             private Texture2D _textureDownsampled;
+
+            private long _elapsedMsSum = 0;
+            private long _elapsedMsCount = 0;
         }
     }
 }
