@@ -238,6 +238,8 @@ namespace Janelia
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void OnRuntimeMethodLoad()
         {
+            Debug.Log("Application run as: " + System.Environment.CommandLine);
+
             InitIfNeeded();
             LogUtilities.LogCurrentResolution();
         }
