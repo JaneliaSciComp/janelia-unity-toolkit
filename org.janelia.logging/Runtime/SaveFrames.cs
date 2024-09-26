@@ -292,7 +292,7 @@ namespace Janelia
                     string pathname = _outputPath + "/" + filename;
                     File.WriteAllText(pathname, sb.ToString());
                 }
-                else if ((_format.ToLower() == "gray") || (_format.ToLower() == "grey"))
+                else if ((_format.ToLower() == "graybin") || (_format.ToLower() == "greybin"))
                 {
                     byte[] everyFourthByte = Enumerable.Range(0, imageBytes.Length / 4).Select(i => imageBytes[i * 4]).ToArray();
                     string filename = _frame + ".bin";
