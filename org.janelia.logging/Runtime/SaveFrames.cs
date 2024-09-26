@@ -123,14 +123,6 @@ namespace Janelia
                     SetupTextWidget();
                 }
 
-                _texture = new Texture2D(Screen.width, Screen.height, TextureFormat.ARGB32, false);
-                if (_downsampleHeight > 0)
-                {
-                    float ratio = _downsampleHeight / (float)Screen.height;
-                    int downsampleWidth = Mathf.RoundToInt(ratio * Screen.width);
-                    _textureDownsampled = new Texture2D(downsampleWidth, _downsampleHeight, TextureFormat.ARGB32, false); 
-                }
-
                 StartCoroutine(CaptureFrames());
             }
 
@@ -154,6 +146,20 @@ namespace Janelia
 
             private IEnumerator CaptureFrames()
             {
+                // For the shader `org.janelia.logging/Assets/Resources/Flip.shader`
+                // the name to use when loading is just `Flip`.
+                Shader flipShader = Resources.Load("Flip", typeof(Shader)) as Shader;
+                Material flipMaterial = new Material(flipShader);
+                
+                int width = Screen.width;
+                int height = Screen.height;
+                if (_downsampleHeight > 0)
+                {
+                    float ratio = _downsampleHeight / (float)Screen.height;
+                    width = Mathf.RoundToInt(ratio * Screen.width);
+                    height = _downsampleHeight;
+                }
+
                 int i = 0;
                 while (_capturing)
                 {
@@ -162,36 +168,22 @@ namespace Janelia
                     {
                         long t1 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                        // A more sophisticated approach would use `ScreenCapture.CaptureScreenshotIntoRenderTexture`
-                        // and `AsyncGPUReadback.Request`.  But improving performance on the main thread is not so
-                        // important here, because the most common use case involves saving frames being played back
-                        // from a log file.  The current approach has no asynchronous behavior so it is simple and
-                        // reliable.
-                        _texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
-                        _texture.Apply();
+                        // https://docs.unity3d.com/ScriptReference/RenderTexture.GetTemporary.html
+                        // "This function is optimized for when you need a quick RenderTexture to do some temporary calculations.
+                        // Internally Unity keeps a pool of temporary render textures, so a call to GetTemporary most often 
+                        // just returns an already created one."
+                        RenderTexture renderTextureNeedsFlipping = RenderTexture.GetTemporary(Screen.width, Screen.height, 24, RenderTextureFormat.BGRA32);
+                        _renderTexture = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.BGRA32);
 
-                        if (_downsampleHeight > 0)
-                        {
-                            int width = _textureDownsampled.width;
-                            int height = _textureDownsampled.height;
-                            RenderTexture wasActive = RenderTexture.active;
-                            RenderTexture renderTextureDownsampled = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32);
-                            RenderTexture.active = renderTextureDownsampled;
-                            Graphics.Blit(_texture, renderTextureDownsampled);
-                            _textureDownsampled.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-                            _textureDownsampled.Apply();
-                            RenderTexture.active = wasActive;
-                            RenderTexture.ReleaseTemporary(renderTextureDownsampled);
-                            uint widthUint = (uint)_textureDownsampled.width;
-                            uint heightUint = (uint)_textureDownsampled.height;
-                            SaveAsFormat(_textureDownsampled, widthUint, heightUint);
-                        }
-                        else
-                        {
-                            uint width = (uint)Screen.width;
-                            uint height = (uint)Screen.height;
-                            SaveAsFormat(_texture, width, height);
-                        }
+                        // Using `ScreenCapture` and `AsyncGPUReadback` is considerably faster than `Texture2D.ReadPixels()`.
+                        ScreenCapture.CaptureScreenshotIntoRenderTexture(renderTextureNeedsFlipping);
+                        Graphics.Blit(renderTextureNeedsFlipping, _renderTexture, flipMaterial, 0);
+                        RenderTexture.ReleaseTemporary(renderTextureNeedsFlipping);
+
+                        // This call seems to make `player.log` contain this messsage:
+                        // `'B8G8R8A8_SRGB' doesn't support ReadPixels usage on this platform. Async GPU readback failed.`
+                        // Yet `ReadbackCompleted()` detects no error and the data does seem to be accessible as expected.
+                        AsyncGPUReadback.Request(_renderTexture, 0, TextureFormat.BGRA32, ReadbackCompleted);
 
                         long t2 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                         long elapsedMs = t2 - t1;
@@ -202,6 +194,31 @@ namespace Janelia
                         }
                     }
                     i++;
+                }
+            }
+
+            private void ReadbackCompleted(AsyncGPUReadbackRequest request)
+            {
+                if (!request.done)
+                {
+                    Debug.Log("SaveFrames.ReadbackCompleted AsyncGPUReadbackRequest done false, _frame " + _frame);
+                }
+                else if (request.hasError)
+                {
+                    Debug.Log("SaveFrames.ReadbackCompleted AsyncGPUReadbackRequest hasError true, _frame " + _frame);
+                }
+                else
+                {
+                    uint widthUint = (uint)_renderTexture.width;
+                    uint heightUint = (uint)_renderTexture.height;
+                    UnityEngine.Experimental.Rendering.GraphicsFormat graphicsFormat = _renderTexture.graphicsFormat;
+                    RenderTexture.ReleaseTemporary(_renderTexture);
+
+                    using (Unity.Collections.NativeArray<byte> requestBytes = request.GetData<byte>())
+                    {
+                        byte[] imageBytes = requestBytes.ToArray();
+                        SaveAsFormat(imageBytes, graphicsFormat, widthUint, heightUint);
+                    }
                 }
             }
 
@@ -260,26 +277,31 @@ namespace Janelia
                 rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, insetForHeight, height);
             }
 
-            private void SaveAsFormat(Texture2D texture, uint width, uint height)
+            private void SaveAsFormat(byte[] imageBytes, UnityEngine.Experimental.Rendering.GraphicsFormat graphicsFormat, uint width, uint height)
             {
                 if ((_format.ToLower() == "graytxt") || (_format.ToLower() == "greytxt"))
                 {
                     StringBuilder sb = new StringBuilder();
-                    Color32[] colors = texture.GetPixels32();
-                    for (int i = 0; i < colors.Length; ++i)
+                    for (int i = 0; i < imageBytes.Length; i += 4)
                     {
-                        sb.Append($"{colors[i].r}");
-                        string s = ((i + 1) % width != 0) ? " " : "\n";
+                        sb.Append($"{imageBytes[i]}");
+                        string s = ((i + 4) % (width * 4) != 0) ? " " : "\n";
                         sb.Append(s);
                     }
                     string filename = _frame + ".txt";
                     string pathname = _outputPath + "/" + filename;
                     File.WriteAllText(pathname, sb.ToString());
                 }
+                else if ((_format.ToLower() == "gray") || (_format.ToLower() == "grey"))
+                {
+                    byte[] everyFourthByte = Enumerable.Range(0, imageBytes.Length / 4).Select(i => imageBytes[i * 4]).ToArray();
+                    string filename = _frame + ".bin";
+                    string pathname = _outputPath + "/" + filename;
+                    File.WriteAllBytes(pathname, everyFourthByte);
+                }
                 else
                 {
-                    byte[] data = texture.GetRawTextureData();
-                    byte[] pngBytes = ImageConversion.EncodeArrayToPNG(data, texture.graphicsFormat, width, height);
+                    byte[] pngBytes = ImageConversion.EncodeArrayToPNG(imageBytes, graphicsFormat, width, height);
                     string filename = _frame + ".png";
                     string pathname = _outputPath + "/" + filename;
                     File.WriteAllBytes(pathname, pngBytes);
@@ -288,8 +310,7 @@ namespace Janelia
 
             private bool _capturing = false;
             private Text _textWidget = null;
-            private Texture2D _texture;
-            private Texture2D _textureDownsampled;
+            private RenderTexture _renderTexture;
 
             private long _elapsedMsSum = 0;
             private long _elapsedMsCount = 0;
