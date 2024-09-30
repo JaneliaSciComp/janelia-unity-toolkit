@@ -13,7 +13,7 @@ namespace Janelia
             _camera = GetComponent<Camera>();
         }
 
-        public void Update()
+        public void LateUpdate()
         {
             // This function sets _camera's projectionMatrix and worldToCameraMatrix properties.
             // If the worldToCameraMatrix property is ever set, it must be set at every frame, as

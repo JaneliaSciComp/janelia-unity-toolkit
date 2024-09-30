@@ -136,7 +136,6 @@ namespace Janelia
                 }
 
                 SaveUpdateForPacking();
-                SaveUpdateForPacking();
             }
         }
 
@@ -521,6 +520,7 @@ namespace Janelia
                 }
                 else
                 {
+                    // TODO: Would it be faster to use Blit(Texture source, RenderTexture dest, Vector2 scale, Vector2 offset, ...)?
                     Graphics.DrawTexture(new Rect(x, 0, w, displayHeight), displayCameras[i].targetTexture);
                 }
             }
