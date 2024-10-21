@@ -113,7 +113,16 @@ namespace Janelia
                 List<string> rootDirs = new List<string>();
                 foreach (string pkgDir in pkgDirs)
                 {
-                   rootDirs.Add(Path.GetDirectoryName(pkgDir));
+                    rootDirs.Add(Path.GetDirectoryName(pkgDir));
+
+                    // Necessary to get `pkgDir` `C:\User\labadmin\Documents\mujoco-3_2_0\unity` and similar
+                    // roots that have `Editor` and/or `Runtime` subdirectories with asmdef but which do not
+                    // follow the naming conventions of the Janelia Unity Tookit.
+                    string pkg = Path.GetFileName(pkgDir);
+                    if (!pkg.StartsWith("org."))
+                    {
+                        rootDirs.Add(pkgDir);
+                    }
                 }
                     
                 foreach (string pkgDir in pkgDirs)
