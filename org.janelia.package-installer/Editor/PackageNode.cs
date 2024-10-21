@@ -79,6 +79,7 @@ namespace Janelia
             }
         }
 
+        // `subDir` is "Editor" or "Runtime"
         private HashSet<string> GetDepPkgDirs(string pkgDir, string subDir, List<string> rootDirs)
         {
             HashSet<string> result = new HashSet<string>();
@@ -102,6 +103,14 @@ namespace Janelia
                             {
                                 result.Add(referencePkgDir);
                                 break;
+                            }
+
+                            // Necessary to get `rootDir` `C:\User\labadmin\Documents\mujoco-3_2_0\unity` and similar
+                            // roots that have `Editor` and/or `Runtime` subdirectories with asmdef but which do not
+                            // follow the naming conventions of the Janelia Unity Tookit.
+                            else if (System.IO.Directory.Exists(Path.Join(rootDir, subDir)))
+                            {
+                                result.Add(rootDir);
                             }
                         }
                     }
