@@ -33,6 +33,8 @@ The JSON spec file contains elements to control the grid,  the random placement 
 
 * `"xWidth10cm"` [required]: The overall size of the meadow in the _x_ dimension.  Note that one unit is 10 cm, which is different from the Unity standard of one unit being 1 m; the new units give a better compromise between higher resolution and lower numerical instability at the scale of small animals (e.g, _Drosophila_ fruit flies).
 * `"zWidth10cm"`[required]: The overall size of the meadow in the _z_ dimension, with one unit being 10 cm.
+* `"xWidthClear10cm"` [optional, default 0]: The overall size in the _x_ dimension of a clear space with no plants at the center of the meadow.  The default of 0 means there is no clear space.
+* `"zWidthClear10cm"` [optional, default 0]: The overall size in the _z_ dimension of a clear space with no plants at the center of the meadow.
 * `"xNumClutterCells"` [required]: The number of cells along the _x_ dimension.
 * `"zNumClutterCells"` [required]: The number of cells along the _z_ dimension.
 * `clutterJitterFraction"` [optional, default: 0.3]: Controls the "jitter" or random displacement from the cell center, with 0 giving no jitter and 0.5 giving the most possible jitter.
