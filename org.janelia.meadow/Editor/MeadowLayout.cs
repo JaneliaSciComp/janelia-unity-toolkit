@@ -244,23 +244,25 @@ namespace Janelia
                 float z = -_spec.zWidth10cm / 2 + dZ / 2;
                 for (int iZ = 0; iZ < _spec.zNumClutterCells; iZ++)
                 {
-                    float jitterX = UnityEngine.Random.Range(-dX * _spec.clutterJitterFraction, dX * _spec.clutterJitterFraction);
-                    float jitterZ = UnityEngine.Random.Range(-dZ * _spec.clutterJitterFraction, dZ * _spec.clutterJitterFraction);
-                    Vector3 pos = new Vector3(x + jitterX, y, z + jitterZ);
-                    float rotZ = UnityEngine.Random.Range(0, 360);
-                    Vector3 euler = new Vector3(0, rotZ, 0);
-                    float t = UnityEngine.Random.Range(0.0f, 1.0f);
-                    foreach (Master master in _clutterMasters)
+                    if ((Mathf.Abs(x) > _spec.xWidthClear10cm / 2) || (Mathf.Abs(z) > _spec.zWidthClear10cm / 2))
                     {
-                        if (master.Choose(t))
+                        float jitterX = UnityEngine.Random.Range(-dX * _spec.clutterJitterFraction, dX * _spec.clutterJitterFraction);
+                        float jitterZ = UnityEngine.Random.Range(-dZ * _spec.clutterJitterFraction, dZ * _spec.clutterJitterFraction);
+                        Vector3 pos = new Vector3(x + jitterX, y, z + jitterZ);
+                        float rotZ = UnityEngine.Random.Range(0, 360);
+                        Vector3 euler = new Vector3(0, rotZ, 0);
+                        float t = UnityEngine.Random.Range(0.0f, 1.0f);
+                        foreach (Master master in _clutterMasters)
                         {
-                            InstantiateMaster(master, "_" + i++, pos, euler, _clutter);
-                            break;
+                            if (master.Choose(t))
+                            {
+                                InstantiateMaster(master, "_" + i++, pos, euler, _clutter);
+                                break;
+                            }
                         }
                     }
                     z += dZ;
                 }
-
                 x += dX;
             }
         }
@@ -404,6 +406,8 @@ namespace Janelia
         {
             public float xWidth10cm;
             public float zWidth10cm;
+            public float xWidthClear10cm = 0;
+            public float zWidthClear10cm = 0;
             public int xNumClutterCells;
             public int zNumClutterCells;
             public float clutterJitterFraction = 0.3f;
