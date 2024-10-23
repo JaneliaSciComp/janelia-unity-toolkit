@@ -91,7 +91,7 @@ namespace Janelia
             private void LoadSeparatorTexture()
             {
                 _separatorTexture = SolidTexture(Color.black);
-                if (_spec.separatorTexture != null)
+                if ((_spec.separatorTexture != null) && (_spec.separatorTexture.Length > 0))
                 {
                     string jsonDir = Path.GetDirectoryName(_specFilePath);
                     string separatorPathFull = Path.Combine(jsonDir, _spec.separatorTexture);
