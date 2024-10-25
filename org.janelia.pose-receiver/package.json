@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.pose-receiver",
     "displayName": "Janelia Pose Receiver",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "unity": "2020.1",
     "description": "Receives UDP packets with poses for designated objects",
     "keywords": [],
