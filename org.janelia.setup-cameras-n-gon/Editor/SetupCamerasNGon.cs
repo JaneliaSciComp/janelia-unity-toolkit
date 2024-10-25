@@ -49,7 +49,9 @@ namespace Janelia
             window._offsetX = offsetX;
             window._offsetZ = offsetZ;
 
-            window.OnGUI();
+            window.ReconcileCameraScreens();
+            window._rotationY = window.RotationYCentered();
+
             window.UpdateCameras();
         }
 
@@ -121,28 +123,7 @@ namespace Janelia
             _near = EditorGUILayout.FloatField("Near", _near);
             _far = EditorGUILayout.FloatField("Far", _far);
 
-            while (_cameraScreens.Count < _numCameras)
-            {
-                _cameraScreens.Add(new CameraScreen());
-            }
-
-            int failSafe = _cameraScreens.Count;
-            while ((_cameraScreens.Count > _numCameras) && (failSafe-- > 0))
-            {
-                foreach (CameraScreen cameraScreen in _cameraScreens)
-                {
-                    string suffix = cameraScreen.camera.name.Substring("FlyCamera".Length);
-                    int i;
-                    if (int.TryParse(suffix, out i))
-                    {
-                        if (i > _numCameras)
-                        {
-                            _cameraScreens.Remove(cameraScreen);
-                            break;
-                        }
-                    }
-                }
-            }
+            ReconcileCameraScreens();
 
             for (int i = 0; i < _cameraScreens.Count; i++)
             {
@@ -165,6 +146,32 @@ namespace Janelia
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void ReconcileCameraScreens()
+        {
+            while (_cameraScreens.Count < _numCameras)
+            {
+                _cameraScreens.Add(new CameraScreen());
+            }
+
+            int failSafe = _cameraScreens.Count;
+            while ((_cameraScreens.Count > _numCameras) && (failSafe-- > 0))
+            {
+                foreach (CameraScreen cameraScreen in _cameraScreens)
+                {
+                    string suffix = cameraScreen.camera.name.Substring("FlyCamera".Length);
+                    int i;
+                    if (int.TryParse(suffix, out i))
+                    {
+                        if (i > _numCameras)
+                        {
+                            _cameraScreens.Remove(cameraScreen);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         private void OnSceneSaved(UnityEngine.SceneManagement.Scene scene)
