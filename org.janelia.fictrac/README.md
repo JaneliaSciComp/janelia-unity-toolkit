@@ -21,3 +21,5 @@ Provides the `GetNextMessage` function to copy the next message from FicTrac int
 ### `FakeTrac.py`
 
 A simple Python script that sends messages in the FicTrac format over a socket, for testing how a Unity application responds to the messages.  Supports UDP and TCP, with UDP being the default to match the real FicTrac code as of late 2020.  Note that with UDP, this scripts starts sending messages immediately (without waiting for a connection, since connections are a TCP concept), so be sure to start the message-receiving application (game) before starting this script.
+
+The `--delay n` argument delays each message by `n` milliseconds, to give a particular frame rate.  Note, however, that versions of Python earlier than 3.11 will not work well for small values of `n`.
