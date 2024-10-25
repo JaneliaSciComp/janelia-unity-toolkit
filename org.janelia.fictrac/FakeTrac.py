@@ -14,9 +14,12 @@ import sys
 import time
 
 integratedHeading = 0
+integratedX = 0
+integratedY = 0
 
 def message(i, args):
     global integratedHeading
+    global integratedX, integratedY
 
     # FicTrac format:
     # https://github.com/rjdmoore/fictrac/blob/master/doc/data_header.txt
@@ -25,6 +28,9 @@ def message(i, args):
     # 6-8     delta rotation vector (lab)     Change in orientation since last frame,
     #                                         represented as rotation angle/axis (radians)
     #                                         in laboratory coordinates.
+    # 15-16   integrated x/y position (lab)   Integrated x/y position (radians) in
+    #                                         laboratory coordinates. Scale by sphere
+    #                                         radius for true position.
     # 17      integrated animal heading (lab) Integrated heading orientation (radians) of
     #                                         the animal in laboratory coordinates. This
     #                                         is the direction the animal is facing.
@@ -40,6 +46,12 @@ def message(i, args):
     forward += forward * random.uniform(-args.noisePercentage, args.noisePercentage)
     rotationRad = args.rotationRate / (2 * math.pi)
     rotationRad += rotationRad * random.uniform(-args.noisePercentage, args.noisePercentage)
+
+    if args.oscillating:
+        p = 200
+        d = (i + p/2) // p
+        if d % 2 == 1:
+            rotationRad *= -1
 
     d = i // 60
     if args.free and d % 2 == 1:
@@ -64,6 +76,20 @@ def message(i, args):
     integratedHeading -= rotationRad
     msgNumeric[17] = integratedHeading
 
+    changeX = math.cos(-integratedHeading) * forward
+    changeY = math.sin(-integratedHeading) * forward
+
+    # In the FicTrac `data_header.txt`, for the "integrated x/y position (in radians) in lab coordinates",
+    # the receiver is to "scale by sphere radius for true position", so do the inverse of scaling by
+    # that radius here.
+    changeX /= args.radius
+    changeY /= args.radius
+
+    integratedX += changeX
+    integratedY += changeY
+    msgNumeric[15] = integratedX
+    msgNumeric[16] = integratedY
+ 
     # Time (in milliseconds) since the Unix epoch.
     timestampMs = int(time.time() * 1000)
     msgNumeric[22] = timestampMs
@@ -108,6 +134,10 @@ if __name__ == "__main__":
     parser.add_argument("--free", "-fr", dest="free", action="store_true", help="add occasional chaos to test thresholding")
     parser.set_defaults(stepped=False)
     parser.add_argument("--stepped", "-st", dest="stepped", action="store_true", help="produce motion in a stepping pattern")
+    parser.set_defaults(oscillating=False)
+    parser.add_argument("--oscillate", "-os", dest="oscillating", action="store_true", help="produce oscilating rotation")
+    parser.set_defaults(radius=1.0)
+    parser.add_argument("--rad", "-r", type=float, dest="radius", help="trackball radius (for integrated x, y only)")
     args = parser.parse_args()
 
     socketType = socket.SOCK_DGRAM if args.useUDP else socket.SOCK_STREAM
