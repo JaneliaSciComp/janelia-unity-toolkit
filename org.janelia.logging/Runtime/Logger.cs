@@ -399,11 +399,10 @@ namespace Janelia
                 Thread.Sleep(2000);
             }
             if (File.Exists(shortcutPath)) {
-                standalonePath = shortcutPath;
                 Debug.Log("Using shortcut");
             }
 
-            MakeLauncherScript(scriptTemplatePath, scriptPath, standalonePath);
+            MakeLauncherScript(scriptTemplatePath, scriptPath, shortcutPath, standalonePath);
         }
 
         // The launcher script is a Microsoft "HTML Application" ("HTA"), with HTML and
@@ -414,7 +413,7 @@ namespace Janelia
         // TODO: The disadvantage is that this implementation works on Windows only, so
         // there should be an alternative implementation is other platforms are to be supported.
 
-        private static void MakeLauncherScript(string scriptTemplatePath, string scriptPath, string standalonePath)
+        private static void MakeLauncherScript(string scriptTemplatePath, string scriptPath, string shortcutPath, string standalonePath)
         {
             if (File.Exists(scriptPath))
             {
@@ -422,6 +421,7 @@ namespace Janelia
             }
 
             string logDirSuffixStr = getLogDirectorySuffix().Replace("\\", "\\\\");
+            string shortcutPathStr = shortcutPath.Replace("\\", "\\\\");
             string standalonePathStr = standalonePath.Replace("\\", "\\\\");
 
             // The HTML and JScript code is in a separate "template" file, which has
@@ -455,11 +455,21 @@ namespace Janelia
                     {
                         line = MakeLauncherPluginOtherFunctionCalls();
                     }
-                    string line1 = line.Replace("LOG_DIR_SUFFIX", logDirSuffixStr);
-                    string line2 = line1.Replace("STANDALONE_PATH", standalonePathStr);
-                    if (line2.Length > 0)
+                    else if (line.Contains("LOG_DIR_SUFFIX"))
                     {
-                        lines.Add(line2);
+                        line = line.Replace("LOG_DIR_SUFFIX", logDirSuffixStr);
+                    }
+                    else if (line.Contains("SHORTCUT_PATH"))
+                    {
+                        line = line.Replace("SHORTCUT_PATH", shortcutPathStr);
+                    }
+                    else if (line.Contains("STANDALONE_PATH"))
+                    {
+                        line = line.Replace("STANDALONE_PATH", standalonePathStr);
+                    }
+                    if (line.Length > 0)
+                    {
+                        lines.Add(line);
                     }
                 }
             }
