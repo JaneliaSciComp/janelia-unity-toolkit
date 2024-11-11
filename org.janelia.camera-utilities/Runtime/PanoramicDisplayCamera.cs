@@ -1,4 +1,5 @@
 #define PROGRESS_BOX
+#define PROFILE
 
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,10 @@ namespace Janelia
         // the left projector onto the others, to the right.
         public int leftProjectorIndex = 2;
         public static int leftProjectorIndexStatic = 2;
+
+        // `false` means the surface is stationary and the cameras move relative to it.
+        // `true` means the surface moves (translates and rotates) along with the cameras.
+        public bool movingSurface = false;
 
 #if PROGRESS_BOX
         public bool showProgressBox = false;
@@ -132,6 +137,11 @@ namespace Janelia
             camera.clearFlags = CameraClearFlags.Nothing;
 
             SetupSourceCameras(sourceWidth, sourceWidth);
+
+            Debug.Log("QualitySettings.GetQualityLevel() " + QualitySettings.GetQualityLevel() + " (of " + QualitySettings.count + " possible)");
+            Debug.Log("QualitySettings.antiAliasing " + QualitySettings.antiAliasing);
+            Debug.Log("QualitySettings.shadows " + QualitySettings.shadows);
+            Debug.Log("QualitySettings.shadowResolution " + QualitySettings.shadowResolution);
         }
 
         public void Update()
@@ -159,6 +169,19 @@ namespace Janelia
             else if (Input.GetKey("d"))
             {
                 progressBoxPosition.x += 1;
+            }
+#endif
+#if PROFILE
+            _profileDeltaTimeSum += Time.deltaTime;
+            _profileDeltaTimeCount += 1;
+            if (Time.frameCount % _profilePeriod == 0)
+            {
+                float mean = _profileDeltaTimeSum / _profileDeltaTimeCount;
+                float meanMs = Mathf.Round(mean * 1000);
+                float rate = Mathf.Round(1 / mean);
+                Debug.Log("PanoramicDisplayCamera mean time between frames: " + meanMs + " ms (" + rate + " Hz)");
+                _profileDeltaTimeSum = 0;
+                _profileDeltaTimeCount = 0;
             }
 #endif
         }
@@ -200,6 +223,11 @@ namespace Janelia
                 {
                     sourceCameras[i].targetTexture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
                     sourceCameras[i].enabled = false;
+
+                    _initialForward[i] = sourceCameras[i].transform.forward;
+                    _initialUp[i] = sourceCameras[i].transform.up;
+                    _initialRight[i] = sourceCameras[i].transform.right;
+
                     ++n;
                 }
             }
@@ -301,10 +329,10 @@ namespace Janelia
         private void SetMaterialCamera(Material material, Camera camera, int i)
         {
             string baseName = "_Camera" + i.ToString(); 
-            material.SetVector(baseName + "Position", camera.transform.position);
-            material.SetVector(baseName + "Forward", camera.transform.forward);
-            material.SetVector(baseName + "Up", camera.transform.up);
-            material.SetVector(baseName + "Right", camera.transform.right);
+            material.SetVector(baseName + "Position", movingSurface ? Vector3.zero : camera.transform.position);
+            material.SetVector(baseName + "Forward", movingSurface ? _initialForward[i] : camera.transform.forward);
+            material.SetVector(baseName + "Up", movingSurface ? _initialUp[i] : camera.transform.up);
+            material.SetVector(baseName + "Right", movingSurface ? _initialRight[i] : camera.transform.right);
             material.SetFloat(baseName + "Near", camera.nearClipPlane);
             float fovHoriz = camera.fieldOfView;
             float fovVert = Camera.VerticalToHorizontalFieldOfView(fovHoriz, camera.aspect);
@@ -388,9 +416,18 @@ namespace Janelia
 
         private bool _enableSixCameras = false;
 
+        private Vector3[] _initialForward = new Vector3[6];
+        private Vector3[] _initialUp = new Vector3[6];
+        private Vector3[] _initialRight = new Vector3[6];
+
 #if PROGRESS_BOX
         private Texture2D _progressTextureEven;
         private Texture2D _progressTextureOdd;
+#endif
+#if PROFILE
+        private float _profileDeltaTimeSum = 0;
+        private int _profileDeltaTimeCount = 0;
+        private int _profilePeriod = 500;
 #endif
     }
 }
