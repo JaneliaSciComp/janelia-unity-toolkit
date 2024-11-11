@@ -11,6 +11,8 @@ namespace Janelia
         public int readBufferSizeBytes = 256;
         public int readBufferCount = 2;
 
+        public int forwardingPort = 0;
+
         public GameObject[] controlled = new GameObject[2];
         public float scale = 1;
         public Vector3 angleOffsetDegs = Vector3.zero;
@@ -23,7 +25,34 @@ namespace Janelia
 
         public void Start()
         {
+            bool forwardedTo = false;
+            if (forwardingPort != 0)
+            {
+                string[] args = System.Environment.GetCommandLineArgs();
+                for (int i = 0; i < args.Length; ++i)
+                {
+                    if (args[i] == "-forwardedto")
+                    {
+                        forwardedTo = true;
+                    }
+                }
+
+                if (forwardedTo)
+                {
+                    port = forwardingPort;
+                }
+            }
+
             _socketMessageReader = new SocketMessageReader(HEADER, server, port, readBufferSizeBytes, readBufferCount);
+
+            if (forwardingPort != 0)
+            {
+                if (!forwardedTo)
+                {
+                    _socketMessageReader.ForwardTo(server, forwardingPort);
+                }
+            }
+
             _socketMessageReader.Start();
 
             _received = new bool[controlled.Length];
