@@ -55,8 +55,11 @@
         CALL_PLUGIN_FUNCTIONS
         self.close();
       }
-      function runApp(extraArgs)
+      function runApp(extraArgs, useShortcut)
       {
+        if (typeof useShortcut === 'undefined') {
+          useShortcut = true;
+        }
         CALL_PLUGIN_OTHER_FUNCTIONS
         var args = extraArgs ? extraArgs : '';
         var filenameExtra = document.getElementById('id_logFilenameExtra');
@@ -82,6 +85,9 @@
 
         var sh = new ActiveXObject('Shell.Application');
         var exe = 'STANDALONE_PATH';
+        if (useShortcut) {
+          exe = 'SHORTCUT_PATH';
+        }
         sh.ShellExecute(exe, args, '', 'open', '1');
       }
     </script>
