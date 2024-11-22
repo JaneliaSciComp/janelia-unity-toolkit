@@ -561,7 +561,7 @@ namespace Janelia
             foreach (LauncherOtherPlugin plugin in _launcherOtherPlugins)
             {
                 result += (!String.IsNullOrEmpty(result)) ? n : "";
-                result += "        " + plugin.onRunAppFuncName + "();";
+                result += "        args += " + plugin.onRunAppFuncName + "() || '';";
             }
             return result;
         }
