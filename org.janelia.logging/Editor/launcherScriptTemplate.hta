@@ -60,8 +60,8 @@
         if (typeof useShortcut === 'undefined') {
           useShortcut = true;
         }
-        CALL_PLUGIN_OTHER_FUNCTIONS
         var args = extraArgs ? extraArgs : '';
+        CALL_PLUGIN_OTHER_FUNCTIONS
         var filenameExtra = document.getElementById('id_logFilenameExtra');
         if (filenameExtra.value) {
           var value = filenameExtra.value.replace(' ', '');
