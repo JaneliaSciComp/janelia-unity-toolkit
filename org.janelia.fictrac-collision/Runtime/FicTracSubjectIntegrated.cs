@@ -1,3 +1,5 @@
+#define LOG_ALL_MESHES
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -55,6 +57,10 @@ namespace Janelia
             _averager = gameObject.GetComponentInChildren<FicTracAverager>();
 
             _playbackHandler.ConfigurePlayback();
+
+#if LOG_ALL_MESHES
+            LogUtilities.LogAllMeshes();
+#endif
         }
 
         public void Update()
