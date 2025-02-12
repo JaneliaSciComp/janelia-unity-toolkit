@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
@@ -19,7 +20,7 @@ namespace Janelia
     {
         public static void SetFrame(int frame)
         {
-            _frame = frame.ToString("D5");
+            _frame = frame;
         }
 
         [RuntimeInitializeOnLoadMethod]
@@ -95,7 +96,7 @@ namespace Janelia
         private static string _outputPath;
         private static string _format = "";
         private static GameObject _object;
-        internal static string _frame = "";
+        internal static int _frame = -1;
 
         // The class with the coroutine that will wait until the end of each frame, grab the pixels,
         // and save them.
@@ -140,7 +141,14 @@ namespace Janelia
             {
                 if (_textWidget != null)
                 {
-                    _textWidget.text = _frame;
+                    _textWidget.text = _frame.ToString("D5");
+
+                    if ((_state != State.STARTING) && (_state != State.SAVED_CAPTURE))
+                    {
+                        _frameLag += 1;
+                        Debug.Log("WARNING: for saving frame " + _frame + " expected state " + State.SAVED_CAPTURE + " but found state " + _state);
+                    }
+                    _state = State.SET_FRAME;
                 }
             }
 
@@ -164,7 +172,7 @@ namespace Janelia
                 while (_capturing)
                 {
                     yield return new WaitForEndOfFrame();
-                    if ((_frame.Length > 0) && (i % _savingPeriod == 0))
+                    if ((_frame > 0) && (i % _savingPeriod == 0))
                     {
                         long t1 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -174,6 +182,13 @@ namespace Janelia
                         // just returns an already created one."
                         RenderTexture renderTextureNeedsFlipping = RenderTexture.GetTemporary(Screen.width, Screen.height, 24, RenderTextureFormat.BGRA32);
                         _renderTexture = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.BGRA32);
+
+                        if (_state != State.SET_FRAME)
+                        {
+                            _frameLag += 1;
+                            Debug.Log("WARNING: for saving frame " + _frame + " expected state " + State.SET_FRAME + " but found state " + _state);
+                        }
+                        _state = State.REQUESTED_CAPTURE;
 
                         // Using `ScreenCapture` and `AsyncGPUReadback` is considerably faster than `Texture2D.ReadPixels()`.
                         ScreenCapture.CaptureScreenshotIntoRenderTexture(renderTextureNeedsFlipping);
@@ -288,22 +303,30 @@ namespace Janelia
                         string s = ((i + 4) % (width * 4) != 0) ? " " : "\n";
                         sb.Append(s);
                     }
-                    string filename = _frame + ".txt";
+                    string filename = (_frame - _frameLag).ToString("D5") + ".txt";
                     string pathname = _outputPath + "/" + filename;
                     File.WriteAllText(pathname, sb.ToString());
                 }
                 else if ((_format.ToLower() == "graybin") || (_format.ToLower() == "greybin"))
                 {
                     byte[] everyFourthByte = Enumerable.Range(0, imageBytes.Length / 4).Select(i => imageBytes[i * 4]).ToArray();
-                    string filename = _frame + ".bin";
+                    string filename = (_frame - _frameLag).ToString("D5") + ".bin";
                     string pathname = _outputPath + "/" + filename;
                     File.WriteAllBytes(pathname, everyFourthByte);
                 }
                 else
                 {
                     byte[] pngBytes = ImageConversion.EncodeArrayToPNG(imageBytes, graphicsFormat, width, height);
-                    string filename = _frame + ".png";
+                    string filename = (_frame - _frameLag).ToString("D5") + ".png";
                     string pathname = _outputPath + "/" + filename;
+
+                    if (_state != State.REQUESTED_CAPTURE)
+                    {
+                        _frameLag += 1;
+                        Debug.Log("WARNING: for saving frame " + _frame + " expecte state " + State.REQUESTED_CAPTURE + " but found state " + _state);
+                    }
+                    _state = State.SAVED_CAPTURE;
+
                     File.WriteAllBytes(pathname, pngBytes);
                 }
             }
@@ -314,6 +337,10 @@ namespace Janelia
 
             private long _elapsedMsSum = 0;
             private long _elapsedMsCount = 0;
+
+            private enum State { STARTING, SET_FRAME, REQUESTED_CAPTURE, SAVED_CAPTURE }
+            private State _state = State.STARTING;
+            private int _frameLag = 0;
         }
     }
 }
