@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.logging",
     "displayName": "Janelia Logging",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "unity": "2018.3",
     "description": "Utility code related to logging.",
     "keywords": ["VR"],
