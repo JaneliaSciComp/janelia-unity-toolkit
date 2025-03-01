@@ -42,6 +42,9 @@ namespace Janelia
         // `true` means the surface moves (translates and rotates) along with the cameras.
         public bool movingSurface = false;
 
+        // An optional height displacement, necessarily only in unusual circumstances.
+        public float offsetY = 0;
+
 #if PROGRESS_BOX
         public bool showProgressBox = false;
         public Vector2Int progressBoxPosition = new Vector2Int(100, 100);
@@ -329,7 +332,9 @@ namespace Janelia
         private void SetMaterialCamera(Material material, Camera camera, int i)
         {
             string baseName = "_Camera" + i.ToString(); 
-            material.SetVector(baseName + "Position", movingSurface ? Vector3.zero : camera.transform.position);
+
+            Vector3 pos = camera.transform.position + new Vector3(0, offsetY, 0);
+            material.SetVector(baseName + "Position", movingSurface ? Vector3.zero : pos);
             material.SetVector(baseName + "Forward", movingSurface ? _initialForward[i] : camera.transform.forward);
             material.SetVector(baseName + "Up", movingSurface ? _initialUp[i] : camera.transform.up);
             material.SetVector(baseName + "Right", movingSurface ? _initialRight[i] : camera.transform.right);
