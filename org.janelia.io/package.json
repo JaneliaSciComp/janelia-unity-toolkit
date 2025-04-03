@@ -1,7 +1,7 @@
 {
     "name": "org.janelia.io",
     "displayName": "Janelia Basic Input/Output",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "unity": "2019.2",
     "description": "Code for general device communication.",
     "keywords": ["VR"],

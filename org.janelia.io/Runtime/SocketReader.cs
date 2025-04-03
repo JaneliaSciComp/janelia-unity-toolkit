@@ -37,10 +37,16 @@ namespace Janelia
             OnDisable();
         }
 
-        public void ForwardTo(string hostname = "127.0.0.1", int port = 2100)
+        public void ForwardTo(string hostname = "127.0.0.1", int port = 2100, Byte[] initialMessage = null)
         {
             _forwardingHostname = hostname;
             _forwardingPort = port;
+            
+            if (initialMessage != null)
+            {
+                _forwardingInitialMessage = new Byte[initialMessage.Length];
+                Buffer.BlockCopy(initialMessage, 0, _forwardingInitialMessage, 0, initialMessage.Length);
+            }
         }
 
         public void Start()
@@ -156,13 +162,6 @@ namespace Janelia
                     socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
 
                     socket.Bind(new IPEndPoint(IPAddress.Parse(_hostname), _port));
-
-                    if (_forwardingHostname != null)
-                    {
-                        forwardingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                        forwardingSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-                        forwardingEndpoint = new IPEndPoint(IPAddress.Parse(_forwardingHostname), _forwardingPort);
-                    }
                 }
                 catch (SocketException socketException)
                 {
@@ -180,6 +179,19 @@ namespace Janelia
                             Debug.Log(Now() + "SocketReader waiting to receive UDP datagram");
 
                         int length = socket.Receive(readBuffer);
+
+                        if ((_forwardingHostname != null) && (forwardingSocket == null))
+                        {
+                            forwardingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                            forwardingSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                            forwardingEndpoint = new IPEndPoint(IPAddress.Parse(_forwardingHostname), _forwardingPort);
+
+                            if (_forwardingInitialMessage != null)
+                            {
+                                int count = _forwardingInitialMessage.Length;
+                                forwardingSocket.SendTo(_forwardingInitialMessage, count, System.Net.Sockets.SocketFlags.None, forwardingEndpoint);
+                            }
+                        }
 
                         if (forwardingSocket != null)
                             forwardingSocket.SendTo(readBuffer, length, System.Net.Sockets.SocketFlags.None, forwardingEndpoint);
@@ -327,6 +339,7 @@ namespace Janelia
 
         private string _forwardingHostname;
         private int _forwardingPort;
+        private Byte[] _forwardingInitialMessage;
 
         private TcpClient _clientSocket;
 
