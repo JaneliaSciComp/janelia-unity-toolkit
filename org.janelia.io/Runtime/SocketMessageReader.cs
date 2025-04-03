@@ -42,9 +42,9 @@ namespace Janelia
             _socketReaderMessage = new Byte[readBufferSizeBytes];
         }
 
-        public void ForwardTo(string hostname = "127.0.0.1", int port = 2100)
+        public void ForwardTo(string hostname = "127.0.0.1", int port = 2100, Byte[] initialMessage = null)
         {
-            _socketReader.ForwardTo(hostname, port);
+            _socketReader.ForwardTo(hostname, port, initialMessage);
         }
 
         public void Start()
