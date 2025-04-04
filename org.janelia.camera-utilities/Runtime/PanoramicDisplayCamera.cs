@@ -140,6 +140,7 @@ namespace Janelia
             camera.clearFlags = CameraClearFlags.Nothing;
 
             SetupSourceCameras(sourceWidth, sourceWidth);
+            SetupBlackTexture(sourceWidth, sourceWidth);
 
             Debug.Log("QualitySettings.GetQualityLevel() " + QualitySettings.GetQualityLevel() + " (of " + QualitySettings.count + " possible)");
             Debug.Log("QualitySettings.antiAliasing " + QualitySettings.antiAliasing);
@@ -187,6 +188,11 @@ namespace Janelia
                 _profileDeltaTimeCount = 0;
             }
 #endif
+        }
+
+        public void SetToBlack(bool black)
+        {
+            _black = black;
         }
 
         public void OnRenderImage(RenderTexture input, RenderTexture output)
@@ -254,6 +260,18 @@ namespace Janelia
             {
                 Debug.Log("Could not load PanoramicDisplay.shader");
             }
+        }
+
+        private void SetupBlackTexture(int width, int height)
+        {
+            _blackTexture = new Texture2D(width, height);
+            Color[] pixels = new Color[width * height];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = Color.black;
+            }
+            _blackTexture.SetPixels(pixels);
+            _blackTexture.Apply();
         }
 
         private bool SourceCamerasAreValid()
@@ -348,9 +366,8 @@ namespace Janelia
             cameraTexture.filterMode = FilterMode.Bilinear;
 
             string name = "_TexCamera" + i.ToString();
-            material.SetTexture(name, cameraTexture);
+            material.SetTexture(name, _black ? _blackTexture : cameraTexture);
         }
-
 
 #if UNITY_EDITOR
         // The following three functions are part of the complicated pattern necessary for
@@ -412,6 +429,9 @@ namespace Janelia
 #endif
 
         private Material _material;
+
+        private bool _black = false;
+        private Texture2D _blackTexture;
 
         private Texture2D _projectorSurfaceXTexture;
         private Texture2D _projectorSurfaceYTexture;
