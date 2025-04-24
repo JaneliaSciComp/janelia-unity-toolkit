@@ -23,6 +23,35 @@ namespace Janelia
             _frame = frame;
         }
 
+        public static string GetCommandLineArgs()
+        {
+            string result = "";
+            string[] args = System.Environment.GetCommandLineArgs();
+            bool includeNext = false;
+            for (int i = 0; i < args.Length; ++i)
+            {
+                if ((args[i] == "-saveFrames") || (args[i] == "-height"))
+                {
+                    result += $"{args[i]} ";
+                    includeNext = true;
+                }
+                if (args[i] == "-numbers")
+                {
+                    result += $"{args[i]} ";
+                }
+                if (includeNext)
+                {
+                    int dummy;
+                    if (int.TryParse(args[i], out dummy))
+                    {
+                        result += $"{args[i]} ";
+                    }
+                    includeNext = false;
+                }
+            }
+            return result;
+        }
+
         [RuntimeInitializeOnLoadMethod]
         private static void Initialize()
         {
@@ -152,19 +181,20 @@ namespace Janelia
                 Shader flipShader = Resources.Load("Flip", typeof(Shader)) as Shader;
                 Material flipMaterial = new Material(flipShader);
                 
-                int width = Screen.width;
-                int height = Screen.height;
-                if (_downsampleHeight > 0)
-                {
-                    float ratio = _downsampleHeight / (float)Screen.height;
-                    width = Mathf.RoundToInt(ratio * Screen.width);
-                    height = _downsampleHeight;
-                }
-
                 int i = 0;
                 while (_capturing)
                 {
                     yield return new WaitForEndOfFrame();
+
+                    int width = Screen.width;
+                    int height = Screen.height;
+                    if (_downsampleHeight > 0)
+                    {
+                        float ratio = _downsampleHeight / (float)Screen.height;
+                        width = Mathf.RoundToInt(ratio * Screen.width);
+                        height = _downsampleHeight;
+                    }
+
                     if ((_frame > 0) && (i % _savingPeriod == 0))
                     {
                         long t1 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
