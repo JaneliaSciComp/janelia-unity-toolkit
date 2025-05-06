@@ -181,7 +181,12 @@ namespace Janelia
 
         public bool UsingURP()
         {
-            return (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "UniversalRenderPipelineAsset");
+            UnityEngine.Rendering.RenderPipelineAsset pipeline = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset;
+            if (pipeline != null)
+            {
+                return (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().Name == "UniversalRenderPipelineAsset");
+            }
+            return false;
         }
     }
 }
