@@ -51,6 +51,11 @@ namespace Janelia
         public int progressBoxSize = 50;
 #endif
 
+        public void SetBottomBias(bool enabled)
+        {
+            _material.SetInt("_BottomBias", enabled ? 1 : 0);
+        }
+
         // A client should call this function before any `Update` functions are called (e.g. call it in `Start`).
         // The arrays are a `dataWidth` by `dataHeight` grid of elements in row-major order, sized to match the
         // pixels on the final display projector, or projectors; the data for multiple projectors must be concatenated
@@ -363,10 +368,13 @@ namespace Janelia
             material.SetFloat(baseName + "FovVert", fovVert);
 
             RenderTexture cameraTexture = camera.targetTexture;
-            cameraTexture.filterMode = FilterMode.Bilinear;
+            if (cameraTexture != null)
+            {
+                cameraTexture.filterMode = FilterMode.Bilinear;
 
-            string name = "_TexCamera" + i.ToString();
-            material.SetTexture(name, _black ? _blackTexture : cameraTexture);
+                string name = "_TexCamera" + i.ToString();
+                material.SetTexture(name, _black ? _blackTexture : cameraTexture);
+            }
         }
 
 #if UNITY_EDITOR

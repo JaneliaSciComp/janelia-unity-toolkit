@@ -40,7 +40,7 @@ Shader "Unlit/PanoramicDisplay"
             // looking north, south, east, west, down, and optionally, up). In this typical case, the position, near and fov
             // values will be the same for all cameras, but there is an independent input for each to allow esoteric uses.
 
-            // It would be nice to use a struct to collect the camera parmeters.  But doing so and passing either the whol struct
+            // It would be nice to use a struct to collect the camera parmeters.  But doing so and passing either the whole struct
             // or its fields to subroutines produces errors of the form:
             // "Only instancing constant buffers can have struct variables"
 
@@ -138,6 +138,12 @@ Shader "Unlit/PanoramicDisplay"
             sampler2D _TexColorCorrection;
             float _ColorCorrectionScale;
 
+            // A value of 1 enables a wider filter kernel (i.e., more blurring) at the bottom of the
+            // source camera images.  For an observer looking at an image projected on the ground,
+            // the bottoms of the source camera images have the pixels that are close to the observer,
+            // and thus large and in need of extra filtering to avoid aliasing.
+            int _BottomBias = 0;
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -149,19 +155,58 @@ Shader "Unlit/PanoramicDisplay"
             fixed4 averageAdjacent(float interU, float interV, float4 texelSize, Texture2D tex, SamplerState texSampler)
             {
                 float2 i = float2(interU, interV);
-                fixed4 result = tex.Sample(texSampler, i);
+                if (_BottomBias == 0)
+                {
+                    fixed4 result = tex.Sample(texSampler, i);
 
-                // Simple anti-aliasing by averaging adjacent pixels.
-                float2 offset = texelSize.xy;
-                result += tex.Sample(texSampler, i + float2( offset.x,  offset.y));
-                result += tex.Sample(texSampler, i + float2(-offset.x,  offset.y));
-                result += tex.Sample(texSampler, i + float2(-offset.x, -offset.y));
-                result += tex.Sample(texSampler, i + float2( offset.x, -offset.y));
-                result /= 5;
+                    // Simple anti-aliasing by averaging adjacent pixels.
+                    float2 offset = texelSize.xy;
+                    result += tex.Sample(texSampler, i + float2( offset.x,  offset.y));
+                    result += tex.Sample(texSampler, i + float2(-offset.x,  offset.y));
+                    result += tex.Sample(texSampler, i + float2(-offset.x, -offset.y));
+                    result += tex.Sample(texSampler, i + float2( offset.x, -offset.y));
+                    result /= 5;
 
-                return result;
+                    return result;
+                }
+                else
+                {
+                    // Use a Gaussian filter with sample spacing that gets bigger closer to the bottom
+                    // of the source images, because those pixels appear bigger and more aliased in a
+                    // panorama for overhead projection onto the floor around a viewer.  Those pixels have
+                    // a lower `interV`.
+                    float scale = 1;
+                    const float boundaryV = 0.5f;
+                    if (interV < boundaryV)
+                    {
+                        scale += (boundaryV - interV) / boundaryV * 17;
+                    }
+                    float2 sampleStep = texelSize.xy * scale;
+
+                    fixed4 col = fixed4(0, 0, 0, 0);
+                    float totalWeight = 0.0;
+
+                    int samples = 10;
+                    float center = (samples - 1) / 2.0;
+                    for (int x = 0; x < samples; x++)
+                    {
+                        for (int y = 0; y < samples; y++)
+                        {
+                            float2 offset = float2(x, y) - center;
+
+                            // Gaussian weight. Would a lookup table be faster?
+                            float weight = exp(-dot(offset, offset) * 0.5);
+
+                            float2 sampleUV = i.xy + offset * sampleStep;
+                            col += tex.Sample(texSampler, sampleUV) * weight;
+                            totalWeight += weight;
+                        }
+                    }
+
+                    return col / totalWeight;
+                }
             }
-            
+
             bool rayIntersects(float3 projectorSurfacePt, float3 camPos, float3 camForward, float3 camUp, float3 camRight, float camNear, float camFovHoriz, float camFovVert, out float interDist, out float interU, out float interV)
             {
                 float3 rayPt = camPos;
@@ -262,7 +307,6 @@ Shader "Unlit/PanoramicDisplay"
                     {
                         interDistMin = interDist;
                         result = averageAdjacent(interU, interV, _TexCamera4_TexelSize, _TexCamera4, sampler_TexCamera4);
-                        result = _TexCamera4.Sample(sampler_TexCamera4, float2(interU, interV));
                     }
                 }
 
@@ -274,7 +318,6 @@ Shader "Unlit/PanoramicDisplay"
                         {
                             interDistMin = interDist;
                             result = averageAdjacent(interU, interV, _TexCamera5_TexelSize, _TexCamera5, sampler_TexCamera5);
-                            result = _TexCamera5.Sample(sampler_TexCamera5, float2(interU, interV));
                         }
                     }
                 }
