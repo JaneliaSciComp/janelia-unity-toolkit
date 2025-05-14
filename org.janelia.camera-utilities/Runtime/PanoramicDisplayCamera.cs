@@ -56,6 +56,12 @@ namespace Janelia
             _material.SetInt("_BottomBias", enabled ? 1 : 0);
         }
 
+        // A larger value (e.g., 1) reduces crackes between cameras.
+        public void SetCrackReduction(float factor)
+        {
+            _material.SetFloat("_CrackReduction", factor);
+        }
+
         // A client should call this function before any `Update` functions are called (e.g. call it in `Start`).
         // The arrays are a `dataWidth` by `dataHeight` grid of elements in row-major order, sized to match the
         // pixels on the final display projector, or projectors; the data for multiple projectors must be concatenated

@@ -144,6 +144,9 @@ Shader "Unlit/PanoramicDisplay"
             // and thus large and in need of extra filtering to avoid aliasing.
             int _BottomBias = 0;
 
+            // A larger value (e.g., 1) reduces cracks between source cameras.
+            float _CrackReduction = 0.01F;
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -234,7 +237,7 @@ Shader "Unlit/PanoramicDisplay"
                 float3 planePtToInterPt = interPt - planePt;
 
                 // Extend the valid region a bit, to avoid occasional cracks between the cameras.
-                float extra = 0.01F * camNear;
+                float extra = _CrackReduction * camNear;
 
                 float distHoriz = dot(planePtToInterPt, camRight);
                 float distHorizMax = tan(radians(camFovHoriz / 2)) * camNear;
