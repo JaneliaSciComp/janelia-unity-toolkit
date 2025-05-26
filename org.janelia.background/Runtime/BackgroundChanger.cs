@@ -24,6 +24,19 @@ namespace Janelia
             public float durationSecs = 1;
             public string separatorTexture;
             public float separatorDurationSecs;
+
+            // When true, and when 1 / `durationSecs` matches the display refresh rate,
+            // then all textures will be shown even if variations in Unity's frame rate
+            // causes the overall elapsed time to excede the expected value.
+            // Otherwise, occasional textures can be omitted (i.e., frames dropped) to
+            // maintain the expected overall elapsed time.
+            public bool complete = false;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+        public static void OnBeforeSplashScreen()
+        {
+            _timeSplashStartMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
         public static void Initialize(Spec spec, string specFilePath)
@@ -49,13 +62,69 @@ namespace Janelia
                 }
             }
 
-            public void Start()
+            public void Update()
             {
-                StartCoroutine(ChangeBackground());
+                if (Input.GetKey(KeyCode.Escape))
+                {
+                    Application.Quit();
+                }
+
+                if (!_splashIsFinished && SplashScreen.isFinished)
+                {
+                    _splashIsFinished = true;
+                    _timeBackgroundsStartMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                    _currentTextureIndex = 0;
+                    UseTexture(_currentTextureIndex);
+                    _currentTime = _textureDurationSecs[_currentTextureIndex];
+
+                    _usingDisplayRate = UsingDisplayRate();
+
+                    return;
+                }
+
+                int nextTextureIndex = _currentTextureIndex;
+                double nextTime = _currentTime;
+
+                if (_usingDisplayRate)
+                {
+                    // Show every background texture, no matter what the delay.
+                    nextTextureIndex += 1;
+                    nextTime = Time.realtimeSinceStartup;
+
+                    if (nextTextureIndex >= _texturePaths.Count)
+                    {
+                        ReportTextureUsage();
+                        Application.Quit();
+                    }
+                }
+                else
+                {
+                    // Allow skipping over background textures to stay on the overall time schedule.
+                    while (nextTime <= Time.timeAsDouble)
+                    {
+                        nextTime += _textureDurationSecs[nextTextureIndex];
+                        nextTextureIndex += 1;
+
+                        if (nextTextureIndex >= _texturePaths.Count)
+                        {
+                            ReportTextureUsage();
+                            Application.Quit();
+                        }
+                    }
+                }
+
+                if (nextTextureIndex != _currentTextureIndex)
+                {
+                    _currentTextureIndex = nextTextureIndex;
+                    _currentTime = nextTime;
+                    UseTexture(_currentTextureIndex);
+                }
             }
 
             private void LoadTexturePaths()
             {
+                bool useSeparator = ((_spec.separatorTexture != null) && (_spec.separatorTexture.Length > 0) && (_spec.separatorDurationSecs > 0));
                 string jsonDir = Path.GetDirectoryName(_specFilePath);
                 foreach (string texturePath in _spec.textures)
                 {
@@ -77,13 +146,30 @@ namespace Janelia
                             string ext = Path.GetExtension(file).ToLower();
                             if (supported.Contains(ext))
                             {
+                                if (useSeparator)
+                                {
+                                    _texturePaths.Add("separator");
+                                    _textureDurationSecs.Add(_spec.separatorDurationSecs);
+                                }
                                 _texturePaths.Add(file);
+                                _textureDurationSecs.Add(_spec.durationSecs);
                             }
+                        }
+                        if (useSeparator)
+                        {
+                            _texturePaths.Add("separator");
+                            _textureDurationSecs.Add(_spec.separatorDurationSecs);
                         }
                     }
                     else
                     {
+                        if (useSeparator)
+                        {
+                            _texturePaths.Add("separator");
+                            _textureDurationSecs.Add(_spec.separatorDurationSecs);
+                        }
                         _texturePaths.Add(pathFull);
+                        _textureDurationSecs.Add(_spec.durationSecs);
                     }
                 }
             }
@@ -95,11 +181,11 @@ namespace Janelia
                 {
                     string jsonDir = Path.GetDirectoryName(_specFilePath);
                     string separatorPathFull = Path.Combine(jsonDir, _spec.separatorTexture);
-                    _separatorTexture = LoadTexture(separatorPathFull);
+                    LoadTexture(separatorPathFull, ref _separatorTexture);
                 }
                 if (_separatorTexture == null)
                 {
-                    Debug.LogError("BackgroundChanger: cannot create separator texture from file '" + _separatorTexture +"'");
+                    Debug.LogError("BackgroundChanger: cannot create separator texture from file '" + _spec.separatorTexture +"'");
                     _separatorTexture = SolidTexture(Color.red);
                 }
             }
@@ -115,9 +201,14 @@ namespace Janelia
             }
 
             // TODO: Move to a utilities file so this code can be shared with StartupCylinderBackground.cs.
-            private Texture2D LoadTexture(string texturePath)
+            private void LoadTexture(string texturePath, ref Texture2D texture)
             {
-                if (File.Exists(texturePath))
+                if (!File.Exists(texturePath))
+                {
+                    Debug.Log("BackgroundChanger: cannot find texture file " + texturePath);
+                    texture = SolidTexture(Color.red);
+                }
+                else
                 {
                     using (FileStream fs = new FileStream(texturePath, FileMode.Open, FileAccess.Read))
                     {
@@ -129,99 +220,133 @@ namespace Janelia
                         fs.Read(_textureBytes, 0, length);
                     }
 
-                    if (_texture == null)
+                    if (texture == null)
                     {
                         const int ToBeReplacedByLoadImage = 2;
                         const bool MipMaps = false;
-                        _texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
+                        texture = new Texture2D(ToBeReplacedByLoadImage, ToBeReplacedByLoadImage, TextureFormat.RGBA32, MipMaps);
                     }
-                    if (_texture.LoadImage(_textureBytes))
-                    {
-                        return _texture;
-                    }
+                    texture.LoadImage(_textureBytes);
                 }
-                Debug.Log("BackgroundChanger: cannot find texture file " + texturePath);
-                return SolidTexture(Color.red);
             }
 
-            private IEnumerator ChangeBackground()
+            private bool UsingDisplayRate()
             {
-                UseSeparatorTexture();
-                while (_current < _texturePaths.Count)
+                bool noSeparators = ((_spec.separatorTexture == null) || (_spec.separatorTexture.Length == 0) || (_spec.separatorDurationSecs <= 0));
+                bool compatibleSeparators = (_spec.separatorDurationSecs == _spec.durationSecs);
+                if ((noSeparators || compatibleSeparators) && _spec.complete)
                 {
-                    long t0 = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-                    if (!_splashIsFinished)
+                    int displayRateHz = Mathf.RoundToInt((float)Screen.currentResolution.refreshRateRatio.value);
+                    int backgroundRateHz = Mathf.RoundToInt(1.0f / _spec.durationSecs);
+                    if (Mathf.Abs(displayRateHz - backgroundRateHz) < 1)
                     {
-                        yield return new WaitForSeconds(Time.deltaTime);
-                        _splashIsFinished = SplashScreen.isFinished;
-                    }
-                    else
-                    {
-                        if (_spec.separatorDurationSecs > 0)
-                        {
-                            UseSeparatorTexture();
-
-                            long t1A = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                            float elapsedSecsA = (t1A - t0) / 1000.0f;
-                            float waitA = Mathf.Max(_spec.separatorDurationSecs - elapsedSecsA, 0);
-
-                            yield return new WaitForSeconds(waitA);
-                        }
-
-                        UseCurrentTexture();
-
-                        long t1B = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                        float elapsedSecsB = (t1B - t0) / 1000.0f;
-                        float waitB = Mathf.Max(_spec.durationSecs - elapsedSecsB, 0);
-
-                        yield return new WaitForSeconds(waitB);
+                        return true;
                     }
                 }
-
-                UseSeparatorTexture();
-                yield return new WaitForSeconds(_spec.separatorDurationSecs);
-
-                Application.Quit();
+                return false;
             }
 
-            private void UseSeparatorTexture()
+            private void UseTexture(int index)
             {
-                if (_material != null)
+                if ((_material == null) || (index >= _texturePaths.Count))
+                {
+                    return;
+                }
+                string path = _texturePaths[index];
+                if (path == "separator")
                 {
                     _material.SetTexture("_MainTex", _separatorTexture);
 
                     _currentChangingToSeparatorTextureLog.separatorTextureDurationSecs = _spec.separatorDurationSecs;
                     Logger.Log(_currentChangingToSeparatorTextureLog);
                 }
+                else
+                {
+                    if (index < _texturePaths.Count)
+                    {
+                        LoadTexture(_texturePaths[index], ref _texture);
+                        _material.SetTexture("_MainTex", _texture);
+
+                        _currentChangingTextureLog.backgroundTextureNowInUse = _texturePaths[index];
+                        _currentChangingTextureLog.durationSecs = _spec.durationSecs;
+                        Logger.Log(_currentChangingTextureLog);
+                    }
+                }
+                if (index < _texturePaths.Count)
+                {
+                    if (_textureUsedAtFrame == null)
+                    {
+                        _textureUsedAtFrame = new int[_texturePaths.Count];
+                        for (int i = 0; i < _textureUsedAtFrame.Length; i++)
+                        {
+                            _textureUsedAtFrame[i] = -1;
+                        }
+                    }
+                    _textureUsedAtFrame[index] = Time.frameCount;
+                }
             }
 
-            private void UseCurrentTexture()
+            private void ReportTextureUsage()
             {
-                if (_material != null)
+                BackgroundsSummaryLog log = new BackgroundsSummaryLog();
+
+                float expectedDurationBackgroundsSec = 0;
+                foreach (float duration in _textureDurationSecs)
                 {
-                    Texture2D texture = LoadTexture(_texturePaths[_current]);
-                    _material.SetTexture("_MainTex", texture);
-
-                    _currentChangingTextureLog.backgroundTextureNowInUse = _texturePaths[_current];
-                    _currentChangingTextureLog.durationSecs = _spec.durationSecs;
-                    Logger.Log(_currentChangingTextureLog);
-
-                    _current++;
+                    expectedDurationBackgroundsSec += duration;
                 }
+
+                long durationSplashMs = _timeBackgroundsStartMs - _timeSplashStartMs;
+                long timeBackgroundsEndMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                long durationBackgroundsMs = timeBackgroundsEndMs - _timeBackgroundsStartMs;
+                log.splashScreenDurationSec = durationSplashMs / 1000.0f;
+                log.backgroundsTotalDurationSec = durationBackgroundsMs / 1000.0f;
+                log.backgroundsTotalCount = _texturePaths.Count;
+                log.complete = _usingDisplayRate;
+
+                log.expectedBackgroundsTotalDurationSecs = 0;
+                for (int i = 0; i < _textureDurationSecs.Count; ++i)
+                {
+                    log.expectedBackgroundsTotalDurationSecs += _textureDurationSecs[i];
+                }
+
+                log.skippedBackgrounds = new List<int>();
+                for (int i = 0; i < _textureUsedAtFrame.Length; ++i)
+                {
+                    if (_textureUsedAtFrame[i] == -1)
+                    {
+                        log.skippedBackgrounds.Add(i);
+                    }
+                }
+                Logger.Log(log);
+
+                Debug.Log($"Splash screen took {durationSplashMs / 1000.0f} sec ({durationSplashMs} ms)");
+                Debug.Log($"Showing backgrounds took {durationBackgroundsMs / 1000.0f} sec ({durationBackgroundsMs} ms)");
+                Debug.Log($"Showing backgrounds expected to take {expectedDurationBackgroundsSec} sec");
+                Debug.Log($"Skipped {log.skippedBackgrounds.Count} of {_textureUsedAtFrame.Length} backgrounds");
             }
         }
 
         private static Spec _spec;
         private static string _specFilePath;
+
         private static Material _material;
         private static List<string> _texturePaths = new List<string>();
+        private static List<float> _textureDurationSecs = new List<float>();
         private static byte[] _textureBytes;
         private static Texture2D _texture;
         private static Texture2D _separatorTexture;
         private static GameObject _object;
         private static bool _splashIsFinished = false;
-        private static int _current = 0;
+
+        private static bool _usingDisplayRate;
+
+        private static int _currentTextureIndex;
+        private static double _currentTime;
+
+        private static long _timeSplashStartMs;
+        private static long _timeBackgroundsStartMs;
+        private static int[] _textureUsedAtFrame;
 
         [Serializable]
         private class ChangingTextureLog : Logger.Entry
@@ -237,5 +362,17 @@ namespace Janelia
             public float separatorTextureDurationSecs;
         };
         private static ChangingToSeparatorTextureLog _currentChangingToSeparatorTextureLog = new ChangingToSeparatorTextureLog();
+
+        [Serializable]
+        private class BackgroundsSummaryLog : Logger.Entry
+        {
+            public float splashScreenDurationSec;
+            public float backgroundsTotalDurationSec;
+            public float expectedBackgroundsTotalDurationSecs;
+            public int backgroundsTotalCount;
+            public bool complete;
+            public List<int> skippedBackgrounds;
+        };
+
     }
 }

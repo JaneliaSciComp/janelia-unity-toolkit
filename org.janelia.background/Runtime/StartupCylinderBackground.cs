@@ -10,6 +10,21 @@ namespace Janelia
         private static void OnRuntimeMethodLoad()
         {
             string path = Janelia.SessionParameters.GetStringParameter("backgroundCylinderTexture");
+
+            // Especially for tests run from the command line, it is useful to be able to use a commandline argument
+            // to override the parameter that indictes the JSON spec file.
+            string[] args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-backgroundCylinderTexture")
+                {
+                    if (i + 1 < args.Length)
+                    {
+                        path = args[i + 1];
+                    }
+                }
+            }
+
             if (path.Length != 0)
             {
                 if (Path.GetExtension(path) == ".json")
@@ -89,9 +104,9 @@ namespace Janelia
                 JsonUtility.FromJsonOverwrite(json, spec);
                 return spec;
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
-                Debug.Log("Cannot process JSON spec '" + jsonPath + "'");
+                Debug.Log($"Cannot process JSON spec \"{jsonPath}\": {ex.Message}");
                 return null;
             }
         }

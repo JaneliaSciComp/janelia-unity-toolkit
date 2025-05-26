@@ -1,0 +1,23 @@
+{
+    "durationSecs": 1,
+    "textures": [
+        "Images1/Image1.png",
+        "Images1/Image2.png",
+        "Images1/Image3.png",
+        "Images1/Image4.png",
+        "Images1/Image5.png",
+        "Images1/Image6.png",
+        "Images1/Image7.png",
+        "Images1/Image8.png",
+        "Images1/Image9.png",
+        "Images1/Image10.png",
+        "Images1/Image11.png",
+        "Images1/Image12.png",
+        "Images1/Image13.png",
+        "Images1/Image14.png",
+        "Images1/Image15.png",
+        "Images1/Image16.png"
+    ],
+    "separatorDurationSecs": 1,
+    "separatorTexture": "Images1/ImageSep.png"
+}
