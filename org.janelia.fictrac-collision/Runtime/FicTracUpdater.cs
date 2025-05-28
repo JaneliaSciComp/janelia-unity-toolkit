@@ -114,8 +114,12 @@ namespace Janelia
                     int i22 = 0, len22 = 0;
                     IoUtilities.NthSplit(dataFromSocket, SEPARATOR, i0, 22, ref i22, ref len22);
                     long timestampWrite = IoUtilities.ParseLong(dataFromSocket, i22, len22, ref valid);
+
+                    // Field 22 in the FicTrac message may not be as documented, "Either position in video file (ms)
+                    // or frame capture time (ms since epoch)," and so may not be parsable.  Log the rest of the
+                    // message anyway.
                     if (!valid)
-                        break;
+                        timestampWrite = 0;
 
                     _currentFicTracMessageLog.ficTracTimestampWriteMs = timestampWrite;
                     _currentFicTracMessageLog.ficTracTimestampReadMs = dataTimestampMs;
