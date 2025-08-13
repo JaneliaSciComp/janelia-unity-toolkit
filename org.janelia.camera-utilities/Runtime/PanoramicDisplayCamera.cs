@@ -51,9 +51,10 @@ namespace Janelia
         public int progressBoxSize = 50;
 #endif
 
-        public void SetBottomBias(bool enabled)
+        public void SetAntialiasing(int level)
         {
-            _material.SetInt("_BottomBias", enabled ? 1 : 0);
+            int clamped = Mathf.Clamp(level, 0, 2);
+            _material.SetInt("_Antialiasing", clamped);
         }
 
         // A larger value (e.g., 1) reduces crackes between cameras.
