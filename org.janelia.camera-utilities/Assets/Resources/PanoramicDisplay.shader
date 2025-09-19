@@ -138,11 +138,13 @@ Shader "Unlit/PanoramicDisplay"
             sampler2D _TexColorCorrection;
             float _ColorCorrectionScale;
 
-            // A value of 1 enables a wider filter kernel (i.e., more blurring) at the bottom of the
+            // A value of 2 enables a wider filter kernel (i.e., more blurring) at the bottom of the
             // source camera images.  For an observer looking at an image projected on the ground,
             // the bottoms of the source camera images have the pixels that are close to the observer,
             // and thus large and in need of extra filtering to avoid aliasing.
-            int _BottomBias = 0;
+            // A value of 1 enables simple averaging with the north, south, east, west neighbors.
+            // Other values disable antialiasing altogether.
+            int _Antialiasing = 1;
 
             // A larger value (e.g., 1) reduces cracks between source cameras.
             float _CrackReduction = 0.01F;
@@ -158,7 +160,7 @@ Shader "Unlit/PanoramicDisplay"
             fixed4 averageAdjacent(float interU, float interV, float4 texelSize, Texture2D tex, SamplerState texSampler)
             {
                 float2 i = float2(interU, interV);
-                if (_BottomBias == 0)
+                if (_Antialiasing == 1)
                 {
                     fixed4 result = tex.Sample(texSampler, i);
 
@@ -172,7 +174,7 @@ Shader "Unlit/PanoramicDisplay"
 
                     return result;
                 }
-                else
+                else if (_Antialiasing == 2)
                 {
                     // Use a Gaussian filter with sample spacing that gets bigger closer to the bottom
                     // of the source images, because those pixels appear bigger and more aliased in a
@@ -207,6 +209,11 @@ Shader "Unlit/PanoramicDisplay"
                     }
 
                     return col / totalWeight;
+                }
+                else
+                {
+                    // No antialiasing.
+                    return tex.Sample(texSampler, i);
                 }
             }
 

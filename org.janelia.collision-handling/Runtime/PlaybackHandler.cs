@@ -132,7 +132,7 @@ namespace Janelia
                 if (transformation != null)
                 {
                     currentTransformation.Set(transformation);
-                    SaveFrames.SetFrame((int)transformation.frame);
+                    SaveAllFrames.SetFrame((int)transformation.frame);
 
                     int frame = (int)Mathf.Round(transformation.frame);
                     if (_previousFrame >= 0)
