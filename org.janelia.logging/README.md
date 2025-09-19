@@ -95,9 +95,9 @@ By default, installing this package makes logging run automatically, without the
 - `EnableLogging` [default: `true`]: when `false`, all logging is disabled.
 - `LogTotalMemory` [defaut: `false`]: when `true`, the value of `System.GC.GetTotalMemory(false)` is logged at each frame.
 
-### `Janelia.SaveFrames`
+### `Janelia.SaveAllFrames`
 
-This class adds the functionality for saving rendered frames.  It is a static class, so there is no need to manually add it to a scene.  It initiates a [coroutine](https://docs.unity3d.com/Manual/Coroutines.html) for saving the frames when a stand-alone executable is run with the `-saveFrames` commandline option.
+This class adds the functionality for saving rendered frames.  It is a static class, so there is no need to manually add it to a scene.  It uses a companion class, `Janelia.SaveFrames`, to initiate a [coroutine](https://docs.unity3d.com/Manual/Coroutines.html) for saving the frames when a stand-alone executable is run with the `-saveFrames` commandline option.
 
 The saving of frames can be tuned with several commandline options:
 
@@ -116,7 +116,7 @@ It is particularly useful to save the frames when playing back a log file, and r
 
 There is no slowdown when saving frames (i.e., the total elapsed time is no different when playing back with or without saving frames) when using `-format greybin` or when using PNG format and a reduced resolution (from the `-height` argument).  Saving back full resolution PNG format may exhibit a slowdown, however.
 
-Don't worry about the following message appearing in the `Player.log` file when saving frames: `'B8G8R8A8_SRGB' doesn't support ReadPixels usage on this platform. Async GPU readback failed.`  It seems to be spurious, and there are no signs that the saving of frames is failing.
+The companion class, `Janelia.SaveFrames`, can be used on its own for more specific forms of frame saving.
 
  ### `simplify.py`
 
