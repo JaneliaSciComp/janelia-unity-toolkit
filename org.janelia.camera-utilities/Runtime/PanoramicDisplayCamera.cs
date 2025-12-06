@@ -154,10 +154,19 @@ namespace Janelia
             SetupSourceCameras(sourceWidth, sourceWidth);
             SetupBlackTexture(sourceWidth, sourceWidth);
 
-            Debug.Log("QualitySettings.GetQualityLevel() " + QualitySettings.GetQualityLevel() + " (of " + QualitySettings.count + " possible)");
-            Debug.Log("QualitySettings.antiAliasing " + QualitySettings.antiAliasing);
-            Debug.Log("QualitySettings.shadows " + QualitySettings.shadows);
-            Debug.Log("QualitySettings.shadowResolution " + QualitySettings.shadowResolution);
+            Debug.Log($"QualitySettings.GetQualityLevel() {QualitySettings.GetQualityLevel()} (of {QualitySettings.count} possible)");
+            Debug.Log($"QualitySettings.antiAliasing {QualitySettings.antiAliasing}");
+            Debug.Log($"QualitySettings.shadows {QualitySettings.shadows}");
+            Debug.Log($"QualitySettings.shadowResolution {QualitySettings.shadowResolution}");
+#if PROGRESS_BOX
+            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X) && PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y) && PlayerPrefs.HasKey(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX))
+            {
+                showProgressBox = PlayerPrefs.GetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX) != 0;
+                progressBoxPosition.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X);
+                progressBoxPosition.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y);
+                Debug.Log($"Read Progress Box position from preferences: ({progressBoxPosition.x}, {progressBoxPosition.y}) and visible: {showProgressBox}.");
+            }
+#endif
         }
 
         public void Update()
@@ -166,25 +175,38 @@ namespace Janelia
             _material.SetFloat("_ColorCorrectionScale", surfaceColorCorrectionScale);
 
 #if PROGRESS_BOX
-            if (Input.GetKeyDown("p"))
+            if (Input.GetKeyDown(KeyCode.P))
             {
                 showProgressBox = !showProgressBox;
-            }
-            if (Input.GetKey("w"))
+                _updatePlayerPrefs = true;
+            } else if (Input.GetKey(KeyCode.W))
             {
                 progressBoxPosition.y -= 1;
+                _updatePlayerPrefs = true;
             }
-            else if (Input.GetKey("a"))
+            else if (Input.GetKey(KeyCode.A))
             {
                 progressBoxPosition.x -= 1;
+                _updatePlayerPrefs = true;
             }
-            else if (Input.GetKey("s"))
+            else if (Input.GetKey(KeyCode.S))
             {
                 progressBoxPosition.y += 1;
+                _updatePlayerPrefs = true;
             }
-            else if (Input.GetKey("d"))
+            else if (Input.GetKey(KeyCode.D))
             {
                 progressBoxPosition.x += 1;
+                _updatePlayerPrefs = true;
+            }
+            if (_updatePlayerPrefs)
+            {
+                PlayerPrefs.SetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX, showProgressBox ? 1 : 0);
+                PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X, progressBoxPosition.x);
+                PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y, progressBoxPosition.y);
+                PlayerPrefs.Save();
+                _updatePlayerPrefs = false;
+                Debug.Log($"Setting Progress Box position to ({progressBoxPosition.x}, {progressBoxPosition.y}). Visible: {showProgressBox}");
             }
 #endif
 #if PROFILE
@@ -195,7 +217,7 @@ namespace Janelia
                 float mean = _profileDeltaTimeSum / _profileDeltaTimeCount;
                 float meanMs = Mathf.Round(mean * 1000);
                 float rate = Mathf.Round(1 / mean);
-                Debug.Log("PanoramicDisplayCamera mean time between frames: " + meanMs + " ms (" + rate + " Hz)");
+                Debug.Log($"PanoramicDisplayCamera mean time between frames: {meanMs} ms ({rate} Hz)");
                 _profileDeltaTimeSum = 0;
                 _profileDeltaTimeCount = 0;
             }
@@ -346,7 +368,7 @@ namespace Janelia
         {
             if (sourceCameras.Count() < 5)
             {
-                Debug.LogWarning("PanoramicDisplayCamera: expecting at least 5 source cameras instead of " + sourceCameras.Count());
+                Debug.LogWarning($"PanoramicDisplayCamera: expecting at least 5 source cameras instead of {sourceCameras.Count()}");
                 return;
             }
 
@@ -463,6 +485,10 @@ namespace Janelia
 #if PROGRESS_BOX
         private Texture2D _progressTextureEven;
         private Texture2D _progressTextureOdd;
+        private bool _updatePlayerPrefs = false;
+        private const string PLAYER_PREF_KEY_SHOW_PROGRESS_BOX = "PanoramicDisplayCamera.ShowProgressBox";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
 #endif
 #if PROFILE
         private float _profileDeltaTimeSum = 0;
