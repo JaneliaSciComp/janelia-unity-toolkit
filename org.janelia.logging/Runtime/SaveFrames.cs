@@ -161,7 +161,7 @@ namespace Janelia
             }
             EnsureDirectory(_outputPath);
 
-            Debug.Log($"Started saving frames to \"{_outputPath}\" with period {_savingPeriod}");
+            Debug.Log($"Started saving frames to \"{_outputPath}\" with period {_savingPeriod} and format {_format}");
 
             if (_showFrameNumbers)
             {
@@ -358,6 +358,13 @@ namespace Janelia
                 string filename = frameBeingSaved.ToString("D5") + ".bin";
                 string pathname = _outputPath + "/" + filename;
                 File.WriteAllBytes(pathname, everyFourthByte);
+            }
+            else if ((_format.ToLower() == "jpg") || (_format.ToLower() == "jpeg"))
+            {
+                byte[] jpgBytes = ImageConversion.EncodeArrayToJPG(imageBytes, graphicsFormat, width, height);
+                string filename = frameBeingSaved.ToString("D5") + ".jpg";
+                string pathname = _outputPath + "/" + filename;
+                File.WriteAllBytes(pathname, jpgBytes);
             }
             else
             {
