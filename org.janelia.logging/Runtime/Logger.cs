@@ -59,19 +59,23 @@ namespace Janelia
         {
             // The elapsed time since the application started.
             [SerializeField]
+            [HideInInspector]
             public float timeSecs;
 
             // The current frame (starting at 1).
             [SerializeField]
+            [HideInInspector]
             public float frame;
 
             // The elapsed time since the end of the "Made with Unity" splash screen,
             // which appears when a standalone executable starts running.
             [SerializeField]
+            [HideInInspector]
             public float timeSecsAfterSplash;
 
             // The number of frames since the end of the splash screen (starting at 0).
             [SerializeField]
+            [HideInInspector]
             public float frameAfterSplash;
         }
 
