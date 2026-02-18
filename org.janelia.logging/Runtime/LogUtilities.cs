@@ -11,7 +11,7 @@ namespace Janelia
     {
         public static LogOptions GetOptions()
         {
-            LogOptions[] paramObjs = UnityEngine.Object.FindObjectsOfType<LogOptions>();
+            LogOptions[] paramObjs = UnityEngine.Object.FindObjectsByType<LogOptions>(FindObjectsSortMode.None);
             if (paramObjs.Length > 0)
             {
                 if (paramObjs.Length > 1)

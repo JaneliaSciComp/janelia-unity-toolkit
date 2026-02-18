@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using UnityEditor;
 #if UNITY_EDITOR
@@ -59,19 +60,23 @@ namespace Janelia
         {
             // The elapsed time since the application started.
             [SerializeField]
+            [HideInInspector]
             public float timeSecs;
 
             // The current frame (starting at 1).
             [SerializeField]
+            [HideInInspector]
             public float frame;
 
             // The elapsed time since the end of the "Made with Unity" splash screen,
             // which appears when a standalone executable starts running.
             [SerializeField]
+            [HideInInspector]
             public float timeSecsAfterSplash;
 
             // The number of frames since the end of the splash screen (starting at 0).
             [SerializeField]
+            [HideInInspector]
             public float frameAfterSplash;
         }
 
@@ -147,7 +152,7 @@ namespace Janelia
             }
         }
 
-        public static List<T> Read<T>(string path) where T : Entry
+        public static List<T> Read<T>(string path, string exclude=null) where T : Entry
         {
             List<T> result = new List<T>();
             if (File.Exists(path))
@@ -163,9 +168,12 @@ namespace Janelia
                         if (FindTopLevelObject(s, ref i0, out i1))
                         {
                             string s1 = s.Substring(i0, i1 - i0 + 1);
+                            if ((exclude == null) || !ContainsJsonKey(s1, exclude))
+                            {
+                                T entry = JsonUtility.FromJson<T>(s1);
+                                result.Add(entry);
+                            }
                             i0 = i1 + 1;
-                            T entry = JsonUtility.FromJson<T>(s1);
-                            result.Add(entry);
                         }
                         else
                         {
@@ -180,6 +188,11 @@ namespace Janelia
                 }
             }
             return result;
+        }
+
+        private static bool ContainsJsonKey(string s, string k)
+        {
+            return Regex.IsMatch(s, $@"""[^""]*{Regex.Escape(k)}[^""]*""\s*:");
         }
 
         // Plugs in some launcher capabilities.  The launcher will have a new radio button with label text `radioButtonLabel`.
@@ -239,6 +252,7 @@ namespace Janelia
         private static void OnRuntimeMethodLoad()
         {
             Debug.Log("Application run as: " + System.Environment.CommandLine);
+            Debug.Log($"Logger.enable {Logger.enable}");
 
             InitIfNeeded();
             LogUtilities.LogCurrentResolution();
@@ -251,17 +265,23 @@ namespace Janelia
                 return;
             }
 
+            LogOptions options = LogUtilities.GetOptions();
+            if (options != null)
+            {
+                // When this class' `enable` is false that takes priority.
+                if (enable && !options.EnableLogging)
+                {
+                    Debug.Log($"LogOptions.EnableLogging {options.EnableLogging}");
+                    enable = false;
+                }
+            }
+
             string[] args = System.Environment.GetCommandLineArgs();
             if (args.Contains("-noLog") || args.Contains("-nolog"))
             {
                 enable = false;
             }
 
-            LogOptions options = LogUtilities.GetOptions();
-            if (options != null)
-            {
-                enable = options.EnableLogging;
-            }
             if (enable)
             {
                 Debug.Log("Logger: starting");
