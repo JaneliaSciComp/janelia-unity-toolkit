@@ -184,18 +184,22 @@ public class TalkToNiDaq_LED_MovieProtocol : MonoBehaviour
         if (_writeData == null || _outputParams == null)
             return;
 
-        double resetValue = _outputParams.VoltageMin;
-        int expectedNumWritten = _writeData.Length;
-
-        if (!Janelia.NiDaqMx.WriteToOutputs(_outputParams,
-                new double[] { resetValue, resetValue, resetValue },
-                ref expectedNumWritten))
+        try
         {
-            Debug.LogError("Reset write failed on destroy");
-            Debug.LogError(Janelia.NiDaqMx.GetLatestError());
-        }
+            double resetValue = _outputParams.VoltageMin;
+            int expectedNumWritten = _writeData.Length;
 
-        Janelia.NiDaqMx.OnDestroy();
+            Janelia.NiDaqMx.WriteToOutputs(_outputParams,
+                    new double[] { resetValue, resetValue, resetValue },
+                    ref expectedNumWritten);
+        }
+        catch (Exception) { }
+
+        try
+        {
+            Janelia.NiDaqMx.OnDestroy();
+        }
+        catch (Exception) { }
     }
 
     [Serializable]
