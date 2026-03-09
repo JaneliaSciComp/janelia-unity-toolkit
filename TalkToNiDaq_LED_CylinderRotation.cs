@@ -8,12 +8,11 @@ public class TalkToNiDaq_LED_CylinderRotation : MonoBehaviour
     [Tooltip("Drag the GameObject with AnimateCylinderTexture here. If left empty, it will be found automatically.")]
     public AnimateCylinderTexture cylinderTexture;
 
-    [Header("LED Angle Ranges (signed degrees, -180 to 180)")]
-    [Tooltip("LED is ON when the cylinder azimuth falls within any of these ranges.")]
+    [Header("LED Angle Ranges (0 to 360 degrees)")]
+    [Tooltip("LED is ON when the cylinder azimuth falls within any of these ranges. Wrap-around is supported: e.g., from=330 to=30 means 330° through 0° to 30°.")]
     public AngleRange[] ledOnAngleRanges = new AngleRange[]
     {
-        new AngleRange { minAngle = 150f, maxAngle = 180f },
-        new AngleRange { minAngle = -180f, maxAngle = -150f }
+        new AngleRange { fromDeg = 330f, toDeg = 30f }
     };
 
     [Header("Debug")]
@@ -30,8 +29,8 @@ public class TalkToNiDaq_LED_CylinderRotation : MonoBehaviour
     [Serializable]
     public struct AngleRange
     {
-        [Range(-180f, 180f)] public float minAngle;
-        [Range(-180f, 180f)] public float maxAngle;
+        [Range(0f, 360f)] public float fromDeg;
+        [Range(0f, 360f)] public float toDeg;
     }
 
     private void Start()
@@ -113,20 +112,32 @@ public class TalkToNiDaq_LED_CylinderRotation : MonoBehaviour
             Debug.Log($"tracePD: {_currentLogEntry.tracePD}, imgFrameTrigger: {_currentLogEntry.imgFrameTrigger}, ledTrigger: {_currentLogEntry.ledTrigger}");
         }
 
-        // Get cylinder azimuth and convert from 0-360 to signed -180 to 180
-        float azimuth0to360 = cylinderTexture.AzimuthDeg;
-        float signedAzimuth = azimuth0to360 > 180f ? azimuth0to360 - 360f : azimuth0to360;
+        // Get cylinder azimuth directly in 0-360
+        float azimuth = cylinderTexture.AzimuthDeg;
 
-        // Check if azimuth falls within any LED-ON range
+        // Check if azimuth falls within any LED-ON range (supports wrap-around)
         bool ledOn = false;
         for (int i = 0; i < ledOnAngleRanges.Length; i++)
         {
-            float min = ledOnAngleRanges[i].minAngle;
-            float max = ledOnAngleRanges[i].maxAngle;
-            if (signedAzimuth >= min && signedAzimuth <= max)
+            float from = ledOnAngleRanges[i].fromDeg;
+            float to = ledOnAngleRanges[i].toDeg;
+            if (from <= to)
             {
-                ledOn = true;
-                break;
+                // Normal range: e.g., from=150 to=210
+                if (azimuth >= from && azimuth <= to)
+                {
+                    ledOn = true;
+                    break;
+                }
+            }
+            else
+            {
+                // Wrap-around range: e.g., from=330 to=30 means 330->360 and 0->30
+                if (azimuth >= from || azimuth <= to)
+                {
+                    ledOn = true;
+                    break;
+                }
             }
         }
 
@@ -143,7 +154,7 @@ public class TalkToNiDaq_LED_CylinderRotation : MonoBehaviour
         _writeData[2] = ledOn ? _outputParams.VoltageMax : _outputParams.VoltageMin;
 
         // Log
-        _currentLogEntry.cylinderAzimuth = signedAzimuth;
+        _currentLogEntry.cylinderAzimuth = azimuth;
         _currentLogEntry.ledState = ledOn ? 1.0 : 0.0;
         Janelia.Logger.Log(_currentLogEntry);
 
@@ -156,7 +167,7 @@ public class TalkToNiDaq_LED_CylinderRotation : MonoBehaviour
         }
         else if (showEachWrite)
         {
-            Debug.Log($"Azimuth: {signedAzimuth:F1}° | LED: {(ledOn ? "ON" : "OFF")} | Write: [{_writeData[0]:F2}, {_writeData[1]:F2}, {_writeData[2]:F2}]");
+            Debug.Log($"Azimuth: {azimuth:F1}° | LED: {(ledOn ? "ON" : "OFF")} | Write: [{_writeData[0]:F2}, {_writeData[1]:F2}, {_writeData[2]:F2}]");
         }
     }
 
