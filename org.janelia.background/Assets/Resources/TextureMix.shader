@@ -37,8 +37,8 @@ Shader "Unlit/TextureMix" {
             }
 
             fixed4 frag (v2f i) : SV_Target {
-                fixed4 color1 = tex2D(_MainTex, i.uv + _MainTex_ST.xy);
-                fixed4 color2 = tex2D(_SecondTex, i.uv + _SecondTex_ST.xy);
+                fixed4 color1 = tex2D(_MainTex, i.uv + _MainTex_ST.zw);
+                fixed4 color2 = tex2D(_SecondTex, i.uv + _SecondTex_ST.zw);
 
                 // Porter and Duff, color2 "over" color1.
                 float finalAlpha = color2.a + color1.a * (1.0 - color2.a);
