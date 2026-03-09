@@ -14,6 +14,9 @@ public class AnimateCylinderTexture : MonoBehaviour
 
     public float offsetEl= 0.1f;
 
+    [Header("Debug")]
+    public bool showDebugLog = false;
+
     private int repeats = 1; // use repeating velocities to ensure repeats
     private Material cylinderMaterial;
     private float elevation;
@@ -21,6 +24,7 @@ public class AnimateCylinderTexture : MonoBehaviour
     private float rotDir = 1.0f;
     private int vel = 0;
     private float waitTime = 0;
+    private int _debugFrameCount = 0;
 
     // Current azimuth in degrees (0-360), readable by other scripts (e.g., LED trigger)
     private float _azimuthDeg;
@@ -42,11 +46,17 @@ public class AnimateCylinderTexture : MonoBehaviour
     void Start()
     {
         cylinderMaterial = Resources.Load(Janelia.CylinderBackgroundResources.MaterialName, typeof(Material)) as Material;
-        //Resources.Load(Janelia.CylinderBackgroundResources.MaterialName, typeof(Material)) as Material
 
         if (cylinderMaterial == null)
         {
-            Debug.LogError("Could not load material'" + Janelia.CylinderBackgroundResources.MaterialName + "'");
+            Debug.LogError("Could not load material '" + Janelia.CylinderBackgroundResources.MaterialName + "'");
+        }
+
+        if (showDebugLog)
+        {
+            Debug.Log($"[AnimateCylinderTexture] Start: material={(cylinderMaterial != null ? "LOADED" : "NULL")}, " +
+                      $"vRotDeg_per_sec.Length={vRotDeg_per_sec?.Length}, sweepRepeatVec.Length={sweepRepeatVec?.Length}, " +
+                      $"delaySeconds={delaySeconds}, offsetTex={offsetTex}, numElevationSteps={numElevationSteps}");
         }
 
         //reset texture based on offset
@@ -69,9 +79,15 @@ public class AnimateCylinderTexture : MonoBehaviour
 
     void Update()
     {
+        _debugFrameCount++;
+
         // Done with all velocities
         if (vel >= vRotDeg_per_sec.Length || vel >= sweepRepeatVec.Length)
+        {
+            if (showDebugLog && _debugFrameCount <= 5)
+                Debug.Log($"[AnimateCylinderTexture] Frame {_debugFrameCount}: SKIPPED — vel={vel} >= array length (vRot={vRotDeg_per_sec.Length}, sweep={sweepRepeatVec.Length})");
             return;
+        }
 
         //check if a velocity has been completed
         if (currentStep > repeats * 2 * sweepRepeatVec[vel] * numElevationSteps)
@@ -123,12 +139,23 @@ public class AnimateCylinderTexture : MonoBehaviour
 
                 cylinderMaterial.SetTextureOffset("_MainTex", offset);
 
+                if (showDebugLog && _debugFrameCount <= 5)
+                    Debug.Log($"[AnimateCylinderTexture] Frame {_debugFrameCount}: ROTATING — x={x:F4}, y={y:F4}, azimuth={_azimuthDeg:F1}°, vel[{vel}]={vRotDeg_per_sec[vel]}, step={currentStep}, dTime={dTime:F3}");
+
                 //log values
                 _currentLogEntry.xpos = x;
                 _currentLogEntry.ypos = y;
                 Janelia.Logger.Log(_currentLogEntry);
             }
+            else if (showDebugLog && _debugFrameCount <= 5)
+            {
+                Debug.Log($"[AnimateCylinderTexture] Frame {_debugFrameCount}: STOPPED — currentStep*vel={currentStep*vel} > limit={repeats * 2 * numElevationSteps * sweepRepeatVec[sweepRepeatVec.Length-1] * vRotDeg_per_sec.Length}");
+            }
 
+        }
+        else if (showDebugLog && _debugFrameCount <= 5)
+        {
+            Debug.Log($"[AnimateCylinderTexture] Frame {_debugFrameCount}: WAITING — material={(cylinderMaterial != null ? "OK" : "NULL")}, Time.time={Time.time:F3}, waitTime+delay={waitTime+delaySeconds:F3}");
         }
 
     }
