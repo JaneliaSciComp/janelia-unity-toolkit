@@ -190,6 +190,7 @@ namespace Janelia
                 if (_material != null)
                 {
                     _material.SetTexture("_MainTex", _separatorTexture);
+                    _currentTextureName = "";
 
                     _currentChangingToSeparatorTextureLog.separatorTextureDurationSecs = _spec.separatorDurationSecs;
                     Logger.Log(_currentChangingToSeparatorTextureLog);
@@ -202,6 +203,7 @@ namespace Janelia
                 {
                     Texture2D texture = LoadTexture(_texturePaths[_current]);
                     _material.SetTexture("_MainTex", texture);
+                    _currentTextureName = Path.GetFileName(_texturePaths[_current]);
 
                     _currentChangingTextureLog.backgroundTextureNowInUse = _texturePaths[_current];
                     _currentChangingTextureLog.durationSecs = _spec.durationSecs;
@@ -222,6 +224,11 @@ namespace Janelia
         private static GameObject _object;
         private static bool _splashIsFinished = false;
         private static int _current = 0;
+
+        // Public read-only access to the filename of the currently displayed texture.
+        // Empty string when the separator (not a stimulus PNG) is being shown.
+        public static string CurrentTextureName => _currentTextureName;
+        private static string _currentTextureName = "";
 
         [Serializable]
         private class ChangingTextureLog : Logger.Entry
