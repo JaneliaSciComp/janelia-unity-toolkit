@@ -69,6 +69,10 @@ public class AnimateCylinderTexture : MonoBehaviour
 
     void Update()
     {
+        // Done with all velocities
+        if (vel >= vRotDeg_per_sec.Length || vel >= sweepRepeatVec.Length)
+            return;
+
         //check if a velocity has been completed
         if (currentStep > repeats * 2 * sweepRepeatVec[vel] * numElevationSteps)
         {
