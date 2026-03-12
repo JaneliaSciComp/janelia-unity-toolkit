@@ -150,10 +150,16 @@ namespace Janelia
                 {
                     _playbackLogObject = new GameObject();
                     _playbackLogObject.transform.SetPositionAndRotation(transform.position, transform.rotation);
-                    _playbackLogTransformation = new Transformation();
+                    _playbackLogTransformation = new TransformationLogDuringPlayback();
                 }
                 transf = _playbackLogObject.transform;
                 logTransf = _playbackLogTransformation;
+
+                // What goes in the log will be the new tracked behavior, plus the played-back behavior stored
+                // in some special fields.
+                TransformationLogDuringPlayback t = logTransf as TransformationLogDuringPlayback;
+                t.playbackWorldPosition = transform.position;
+                t.playbackWorldRotationDegs = transform.eulerAngles;
             }
 
             _framesBeingStill++;
@@ -357,6 +363,13 @@ namespace Janelia
                 rotationDegs = other.rotationDegs;
                 worldRotationDegs = other.worldRotationDegs;
             }
+        }
+
+        [Serializable]
+        internal class TransformationLogDuringPlayback : Transformation
+        {
+            public Vector3 playbackWorldPosition;
+            public Vector3 playbackWorldRotationDegs;
         }
 
         private Transformation _currentTransformation = new Transformation();
