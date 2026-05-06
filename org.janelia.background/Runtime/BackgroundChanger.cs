@@ -24,6 +24,7 @@ namespace Janelia
             public float durationSecs = 1;
             public string separatorTexture;
             public float separatorDurationSecs;
+            public bool quitWhenDone = true;
         }
 
         public static void Initialize(Spec spec, string specFilePath)
@@ -182,7 +183,8 @@ namespace Janelia
                 UseSeparatorTexture();
                 yield return new WaitForSeconds(_spec.separatorDurationSecs);
 
-                Application.Quit();
+                if (_spec.quitWhenDone)
+                    Application.Quit();
             }
 
             private void UseSeparatorTexture()
