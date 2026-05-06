@@ -23,3 +23,12 @@ Provides the `GetNextMessage` function to copy the next message from FicTrac int
 A simple Python script that sends messages in the FicTrac format over a socket, for testing how a Unity application responds to the messages.  Supports UDP and TCP, with UDP being the default to match the real FicTrac code as of late 2020.  Note that with UDP, this scripts starts sending messages immediately (without waiting for a connection, since connections are a TCP concept), so be sure to start the message-receiving application (game) before starting this script.
 
 The `--delay n` argument delays each message by `n` milliseconds, to give a particular frame rate.  Note, however, that versions of Python earlier than 3.11 will not work well for small values of `n`.
+
+The `--interactive` argument enables "driving" with the arrow keys:
+* up arrow = go forward
+* left arrow = rotate left
+* right arrow = rotate right
+* down arrow = go backward
+
+For Janelia fly models (using decimeters as units) `--interactive --trans 0.01` gives a reasonable amount of translation.
+

@@ -8,6 +8,7 @@ import argparse
 import math
 import datetime
 import functools
+import os
 import random
 import socket
 import sys
@@ -17,7 +18,109 @@ integratedHeading = 0
 integratedX = 0
 integratedY = 0
 
-def message(i, args):
+def algorithmic_motion(i, args):
+    # Produces movement in a circle on a plane, with a little jitter.
+    forward = args.translationRate
+    forward += forward * random.uniform(-args.noisePercentage, args.noisePercentage)
+    rotationRad = args.rotationRate / (2 * math.pi)
+    rotationRad += rotationRad * random.uniform(-args.noisePercentage, args.noisePercentage)
+
+    if args.oscillating:
+        p = 200
+        d = (i + p/2) // p
+        if d % 2 == 1:
+            rotationRad *= -1
+
+    d = i // 60
+    if args.free and d % 2 == 1:
+        rotationRad *= 1 # 1.2
+    elif args.stepped:
+        d = i // 6
+        if d % 2 == 1:
+            forward = 0
+            rotationRad = 0
+
+    return rotationRad, forward
+
+def get_key():
+    if os.name == "nt":
+        # Windows
+        import msvcrt
+        key = None
+        if msvcrt.kbhit():
+            key = msvcrt.getch()
+            # Arrow keys send two bytes: first \xe0, then direction.
+            if key == b"\xe0":  
+                key += msvcrt.getch()
+        return key
+    
+    else:
+        # Linux / macOS
+        import tty
+        import termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setcbreak(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+            # Arrow keys send escape sequences.
+            if ch == "\x1b":
+                ch += sys.stdin.read(2)
+            # Encode Unix keypresses to match Windows behavior.
+            return ch.encode()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+def is_up_arrow(key):
+    if os.name == "nt":
+        return key == b"\xe0H"
+    else:
+        return  key == b"\x1b[A"
+
+def is_down_arrow(key):
+    if os.name == "nt":
+        return key == b"\xe0P"
+    else:
+        return  key == b"\x1b[B"
+
+def is_left_arrow(key):
+    if os.name == "nt":
+        return key == b"\xe0K"
+    else:
+        return  key == b"\x1b[D"
+
+def is_right_arrow(key):
+    if os.name == "nt":
+        return key == b"\xe0M"
+    else:
+        return  key == b"\x1b[C"
+
+def is_spacebar(key):
+    return key == b" "
+
+def is_enter(key):
+    return key == b"\r"
+
+def is_esc(key):
+    return key == b"\x1b"
+
+def interactive_motion(i, args):
+    rotation_rad = 0
+    forward = 0
+    key = get_key()
+    if is_left_arrow(key):
+        rotation_rad = args.rotationRate
+    elif is_right_arrow(key):
+        rotation_rad = -args.rotationRate
+    if is_up_arrow(key):
+        forward = args.translationRate
+    elif is_down_arrow(key):
+        forward = -args.translationRate
+    if is_esc(key):
+        sys.exit()
+    return rotation_rad, forward
+
+def message(i, rotationRad, forward):
     global integratedHeading
     global integratedX, integratedY
 
@@ -40,27 +143,6 @@ def message(i, args):
     msgNumeric = [0 for _ in range(26+1)]
     frame = i + 1
     msgNumeric[1] = frame
-
-    # Produces movement in a circle on a plane, with a little jitter.
-    forward = args.translationRate
-    forward += forward * random.uniform(-args.noisePercentage, args.noisePercentage)
-    rotationRad = args.rotationRate / (2 * math.pi)
-    rotationRad += rotationRad * random.uniform(-args.noisePercentage, args.noisePercentage)
-
-    if args.oscillating:
-        p = 200
-        d = (i + p/2) // p
-        if d % 2 == 1:
-            rotationRad *= -1
-
-    d = i // 60
-    if args.free and d % 2 == 1:
-        rotationRad *= 1 # 1.2
-    elif args.stepped:
-        d = i // 6
-        if d % 2 == 1:
-            forward = 0
-            rotationRad = 0
 
     # https://www.researchgate.net/figure/Visual-output-from-the-FicTrac-software-see-supplementary-video-a-A-segment-of-the_fig2_260044337
     # Rotation about `a_x` is sideways translation.
@@ -138,6 +220,8 @@ if __name__ == "__main__":
     parser.add_argument("--oscillate", "-os", dest="oscillating", action="store_true", help="produce oscilating rotation")
     parser.set_defaults(radius=1.0)
     parser.add_argument("--rad", "-r", type=float, dest="radius", help="trackball radius (for integrated x, y only)")
+    parser.set_defaults(interactive=False)
+    parser.add_argument("--interactive", "-i", dest="interactive", action="store_true", help="use interactive keyboard control")
     args = parser.parse_args()
 
     socketType = socket.SOCK_DGRAM if args.useUDP else socket.SOCK_STREAM
@@ -146,10 +230,16 @@ if __name__ == "__main__":
         if args.useUDP:
             print("[{}] Server will send to {}".format(datetime.datetime.now(), (args.host, args.port)))
 
-            for i in range(args.count):
-                msg = message(i, args)
+            i = 0
+            while args.interactive or i < args.count:
+                if args.interactive:
+                    rotationRad, forward = interactive_motion(i, args)
+                else:
+                    rotationRad, forward = algorithmic_motion(i, args)
+                msg = message(i, rotationRad, forward)
                 sock.sendto(msg.encode('utf-8'), (args.host, args.port))
                 time.sleep(args.delayMs / 1000)
+                i += 1
 
             print("[{}] Server done with {} messages".format(datetime.datetime.now(), args.count))
 
@@ -162,9 +252,15 @@ if __name__ == "__main__":
             with conn:
                 print("[{}] Server connected, address {}".format(datetime.datetime.now(), addr))
 
-                for i in range(args.count):
-                    msg = message(i, args)
+                i = 0
+                while args.interactive or i < args.count:
+                    if args.interactive:
+                        rotationRad, forward = interactive_motion(i, args)
+                    else:
+                        rotationRad, forward = algorithmic_motion(i, args)
+                    msg = message(i, rotationRad, forward)
                     conn.sendall(msg.encode('utf-8'))
                     time.sleep(args.delayMs / 1000)
+                    i += 1
 
                 print("[{}] Server done with {} messages".format(datetime.datetime.now(), args.count))
