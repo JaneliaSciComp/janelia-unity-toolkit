@@ -40,10 +40,74 @@ This package (`org.janelia.mapped-grass`) sets up a complete virtual world for a
 
 ## Details
 
+### Projector Configuration
+
+The following fields define the projector configuration as in the [ethoVR project](https://www.haberkernlab.de/ethoVR/getting-started/#3-create-game-objects-and-link-up-package-code-with-objects):
+```
+{
+    ...
+    "projectorCount": 4,
+    "emptySideCount": 1,
+    "projectorOffsetForward": 0,
+    "projectorOffsetLeft": 0,
+    "projectorWidth": 800,
+    "projectorHeight": 600,
+    "projectorFovHorizDeg": 40,
+    "fractionalHeight": 0.737f, 
+    ...
+}
+```
+
+### Subject Motion
+
+By default, the subject fly will be teleported back to the origin when it reaches the edge of the grass field. This behavior is implemented by the `Distance Teleporter` component on the `Fly` object in the Unity scene; some fields on that component control details of the teleportion. To disable teleportation altogether use the following:
+```
+{
+    ...
+    "teleportAtEdge": false,
+    ...
+}
+```
+
+Updates from FicTrac are treated as incremental updates, unless the `"useFicTracIntegratedHeading"` field indicates to use FicTrac's integrated values:
+```
+{
+    ...
+    "useFicTracIntegratedHeading": true,
+    ...
+}
+```
+
+### Random Seed
+
+The JSON spec may contain a specific seed for the random number generator, to give repeatable results from that generator at each run:
+```
+{
+    ...
+    "randomSeed": 123,
+    ...
+}
+```
+As `"randomSeed"` of 0 (the default) indicates that no random seed is explicilty applied, and the random numbers will be different on each run.
+
+### Colors
+
+```
+{
+    ...
+    "objectColor": "#2FAE2F",
+    "groundColor": "#3f3a0b",
+    "skyColor": "#000000",
+    ...
+}
+```
+
 ### Sky Box
 
-To use a custom sky box, add a construct like the following to the JSON spec file:
+To override the constant `"skyColor"` and use a custom sky box, add a construct like the following to the JSON spec file:
 ```
+{
+    ...
     "skyBoxImageFiles": [
         "front.png",
         "back.png",
@@ -51,6 +115,8 @@ To use a custom sky box, add a construct like the following to the JSON spec fil
         "right.png",
         "top.png"
     ],
+    ...
+}
 ```
 For example:
 1. Download https://opengameart.org/sites/default/files/mountain-skyboxes.zip
@@ -66,3 +132,38 @@ For example:
     ],
 ```
 4. Choose the "Mapped Grass/Set Up Grass" menu item and press the "Set Up" button again.
+
+### Lighting
+
+Several fields control shadows:
+```
+{
+    "shadows": 4,
+    "shadowDistance": 2,
+    "shadowBias": 0.001,
+    "shadowNormalBias": 0.001,
+    ...
+}
+```
+
+The `"shadows"` field choose between different levels of shadowing:
+* 0 = no shadows
+* 1 = hard-edged shadows, low resolution
+* 2 = hard-edged shadows, medium resolution
+* 3 = hard-edged shadows, high resolution
+* 4 = soft-edged shadows, high resolution
+
+Generally a higher shadow value means a lower frame rate.
+
+It is unlikely that the other shadow-related parameters will need to be specified, but they are available for completeness. 
+* The `"shadowDistance"` is the distance from the camera (in meters, not the decimeters used for other units) where shadows stop being added.
+* The `"shadowBias"` and `"shadowNormaBias"` affect how close the edge of a shadow is to the base of the object that casts the shadows. The default values should work well but if shadows look detached, it might help to lower these values.
+
+To disable shadows and all other lighting effects, so the color of an object is purely its intrinsic color, use the following:
+```
+{
+    ...
+    "lit": false,
+}
+```
+

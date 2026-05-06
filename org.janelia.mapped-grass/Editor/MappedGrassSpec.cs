@@ -35,15 +35,15 @@ namespace Janelia
         // 0 means no shadows; 1 means hard shadows, low resolution; 2 means hard, medium resolution;
         // 3 means hard, high resolution; 4 means hard and soft, high resolution.
         public int shadows = 4;
-        // https://docs.unity3d.com/ScriptReference/QualitySettings-antiAliasing.html
-        // "Choose the level of Multi-Sample Anti-aliasing (MSAA). Valid values are 0 (no MSAA), 2, 4, and 8."
-        public int antiAliasing = 2;
-
         public float shadowDistance = 2;
         public float shadowNearPlane = 0.2f;
         public float shadowNearPlaneOffset = 1;
         public float shadowBias = 0.001f;
         public float shadowNormalBias = 0.001f;
+
+        // https://docs.unity3d.com/ScriptReference/QualitySettings-antiAliasing.html
+        // "Choose the level of Multi-Sample Anti-aliasing (MSAA). Valid values are 0 (no MSAA), 2, 4, and 8."
+        public int antiAliasing = 2;
 
         public float groundSizeMultiplier = 5;
         public bool teleportAtEdge = true;
