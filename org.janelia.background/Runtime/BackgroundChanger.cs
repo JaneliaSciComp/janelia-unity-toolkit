@@ -24,7 +24,8 @@ namespace Janelia
             public float durationSecs = 1;
             public string separatorTexture;
             public float separatorDurationSecs;
-            public bool quitWhenDone = true;
+            // True: quit per org.janelia.general timeoutSecs. False: quit when images are exhausted.
+            public bool waitForTimeout = false;
         }
 
         public static void Initialize(Spec spec, string specFilePath)
@@ -183,7 +184,7 @@ namespace Janelia
                 UseSeparatorTexture();
                 yield return new WaitForSeconds(_spec.separatorDurationSecs);
 
-                if (_spec.quitWhenDone)
+                if (!_spec.waitForTimeout)
                     Application.Quit();
             }
 
