@@ -103,6 +103,19 @@ Each time the background texture is changed, an entry is written to the log file
 
 For now, at least, the `backgroundCylinderTexture2` parameter can be only the path to a single image, which will be reused for every texture in the sequence for `backgroundCylinderTexture`.
 
+The optional `"waitForTimeout"` field indicates that the stand-alone executable should not automatically stop when all the images have been displayed, but instead when running time reaches the value of the `timeoutSecs` session parameter (from [org.janelia.general package](https://github.com/JaneliaSciComp/janelia-unity-toolkit/tree/master/org.janelia.general)). For example:
+```json
+{
+    "durationSecs": 10,
+    "textures" : [
+        "textures/A.png",
+        "textures/B.png",
+        "textures/C.png"
+    ],
+    "waitForTimeout": true
+}
+```
+
 ### `Janelia.BackgroundUtilities`
 
 #### `Janelia.BackgroundUtilities.SetCylinderTextureOffset`
