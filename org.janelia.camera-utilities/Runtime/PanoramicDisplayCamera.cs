@@ -219,7 +219,7 @@ namespace Janelia
                 float mean = _profileDeltaTimeSum / _profileDeltaTimeCount;
                 float meanMs = Mathf.Round(mean * 1000);
                 float rate = Mathf.Round(1 / mean);
-                Debug.Log($"PanoramicDisplayCamera mean time between frames: {meanMs} ms ({rate} Hz)");
+                Debug.Log($"PanoramicDisplayCamera mean time between frames for the last {_profilePeriod} frames: {meanMs} ms ({rate} Hz)");
                 _profileDeltaTimeSum = 0;
                 _profileDeltaTimeCount = 0;
             }
@@ -261,6 +261,15 @@ namespace Janelia
 
         private void SetupSourceCameras(int width, int height)
         {
+            _materialCameraPositionName = new string[6];
+            _materialCameraForwardName = new string[6];
+            _materialCameraUpName = new string[6];
+            _materialCameraRightName = new string[6];
+            _materialCameraNearName = new string[6];
+            _materialCameraFovHorizName = new string[6];
+            _materialCameraFovVertName = new string[6];
+            _materialCameraTexName = new string[6];
+
             int n = 0;
             for (int i = 0; i < 6; i++)
             {
@@ -272,6 +281,16 @@ namespace Janelia
                     _initialForward[i] = sourceCameras[i].transform.forward;
                     _initialUp[i] = sourceCameras[i].transform.up;
                     _initialRight[i] = sourceCameras[i].transform.right;
+
+                    string baseName = "_Camera" + i.ToString();
+                    _materialCameraPositionName[i] = baseName + "Position";
+                    _materialCameraForwardName[i] = baseName + "Forward";
+                    _materialCameraUpName[i] = baseName + "Up";
+                    _materialCameraRightName[i] = baseName + "Right";
+                    _materialCameraNearName[i] = baseName + "Near";
+                    _materialCameraFovHorizName[i] = baseName + "FovHoriz";
+                    _materialCameraFovVertName[i] = baseName + "FovVert";
+                    _materialCameraTexName[i] = "_TexCamera" + i.ToString();
 
                     ++n;
                 }
@@ -385,26 +404,22 @@ namespace Janelia
 
         private void SetMaterialCamera(Material material, Camera camera, int i)
         {
-            string baseName = "_Camera" + i.ToString(); 
-
             Vector3 pos = camera.transform.position + new Vector3(0, offsetY, 0);
-            material.SetVector(baseName + "Position", movingSurface ? Vector3.zero : pos);
-            material.SetVector(baseName + "Forward", movingSurface ? _initialForward[i] : camera.transform.forward);
-            material.SetVector(baseName + "Up", movingSurface ? _initialUp[i] : camera.transform.up);
-            material.SetVector(baseName + "Right", movingSurface ? _initialRight[i] : camera.transform.right);
-            material.SetFloat(baseName + "Near", camera.nearClipPlane);
+            material.SetVector(_materialCameraPositionName[i], movingSurface ? Vector3.zero : pos);
+            material.SetVector(_materialCameraForwardName[i], movingSurface ? _initialForward[i] : camera.transform.forward);
+            material.SetVector(_materialCameraUpName[i], movingSurface ? _initialUp[i] : camera.transform.up);
+            material.SetVector(_materialCameraRightName[i], movingSurface ? _initialRight[i] : camera.transform.right);
+            material.SetFloat(_materialCameraNearName[i], camera.nearClipPlane);
             float fovHoriz = camera.fieldOfView;
             float fovVert = Camera.VerticalToHorizontalFieldOfView(fovHoriz, camera.aspect);
-            material.SetFloat(baseName + "FovHoriz", fovHoriz);
-            material.SetFloat(baseName + "FovVert", fovVert);
+            material.SetFloat(_materialCameraFovHorizName[i], fovHoriz);
+            material.SetFloat(_materialCameraFovVertName[i], fovVert);
 
             RenderTexture cameraTexture = camera.targetTexture;
             if (cameraTexture != null)
             {
                 cameraTexture.filterMode = FilterMode.Bilinear;
-
-                string name = "_TexCamera" + i.ToString();
-                material.SetTexture(name, _black ? _blackTexture : cameraTexture);
+                material.SetTexture(_materialCameraTexName[i], _black ? _blackTexture : cameraTexture);
             }
         }
 
@@ -468,6 +483,15 @@ namespace Janelia
 #endif
 
         private Material _material;
+
+        string[] _materialCameraPositionName;
+        string[] _materialCameraForwardName;
+        string[] _materialCameraUpName;
+        string[] _materialCameraRightName;
+        string[] _materialCameraNearName;
+        string[] _materialCameraFovHorizName;
+        string[] _materialCameraFovVertName;
+        string[] _materialCameraTexName;
 
         private bool _black = false;
         private Texture2D _blackTexture;
