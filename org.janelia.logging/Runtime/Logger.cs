@@ -116,6 +116,64 @@ namespace Janelia
             }
         }
 
+        // Zero-allocation alternative to `Log(Entry)` for per-frame logging.
+        // The `fields` buffer should contain the entry-specific JSON fields
+        // (e.g., `"deltaTime": 0.016600`), without a trailing comma or newline.
+        // This method composes the full JSON object with time/frame fields and writes
+        // directly to the `StreamWriter`, bypassing the `_entries` collection.
+        public static void Log(char[] fields, int fieldsLen)
+        {
+            if (enable)
+            {
+                InitIfNeeded();
+
+                if (!_splashIsFinished)
+                {
+                    _splashIsFinished = SplashScreen.isFinished;
+                    if (_splashIsFinished)
+                    {
+                        _timeSecsSplashFinished = Time.time;
+                        _frameSplashFinished = Time.frameCount;
+                    }
+                }
+
+                float timeSecs = Time.time;
+                int frame = Time.frameCount;
+                float timeSecsAfterSplash = timeSecs - _timeSecsSplashFinished;
+                int frameAfterSplash = frame - (int)_frameSplashFinished;
+
+                _charEntryLen = 0;
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_OBJ_OPEN);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_FIELD_TIME_SECS);
+                LogUtilities.WriteFixed6(_charEntry, ref _charEntryLen, timeSecs);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_COMMA_NEWLINE);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_FIELD_FRAME);
+                LogUtilities.WriteInt(_charEntry, ref _charEntryLen, frame);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_COMMA_NEWLINE);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_FIELD_TIME_AFTER_SPLASH);
+                LogUtilities.WriteFixed6(_charEntry, ref _charEntryLen, timeSecsAfterSplash);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_COMMA_NEWLINE);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_FIELD_FRAME_AFTER_SPLASH);
+                LogUtilities.WriteInt(_charEntry, ref _charEntryLen, frameAfterSplash);
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_COMMA_NEWLINE);
+
+                System.Array.Copy(fields, 0, _charEntry, _charEntryLen, fieldsLen);
+                _charEntryLen += fieldsLen;
+
+                LogUtilities.WriteString(_charEntry, ref _charEntryLen, JSON_OBJ_CLOSE);
+
+                if (_firstWrite)
+                {
+                    _firstWrite = false;
+                }
+                else
+                {
+                    _writer.Write(",\n");
+                }
+                _writer.Write(_charEntry, 0, _charEntryLen);
+            }
+        }
+
         // Force the entries currently in the log to be written to a file.  The log is
         // then reset, so those entries will not be written again.
         public static void Write()
@@ -617,6 +675,17 @@ namespace Janelia
         private static string _logDirectorySuffix;
         private static string _currentLogFile;
         private static string _previousLogFile;
+
+        private static char[] _charEntry = new char[1024];
+        private static int _charEntryLen;
+
+        private const string JSON_OBJ_OPEN = "{\n";
+        private const string JSON_OBJ_CLOSE = "\n}";
+        private const string JSON_COMMA_NEWLINE = ",\n";
+        private const string JSON_FIELD_TIME_SECS = "    \"timeSecs\": ";
+        private const string JSON_FIELD_FRAME = "    \"frame\": ";
+        private const string JSON_FIELD_TIME_AFTER_SPLASH = "    \"timeSecsAfterSplash\": ";
+        private const string JSON_FIELD_FRAME_AFTER_SPLASH = "    \"frameAfterSplash\": ";
 
         [Serializable]
         private class LogHeader : Entry

@@ -24,7 +24,7 @@ Follow the [installation instructions in the main repository](https://github.com
 
 ## Details
 
-### Adding a Custom Log Entry
+### Adding a Custom Log Entry: The Easy Way
 
 Use the following steps to make a script add a custom entry to the log:
 
@@ -87,6 +87,19 @@ public class Example : MonoBehaviour
   ...
 ]
 ```
+
+### Adding a Custom Log Entry: The Performant Way
+
+The method just described causes the logger to use [Unity's JsonUtility package](https://docs.unity3d.com/ScriptReference/JsonUtility.html) to convert the custom entry into text for the JSON file. That package is carefully designed to be as efficient as possible, but to be able to handle free-form JSON structures it must allocate temporary strings. These temporaries lead to [garbage collection, which can affect application performance](https://docs.unity3d.com/Manual/UnderstandingAutomaticMemoryManagement.html).
+
+In some cases, the etnry being logged is simple enough that an alternative approach can avoid creating any temporary strings, and creating any reason for garbage collection. An example is the `LogUtilities.LogDeltaTime()` function in the `Runtime/LogUtilities.cs` file. It uses `LogUtilities.WriteString()` and `LogUtilities.WriteFixed6()` to write directly to a block of memory that is allocated once at startup and reused for the lifetime of the application. This block is written to the log file efficiently.
+
+In `LogUtilities` there are several functions to efficiently write different types of data to preallocated buffers:
+* `WriteString(char[] buf, ref int pos, string s)`
+* `WriteBool(char[] buf, ref int pos, bool v)`
+* `WriteInt(char[] buf, ref int pos, int v)`
+* `WriteLong(char[] buf, ref int pos, long v)`
+* `WriteFixed6(char[] buf, ref int pos, float v)`
 
 ### `Janelia.LogOptions`
 
