@@ -84,7 +84,7 @@ namespace Janelia
         // display screen.
 
         public void SetDisplaySurfaceData(int dataWidth, int dataHeight, float[] surfaceXData, float[] surfaceYData, float[] surfaceZData, 
-            byte[] surfaceMaskData, Color[] surfaceColorCorrectionData)
+            byte[] surfaceMaskData, Color[] surfaceColorCorrectionData, bool fullScreen = false)
         {
             if (!SystemInfo.SupportsTextureFormat(TextureFormat.RFloat))
             {
@@ -97,9 +97,20 @@ namespace Janelia
                 return;
             }
 
-            // The final "false" is important, to turn off full-screen display, so an extra wide image will
-            // spill over onto other displays that are adjacent in the Windows extended desktop.
-            Screen.SetResolution(dataWidth, dataHeight, false);
+            if (fullScreen)
+            {
+                RefreshRate rate = Screen.currentResolution.refreshRateRatio;
+                // Request `ExclusiveFullScreen` with the appropriate refresh rate to get the most efficient display path
+                // (which avoids compositing with the Desktop Window Manager or DWM).
+                Screen.SetResolution(dataWidth, dataHeight, FullScreenMode.ExclusiveFullScreen, rate);
+                Debug.Log($"Screen.SetResolution({dataWidth}, {dataHeight}, FullScreenMode.ExclusiveFullScreen, {rate})");
+            }
+            else
+            {
+                // The final "false" is important, to turn off full-screen display, so an extra wide image will
+                // spill over onto other displays that are adjacent in the Windows extended desktop.
+                Screen.SetResolution(dataWidth, dataHeight, false);
+            }
 
             SetupMaterial();
 
