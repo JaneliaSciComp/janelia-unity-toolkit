@@ -134,9 +134,32 @@ namespace Janelia
 
         public void Update()
         {
+            Transform transf = transform;
+            Transformation logTransf = _currentTransformation;
             if (_playbackHandler.Update(ref _currentTransformation, transform))
             {
-                return;
+                // The user may or may not choose to log tracked activity (e.g., from FicTrac) during playback.
+                if (!Logger.enable)
+                {
+                    return;
+                }
+
+                // If tracked activity is being logged during playback, then two transforms are needed:
+                // the main one gets the playback activity, and this additional one gets the tracked activity.
+                if (_playbackLogObject == null)
+                {
+                    _playbackLogObject = new GameObject();
+                    _playbackLogObject.transform.SetPositionAndRotation(transform.position, transform.rotation);
+                    _playbackLogTransformation = new TransformationLogDuringPlayback();
+                }
+                transf = _playbackLogObject.transform;
+                logTransf = _playbackLogTransformation;
+
+                // What goes in the log will be the new tracked behavior, plus the played-back behavior stored
+                // in some special fields.
+                TransformationLogDuringPlayback t = logTransf as TransformationLogDuringPlayback;
+                t.playbackWorldPosition = transform.position;
+                t.playbackWorldRotationDegs = transform.eulerAngles;
             }
 
             _framesBeingStill++;
@@ -163,11 +186,11 @@ namespace Janelia
                     actualTranslation = LimitTranslation(postCollisionTranslation);
                 }
 
-                transform.Translate(actualTranslation);
+                transf.Translate(actualTranslation);
 
-                _currentTransformation.attemptedTranslation = (Vector3)translation;
-                _currentTransformation.postCollisionTranslation = postCollisionTranslation;
-                _currentTransformation.actualTranslation = actualTranslation;
+                logTransf.attemptedTranslation = (Vector3)translation;
+                logTransf.postCollisionTranslation = postCollisionTranslation;
+                logTransf.actualTranslation = actualTranslation;
 
                 if (debug)
                 {
@@ -181,8 +204,8 @@ namespace Janelia
             Vector3? rotation = updater.RotationDegrees();
             if (rotation != null)
             {
-                transform.Rotate((Vector3)rotation);
-                _currentTransformation.rotationDegs = (Vector3)rotation;
+                transf.Rotate((Vector3)rotation);
+                logTransf.rotationDegs = (Vector3)rotation;
 
                 addToLog = true;
                 _framesBeingStill = 0;
@@ -190,9 +213,9 @@ namespace Janelia
 
             if (addToLog)
             {
-                _currentTransformation.worldPosition = transform.position;
-                _currentTransformation.worldRotationDegs = transform.eulerAngles;
-                Logger.Log(_currentTransformation);
+                logTransf.worldPosition = transf.position;
+                logTransf.worldRotationDegs = transf.eulerAngles;
+                Logger.Log(logTransf);
             }
 
             _framesSinceLogWrite++;
@@ -267,6 +290,10 @@ namespace Janelia
                 "          <div>" + n +
                 "            <label for='logs'>Choose a log:</label>" + n +
                 "            <select name='logs' id='id_selectLogs'></select>" + n +
+                "          </div>" + n +
+                "          <div>" + n +
+                "            <label for='logs'>Log during replay:</label>" + n +
+                "            <input type='checkbox' id='id_checkboxLogDuringPlayback' style='width:40px; height:40px;'>" + n +
                 "          </div>";
             string scriptBlockWithRadioButtonFunc =
                 "    <script language='javascript'>" + n +
@@ -292,6 +319,10 @@ namespace Janelia
                 "      function actionKinematicSubject()" + n +
                 "      {" + n +
                 "        var extra = '-playback ' + document.getElementById('id_selectLogs').value;" + n +
+                "        var checkboxLogDuringPlayback = document.getElementById('id_checkboxLogDuringPlayback');" + n +
+                "        if (checkboxLogDuringPlayback.checked) {" + n +
+                "          extra += ' -logDuringPlayback';" + n +
+                "        }" + n +
                 "        runApp(extra);" + n +
                 "      }" + n +
                 "    </script>";
@@ -334,7 +365,16 @@ namespace Janelia
             }
         }
 
+        [Serializable]
+        internal class TransformationLogDuringPlayback : Transformation
+        {
+            public Vector3 playbackWorldPosition;
+            public Vector3 playbackWorldRotationDegs;
+        }
+
         private Transformation _currentTransformation = new Transformation();
+        private Transformation _playbackLogTransformation = null;
+        private GameObject _playbackLogObject = null;
 
         private int _framesSinceLogWrite = 0;
         private int _framesBeingStill = 0;

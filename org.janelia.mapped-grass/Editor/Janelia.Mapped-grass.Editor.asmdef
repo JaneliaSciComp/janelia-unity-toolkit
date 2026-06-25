@@ -1,0 +1,19 @@
+{
+    "name": "Janelia.Mapped-grass.Editor",
+    "references": [
+        "Janelia.Setup-cameras-n-gon.Editor",
+        "Janelia.Camera-utilities.Runtime",
+        "Janelia.Collision-handling.Runtime",
+        "Janelia.Fictrac-collision.Runtime",
+        "Janelia.General.Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
