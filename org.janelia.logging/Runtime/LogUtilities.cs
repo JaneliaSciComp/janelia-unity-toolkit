@@ -1,4 +1,8 @@
-﻿// Utilities to simplify certain common types of logging.
+﻿// TODO: The zero-allocation functionality is disabled for now, as it casues some log items
+// to appear in the wrong order (although they do have the correct field values).
+// #define ZERO_ALLOC
+
+// Utilities to simplify certain common types of logging.
 
 using System.Collections;
 using System.Collections.Generic;
@@ -42,6 +46,7 @@ namespace Janelia
             }
         }
 
+#if ZERO_ALLOC
         public static void LogDeltaTime()
         {
             int pos = 0;
@@ -64,6 +69,22 @@ namespace Janelia
             WriteInt(_currentResolutionBuf, ref pos, current.height);
             Logger.Log(_currentResolutionBuf, pos);
         }
+#else
+        public static void LogDeltaTime()
+        {
+            _deltaTimeLog.deltaTime = Time.deltaTime;
+            Logger.Log(_deltaTimeLog);
+        }
+
+        public static void LogCurrentResolution()
+        {
+            Resolution current = Screen.currentResolution;
+            _currentResolutionLog.refreshRateHz = current.refreshRate;
+            _currentResolutionLog.widthPixels = current.width;
+            _currentResolutionLog.heightPixels = current.height;
+            Logger.Log(_currentResolutionLog);
+        }
+#endif
 
         public static void WriteString(char[] buf, ref int pos, string s)
         {
@@ -199,6 +220,7 @@ namespace Janelia
         };
         static private MeshLog _meshLog = new MeshLog();
 
+#if ZERO_ALLOC
         private const string DELTA_TIME_FIELD = "    \"deltaTime\": ";
         private static char[] _deltaTimeBuf = new char[64];
 
@@ -207,5 +229,22 @@ namespace Janelia
         private const string WIDTH_PIXELS_FIELD = "    \"widthPixels\": ";
         private const string HEIGHT_PIXELS_FIELD = "    \"heightPixels\": ";
         private static char[] _currentResolutionBuf = new char[128];
+#else
+        [Serializable]
+        private class DeltaTimeLog : Logger.Entry
+        {
+            public float deltaTime;
+        };
+        static private DeltaTimeLog _deltaTimeLog = new DeltaTimeLog();
+
+        [Serializable]
+        private class CurrentResolutionLog : Logger.Entry
+        {
+            public int refreshRateHz;
+            public int widthPixels;
+            public int heightPixels;
+        };
+        static private CurrentResolutionLog _currentResolutionLog = new CurrentResolutionLog();
+#endif
     }
 }
