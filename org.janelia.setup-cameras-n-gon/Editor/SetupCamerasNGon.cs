@@ -108,20 +108,20 @@ namespace Janelia
             _numCameras = EditorGUILayout.IntField("Number of cameras", _numCameras);
             _numEmptySides = EditorGUILayout.IntField("Number of empty sides", _numEmptySides);
 
-            _screenWidth = EditorGUILayout.FloatField("Screen width (mm)", _screenWidth);
-            _screenHeight = EditorGUILayout.FloatField("Screen height (mm)", _screenHeight);
+            _screenWidth = EditorGUILayout.FloatField("Screen width (scene units)", _screenWidth);
+            _screenHeight = EditorGUILayout.FloatField("Screen height (scene units)", _screenHeight);
             _fractionalHeight = EditorGUILayout.FloatField("Fractional height", _fractionalHeight);
 
             _rotationY = EditorGUILayout.FloatField("Rotation Y (deg)", _rotationY);
 
             // The created "fly" object will be displaced from the center of the n-gon by this vector.
-            _offsetX = EditorGUILayout.FloatField("Offset X (mm)", _offsetX);
-            _offsetZ = EditorGUILayout.FloatField("Offset Z (mm)", _offsetZ);
+            _offsetX = EditorGUILayout.FloatField("Offset X (scene units)", _offsetX);
+            _offsetZ = EditorGUILayout.FloatField("Offset Z (scene units)", _offsetZ);
 
             _tilt = EditorGUILayout.FloatField("Tilt X (deg)", _tilt);
 
-            _near = EditorGUILayout.FloatField("Near", _near);
-            _far = EditorGUILayout.FloatField("Far", _far);
+            _near = EditorGUILayout.FloatField("Near (scene units)", _near);
+            _far = EditorGUILayout.FloatField("Far (scene units)", _far);
 
             ReconcileCameraScreens();
 
