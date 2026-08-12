@@ -123,8 +123,8 @@ namespace Janelia
                 }
 
                 EasyMLSetupHelper helper = new EasyMLSetupHelper();
-                arena.Setup(helper);
                 agent.Setup(helper);
+                arena.Setup(helper);
 
                 arena.PlaceRandomly();
 
