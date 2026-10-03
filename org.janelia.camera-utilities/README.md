@@ -89,6 +89,16 @@ The public fields on `PanoramicDisplayCamera` are:
 - `surfaceMaskScale`: a 0-to-1 scaling factor for brightness compensation using the mask texture. Setting it to 0 disables compensation, and setting it to 1 gives full compensation. See the `ExampleUsingPanoramicDisplayCamera` script.
 - `surfaceColorCorrectionScale`: a 0-to-1 scaling factor for color correction. Setting it to 0 disables color correction.
 - `invertColorAtMask0`: set to `true` to activate [calibration overlay mode](#calibration-overlay-mode), where pixels at dark mask values are color-inverted for guaranteed contrast against any background.
-- `showProgressBox`: set to `true` to make a _progress box_ visible, a small square that changes from black to white on alternate frames. The true frame rate can be verified by positioning a photodiode where the progress box appears on the display, and observing the photodiode's signal with an oscilloscope. The `p` key interactively toggles this value. Changes are saved across sessions via `PlayerPrefs`.
-- `progressBoxPosition`: a `Vector2Int` whose value is the position, in pixels, of the progress box. The `w`, `a`, `s,` and ,`d` keys interactively change this position. Changes are saved across sessions via `PlayerPrefs`.
+- `showProgressBox`: set to `true` to make _progress boxes_ visible, a group of four small squares that change from black to white as the frame count progresses. Each square acts like one binary digit of `Time.frameCount % 16`, and a set of photodiodes positioned over the squares record the true frame rate for the displayed frames. Using four squares allows the recording to detect artifacts of duration up to 16 frames (e.g., several dropped frames in a row). By default, the digits are arranged so they represent the digits in the following order:
+    ```
+    2^0     2^1
+    2^2     2^3
+    ```
+The `p` key interactively toggles this value. Changes are saved across sessions via `PlayerPrefs`.
+- `progressBoxPosition`: a `Vector2Int` array of length four, specifying the positions (in pixels, origin in the upper-left corner) of the progress boxes. To interactively change these positions (e.g., in a running application with no Inspector):
+    - Press the `w`, `a`, `s,` and ,`d` keys to move the whole group up, left, down or right, respectively.
+    - Press the `1` or `2` keys to shrink or stretch, respectively, the group horizontally (in _X_).
+    - Press the `3` or `4` keys to shrink ors tretch, respectively, the group vertially (in _Y_).
+
+    Changes are saved across sessions via `PlayerPrefs`. Or changes can be saved elsewhere if other code specifies the `playerPreferencesAlternative` delegate.
 - `progressBoxSize`: the box's width (and height, since the box is a square), in pixels.
