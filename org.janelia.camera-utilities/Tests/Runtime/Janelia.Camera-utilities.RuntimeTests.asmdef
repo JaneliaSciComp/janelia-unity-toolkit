@@ -1,0 +1,11 @@
+{
+  "name": "Janelia.Camera-utilities.Tests",
+  "references": [
+    "Janelia.Camera-utilities.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": []
+}
