@@ -95,7 +95,7 @@ The public fields on `PanoramicDisplayCamera` are:
     2^2     2^3
     ```
 The `p` key interactively toggles this value. Changes are saved across sessions via `PlayerPrefs`.
-- `progressBoxPosition`: a `Vector2Int` array of length four, specifying the positions (in pixels, origin in the upper-left corner) of the progress boxes. To interactively change these positions (e.g., in a running application with no Inspector):
+- `progressBoxPosition`, `progressBoxSeparation`: a `Vector2Int` for the position (in pixels, origin in the upper-left corner) of the center of the progress boxes, and another for the separations between the boxes. To interactively change these values (e.g., in a running application with no Inspector):
     - Press the `w`, `a`, `s,` and ,`d` keys to move the whole group up, left, down or right, respectively.
     - Press the `1` or `2` keys to shrink or stretch, respectively, the group horizontally (in _X_).
     - Press the `3` or `4` keys to shrink ors tretch, respectively, the group vertially (in _Y_).
