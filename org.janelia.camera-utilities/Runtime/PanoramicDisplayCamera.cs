@@ -20,7 +20,7 @@ namespace Janelia
 {
     public class PanoramicDisplayCamera : MonoBehaviour
     {
-        // The cameras that renderig the box around the viewpoint.
+        // The cameras that render the box around the viewpoint.
         public Camera[] sourceCameras = new Camera[6];
 
         // The width of each of the source cameras. The height is the same, as each side of the box is a square.
@@ -28,7 +28,7 @@ namespace Janelia
 
         // Scaling factors for the masking (e.g., to give brightness compensation) and the color correction.
         // These scaling factors can be changed as the application is running.  See the comments for
-        // `SetDisplaySurfaceData`, below, and also in `ExampleUsingPanoramiceDisplayCamera.cs`.
+        // `SetDisplaySurfaceData`, below, and also in `ExampleUsingPanoramicDisplayCamera.cs`.
         public float surfaceMaskScale = 1;
         public float surfaceColorCorrectionScale = 0;
         public bool invertColorAtMask0 = false;
@@ -47,24 +47,23 @@ namespace Janelia
         public float offsetY = 0;
 
 #if PROGRESS_BOX
-        // The "progress box" is four squares that that change from black to white as the frame count progresses.
-        // Each square acts like one binary digit of `Time.frameCount % 16`, and a set of photodiodes positioned
+        // The "progress box" is four squares that change from black to white as the frame count progresses.
+        // Each square acts like one binary digit of `Time.frameCount % 16`, and a set of photo diodes positioned
         // over the squares record the true frame rate for the displayed frames.
         public bool showProgressBox = false;
-        public Vector2Int[] progressBoxPosition = new Vector2Int[4] {
-            new Vector2Int(100,      100),
-            new Vector2Int(100 + 75, 100),
-            new Vector2Int(100,      100 + 75),
-            new Vector2Int(100 + 75, 100 + 75)
-        };
+        // The squares are arranged in a 2x2 grid, with this position as its center.
+        public Vector2Int progressBoxPosition;
+        // The empty space between the boxes in the 2x2 grid.
+        public Vector2Int progressBoxSeparation;
+        // The size (width and height) of each individual box.
         public int progressBoxSize = 50;
 
-        // By default, inteactive ch anges to the positions of the squares are saved as Unity player prefences,
+        // By default, interactive changes to the positions of the squares are saved as Unity player preferences,
         // but this delegate is a hook for code that saves the changes elsewhere. The code implementing this
-        // alternative is responsible for restoring the changes by setting the `progressBoxPosition` property
-        // directly at startup.
-        public delegate void PlayerPreferencesAltenativeDelegate(Vector2Int[] progressBoxPosition);
-        public PlayerPreferencesAltenativeDelegate playerPreferencesAlternative = null;
+        // alternative is responsible for restoring the changes by setting the `progressBoxPosition` and other
+        // properties directly at startup.
+        public delegate void ProgressBoxSaveDelegate(Vector2Int position, Vector2Int separation);
+        public ProgressBoxSaveDelegate progressBoxSaveDelegate = null;
 #endif
 
         public void SetAntialiasing(int level)
@@ -73,7 +72,7 @@ namespace Janelia
             _material.SetInt("_Antialiasing", clamped);
         }
 
-        // A larger value (e.g., 1) reduces crackes between cameras.
+        // A larger value (e.g., 1) reduces cracks between cameras.
         public void SetCrackReduction(float factor)
         {
             _material.SetFloat("_CrackReduction", factor);
@@ -91,7 +90,7 @@ namespace Janelia
         // unadjusted color, and `s1` is the value of the `surfaceMaskData` at the pixel.  So to get a simple "on/off" 
         // mask, use `surfaceMaskScale` of 1, and set `s1` to 0 for "on" (color unchanged) and 255 for "off" (black).
         // The `surfaceColorCorrectionData` array has a `Color` for each projector pixel, which works with the 
-        // `surfaceColorCorrectionScale` scalar value to further adjuest the final color for each projector pixels.
+        // `surfaceColorCorrectionScale` scalar value to further adjust the final color for each projector pixels.
         // Specifically, `c2 = c1 * (1 - surfaceColorCorrectionScale * s2)`, where `c2` is the compensated color, and
         // `s2` is the color value in `surfaceColorCorrectionData` at the pixel (so that color is subtracted out).
         // See `ExampleUsingPanoramicDisplayCamera` for an example of how the mask can be used to add brightness
@@ -190,37 +189,21 @@ namespace Janelia
             {
                 showProgressBox = PlayerPrefs.GetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX) != 0;
             }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_X) && (progressBoxPosition.Length > 0))
+            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X))
             {
-                progressBoxPosition[0].x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_X);
+                progressBoxPosition.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X);
             }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_Y) && (progressBoxPosition.Length > 0))
+            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y))
             {
-                progressBoxPosition[0].y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_Y);
+                progressBoxPosition.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y);
             }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_X) && (progressBoxPosition.Length > 1))
+            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X))
             {
-                progressBoxPosition[1].x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_X);
+                progressBoxSeparation.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X);
             }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_Y) && (progressBoxPosition.Length > 1))
+            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y))
             {
-                progressBoxPosition[1].y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_Y);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_X) && (progressBoxPosition.Length > 2))
-            {
-                progressBoxPosition[2].x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_X);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_Y) && (progressBoxPosition.Length > 2))
-            {
-                progressBoxPosition[2].y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_Y);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_X) && (progressBoxPosition.Length > 3))
-            {
-                progressBoxPosition[3].x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_X);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_Y) && (progressBoxPosition.Length > 3))
-            {
-                progressBoxPosition[3].y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_Y);
+                progressBoxSeparation.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y);
             }
 #endif
         }
@@ -234,110 +217,78 @@ namespace Janelia
 #if PROGRESS_BOX
             bool updatePlayerPrefs = false;
 
-            Vector2Int sum = Vector2Int.zero;
-            for (int i = 0; i < progressBoxPosition.Length; ++i)
-            {
-                sum += progressBoxPosition[i];
-            }
-            Vector2Int mid = sum / progressBoxPosition.Length;
+            Vector2Int newProgressBoxPosition = progressBoxPosition;
+            Vector2Int newProgressBoxSeparation = progressBoxSeparation;
             if (Input.GetKeyDown(KeyCode.P))
             {
                 showProgressBox = !showProgressBox;
                 updatePlayerPrefs = true;
             }
-            else if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
+            else if (Input.GetKey(KeyCode.W))
             {
-                int dy = Input.GetKey(KeyCode.W) ? -1 : 1;
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
-                {
-                    progressBoxPosition[i].y += dy;
-                }
+                newProgressBoxPosition.y -= 1;
                 updatePlayerPrefs = true;
             }
-            else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            else if (Input.GetKey(KeyCode.S))
             {
-                int dx = Input.GetKey(KeyCode.A) ? -1 : 1;
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
-                {
-                    progressBoxPosition[i].x += dx;
-                }
+                newProgressBoxPosition.y += 1;
+                updatePlayerPrefs = true;
+            }
+            else if (Input.GetKey(KeyCode.A))
+            {
+                newProgressBoxPosition.x -= 1;
+                updatePlayerPrefs = true;
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                newProgressBoxPosition.x += 1;
                 updatePlayerPrefs = true;
             }
             else if (Input.GetKey(KeyCode.Alpha1))
             {
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
+                if (newProgressBoxSeparation.x > 1)
                 {
-                    int dx = (progressBoxPosition[i].x < mid.x - 1) ? 1 :
-                             (progressBoxPosition[i].x > mid.x + 1) ? -1 :
-                             0;
-                    progressBoxPosition[i].x += dx;
+                    newProgressBoxSeparation.x -= 1;
+                    updatePlayerPrefs = true;
                 }
-                updatePlayerPrefs = true;
             }
             else if (Input.GetKey(KeyCode.Alpha2))
             {
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
-                {
-                    int dx = (progressBoxPosition[i].x < mid.x) ? -1 : 1;
-                    progressBoxPosition[i].x += dx;
-                }
+                newProgressBoxSeparation.x += 1;
                 updatePlayerPrefs = true;
             }
             else if (Input.GetKey(KeyCode.Alpha3))
             {
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
+                if (newProgressBoxSeparation.y > 1)
                 {
-                    int dy = (progressBoxPosition[i].y < mid.y - 1) ? 1 :
-                             (progressBoxPosition[i].y > mid.y + 1) ? -1 :
-                             0;
-                    progressBoxPosition[i].y += dy;
+                    newProgressBoxSeparation.y -= 1;
+                    updatePlayerPrefs = true;
                 }
-                updatePlayerPrefs = true;
             }
             else if (Input.GetKey(KeyCode.Alpha4))
             {
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
-                {
-                    int dy = (progressBoxPosition[i].y < mid.y) ? -1 : 1;
-                    progressBoxPosition[i].y += dy;
-                }
+                newProgressBoxSeparation.y += 1;
                 updatePlayerPrefs = true;
             }
             if (updatePlayerPrefs)
             {
-                for (int i = 0; i < progressBoxPosition.Length; ++i)
+                if (ProgressBoxIsValid(newProgressBoxPosition, newProgressBoxSeparation))
                 {
-                    progressBoxPosition[i].x = Mathf.Max(0, Mathf.Min(progressBoxPosition[i].x, Screen.width));
-                    progressBoxPosition[i].y = Mathf.Max(0, Mathf.Min(progressBoxPosition[i].y, Screen.height));
-                }
-                if (playerPreferencesAlternative != null)
-                {
-                    playerPreferencesAlternative(progressBoxPosition);
-                }
-                else
-                {
-                    PlayerPrefs.SetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX, showProgressBox ? 1 : 0);
-                    if (progressBoxPosition.Length > 0)
+                    progressBoxPosition = newProgressBoxPosition;
+                    progressBoxSeparation = newProgressBoxSeparation;
+                    if (progressBoxSaveDelegate != null)
                     {
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_X, progressBoxPosition[0].x);
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_Y, progressBoxPosition[0].y);
+                        progressBoxSaveDelegate(progressBoxPosition, progressBoxSeparation);
                     }
-                    if (progressBoxPosition.Length > 1)
+                    else
                     {
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_X, progressBoxPosition[1].x);
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_Y, progressBoxPosition[1].y);
+                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX, showProgressBox ? 1 : 0);
+                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X, progressBoxPosition.x);
+                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y, progressBoxPosition.y);
+                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X, progressBoxSeparation.x);
+                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y, progressBoxSeparation.y);
+                        PlayerPrefs.Save();
                     }
-                    if (progressBoxPosition.Length > 2)
-                    {
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_X, progressBoxPosition[2].x);
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_Y, progressBoxPosition[2].y);
-                    }
-                    if (progressBoxPosition.Length > 3)
-                    {
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_X, progressBoxPosition[3].x);
-                        PlayerPrefs.SetInt(PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_Y, progressBoxPosition[3].y);
-                    }
-                    PlayerPrefs.Save();
                 }
             }
 #endif
@@ -580,20 +531,16 @@ namespace Janelia
 #if PROGRESS_BOX
         private void DrawProgressBox()
         {
-            if (showProgressBox)
+            if (showProgressBox && ProgressBoxIsValid())
             {
-                if (progressBoxPosition.Length != 4)
-                {
-                    Debug.Log($"Expecting 4 progress box positions but found {progressBoxPosition.Length}");
-                    return;
-                }
                 InitializeProgressTexturesIfNeeded(progressBoxSize);
                 int count = Time.frameCount % 16;
                 int mask = 1;
                 for (int i = 0; i < 4; ++i)
                 {
                     Texture2D progressTex = ((count & mask) != 0) ? _progressTextureOn : _progressTextureOff;
-                    Rect r = new Rect(progressBoxPosition[i].x, progressBoxPosition[i].y, progressBoxSize, progressBoxSize);
+                    Vector2Int p = ProgressBoxTexturePosition(i);
+                    Rect r = new Rect(p.x, p.y, progressBoxSize, progressBoxSize);
                     Graphics.DrawTexture(r, progressTex);
                     mask *= 2;
                 }
@@ -620,6 +567,54 @@ namespace Janelia
             result.SetPixels(pixels);
             result.Apply();
             return result;
+        }
+
+        private Vector2Int ProgressBoxTexturePosition(int i)
+        {
+            return ProgressBoxTexturePosition(i, progressBoxPosition, progressBoxSeparation);
+        }
+
+        private Vector2Int ProgressBoxTexturePosition(int i, Vector2Int pos, Vector2Int sep)
+        {
+            // The squares in the grid should have the following arrangement, where the exponent is `i`:
+            // 2^0 2^1
+            // 2^2 2^3
+            Vector2Int p = pos;
+            p.x += ((i == 0) || (i == 2)) ? -(Mathf.CeilToInt(sep.x / 2) + progressBoxSize) : Mathf.FloorToInt(sep.x / 2);
+            p.y += ((i == 0) || (i == 1)) ? -(Mathf.CeilToInt(sep.y / 2) + progressBoxSize) : Mathf.FloorToInt(sep.y / 2);
+            return p ;
+        }
+
+        private bool ProgressBoxIsValid(bool warn = true)
+        {
+            return ProgressBoxIsValid(progressBoxPosition, progressBoxSeparation, warn);
+        }
+
+        private bool ProgressBoxIsValid(Vector2Int pos, Vector2Int sep, bool warn = false)
+        {
+            if ((sep.x < 1) || (sep.y < 1))
+            {
+                if (warn && !_progressBoxWarned)
+                {
+                    Debug.Log($"Invalid progress box separation {sep}");
+                    _progressBoxWarned = true;
+                }
+                return false;
+            }
+            int w = (_projectorSurfaceXTexture != null) ? _projectorSurfaceXTexture.width : Screen.width;
+            int h = (_projectorSurfaceXTexture != null) ? _projectorSurfaceXTexture.height : Screen.height;
+            Vector2Int p0 = ProgressBoxTexturePosition(0, pos, sep);
+            Vector2Int p3 = ProgressBoxTexturePosition(3, pos, sep);
+            if ((p0.x < 0) || (p0.y < 0) || (p3.x + progressBoxSize >= w) || (p3.y + progressBoxSize >= h))
+            {
+                if (warn && !_progressBoxWarned)
+                {
+                    Debug.Log($"Invalid progress box position {pos} and separation {sep} for screen size ({Screen.width}, {Screen.height})");
+                    _progressBoxWarned = true;
+                }
+                return false;
+            }
+            return true;
         }
 #endif
 
@@ -652,16 +647,12 @@ namespace Janelia
 #if PROGRESS_BOX
         private Texture2D _progressTextureOn;
         private Texture2D _progressTextureOff;
-        private int _progressBoxAdjusting = 0;
         private const string PLAYER_PREF_KEY_SHOW_PROGRESS_BOX = "PanoramicDisplayCamera.ShowProgressBox";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_X = "PanoramicDisplayCamera.ProgressBox0PositionX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_0_POSITION_Y = "PanoramicDisplayCamera.ProgressBox0PositionY";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_X = "PanoramicDisplayCamera.ProgressBox1PositionX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_1_POSITION_Y = "PanoramicDisplayCamera.ProgressBox1PositionY";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_X = "PanoramicDisplayCamera.ProgressBox2PositionX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_2_POSITION_Y = "PanoramicDisplayCamera.ProgressBox2PositionY";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_X = "PanoramicDisplayCamera.ProgressBox3PositionX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_3_POSITION_Y = "PanoramicDisplayCamera.ProgressBox3PositionY";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X = "PanoramicDisplayCamera.ProgressBoxSeparationX";
+        private const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y = "PanoramicDisplayCamera.ProgressBoxSeparationY";
+        private bool _progressBoxWarned = false;
 #endif
 #if PROFILE
         private float _profileDeltaTimeSum = 0;
