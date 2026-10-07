@@ -52,9 +52,9 @@ namespace Janelia
         // over the squares record the true frame rate for the displayed frames.
         public bool showProgressBox = false;
         // The squares are arranged in a 2x2 grid, with this position as its center.
-        public Vector2Int progressBoxPosition;
+        public Vector2Int progressBoxPosition = new Vector2Int(150, 300);
         // The empty space between the boxes in the 2x2 grid.
-        public Vector2Int progressBoxSeparation;
+        public Vector2Int progressBoxSeparation = new Vector2Int(10, 10);
         // The size (width and height) of each individual box.
         public int progressBoxSize = 50;
 
@@ -185,25 +185,28 @@ namespace Janelia
             Debug.Log($"QualitySettings.shadows {QualitySettings.shadows}");
             Debug.Log($"QualitySettings.shadowResolution {QualitySettings.shadowResolution}");
 #if PROGRESS_BOX
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX))
+            if (progressBoxSaveDelegate == null)
             {
-                showProgressBox = PlayerPrefs.GetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX) != 0;
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X))
-            {
-                progressBoxPosition.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y))
-            {
-                progressBoxPosition.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X))
-            {
-                progressBoxSeparation.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X);
-            }
-            if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y))
-            {
-                progressBoxSeparation.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y);
+                if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX))
+                {
+                    showProgressBox = PlayerPrefs.GetInt(PLAYER_PREF_KEY_SHOW_PROGRESS_BOX) != 0;
+                }
+                if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X))
+                {
+                    progressBoxPosition.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X);
+                }
+                if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y))
+                {
+                    progressBoxPosition.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y);
+                }
+                if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X))
+                {
+                    progressBoxSeparation.x = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X);
+                }
+                if (PlayerPrefs.HasKey(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y))
+                {
+                    progressBoxSeparation.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y);
+                }
             }
 #endif
         }
@@ -580,8 +583,10 @@ namespace Janelia
             // 2^0 2^1
             // 2^2 2^3
             Vector2Int p = pos;
-            p.x += ((i == 0) || (i == 2)) ? -(Mathf.CeilToInt(sep.x / 2) + progressBoxSize) : Mathf.FloorToInt(sep.x / 2);
-            p.y += ((i == 0) || (i == 1)) ? -(Mathf.CeilToInt(sep.y / 2) + progressBoxSize) : Mathf.FloorToInt(sep.y / 2);
+            float shx = ((float) sep.x) / 2;
+            float shy = ((float) sep.y) / 2;
+            p.x += ((i == 0) || (i == 2)) ? -(Mathf.CeilToInt(shx) + progressBoxSize) : Mathf.FloorToInt(shx);
+            p.y += ((i == 0) || (i == 1)) ? -(Mathf.CeilToInt(shy) + progressBoxSize) : Mathf.FloorToInt(shy);
             return p ;
         }
 
