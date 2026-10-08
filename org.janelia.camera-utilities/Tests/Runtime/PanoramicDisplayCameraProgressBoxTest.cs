@@ -55,8 +55,10 @@ namespace Janelia
             PlayerPrefs.SetInt(PREFS_SEPARATION_X, 77);
             PlayerPrefs.SetInt(PREFS_SEPARATION_Y, 66);
 
-            MakeComponent();
-            _pdc.progressBoxSaveDelegate = (position, separation) => { };
+            // A realistic texture size, so that the (500, 400) position below is on the texture and the
+            // validity reset in `Start()` leaves it alone.
+            MakeComponent(640, 480);
+            _pdc.progressBoxSaveDelegate = (show, position, separation) => { };
             _pdc.progressBoxPosition = new Vector2Int(500, 400);
             _pdc.progressBoxSeparation = new Vector2Int(5, 6);
 
@@ -66,16 +68,16 @@ namespace Janelia
             Assert.AreEqual(new Vector2Int(5, 6), _pdc.progressBoxSeparation);
         }
 
-        // The delegate receives only the position and the separation, so code using it cannot persist
-        // `showProgressBox`. Yet `Start()` still restores `showProgressBox` from `PlayerPrefs`, so the two
-        // storage mechanisms are mixed.
+        // The delegate receives `show` along with the position and the separation, so code using it owns all
+        // three values. `Start()` must not restore `showProgressBox` from `PlayerPrefs`, or the two storage
+        // mechanisms are mixed.
         [UnityTest]
         public IEnumerator StartDoesNotRestoreVisibilityFromPlayerPrefsWhenSaveDelegateIsInstalled()
         {
             PlayerPrefs.SetInt(PREFS_SHOW, 1);
 
             MakeComponent();
-            _pdc.progressBoxSaveDelegate = (position, separation) => { };
+            _pdc.progressBoxSaveDelegate = (show, position, separation) => { };
             _pdc.showProgressBox = false;
 
             yield return null;
