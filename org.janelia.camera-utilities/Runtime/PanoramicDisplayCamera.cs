@@ -62,7 +62,7 @@ namespace Janelia
         // but this delegate is a hook for code that saves the changes elsewhere. The code implementing this
         // alternative is responsible for restoring the changes by setting the `progressBoxPosition` and other
         // properties directly at startup.
-        public delegate void ProgressBoxSaveDelegate(Vector2Int position, Vector2Int separation);
+        public delegate void ProgressBoxSaveDelegate(bool show, Vector2Int position, Vector2Int separation);
         public ProgressBoxSaveDelegate progressBoxSaveDelegate = null;
 #endif
 
@@ -287,7 +287,7 @@ namespace Janelia
                     progressBoxSeparation = newProgressBoxSeparation;
                     if (progressBoxSaveDelegate != null)
                     {
-                        progressBoxSaveDelegate(progressBoxPosition, progressBoxSeparation);
+                        progressBoxSaveDelegate(showProgressBox, progressBoxPosition, progressBoxSeparation);
                     }
                     else
                     {
