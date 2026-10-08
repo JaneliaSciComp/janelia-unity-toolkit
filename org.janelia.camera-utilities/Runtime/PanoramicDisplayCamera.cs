@@ -52,9 +52,9 @@ namespace Janelia
         // over the squares record the true frame rate for the displayed frames.
         public bool showProgressBox = false;
         // The squares are arranged in a 2x2 grid, with this position as its center.
-        public Vector2Int progressBoxPosition = new Vector2Int(150, 300);
+        public Vector2Int progressBoxPosition = new Vector2Int(PROGRESS_BOX_X0, PROGRESS_BOX_Y0);
         // The empty space between the boxes in the 2x2 grid.
-        public Vector2Int progressBoxSeparation = new Vector2Int(10, 10);
+        public Vector2Int progressBoxSeparation = new Vector2Int(PROGRESS_BOX_SEPARATION0,  PROGRESS_BOX_SEPARATION0);
         // The size (width and height) of each individual box.
         public int progressBoxSize = 50;
 
@@ -208,6 +208,12 @@ namespace Janelia
                     progressBoxSeparation.y = PlayerPrefs.GetInt(PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y);
                 }
             }
+            if (!ProgressBoxIsValid())
+            {
+                progressBoxPosition = new Vector2Int(PROGRESS_BOX_X0, PROGRESS_BOX_Y0);
+                progressBoxSeparation = new Vector2Int(PROGRESS_BOX_SEPARATION0, PROGRESS_BOX_SEPARATION0);
+            }
+            Debug.Log($"Initial progress box position {progressBoxPosition}, separation {progressBoxSeparation}");
 #endif
         }
 
@@ -652,6 +658,9 @@ namespace Janelia
 #if PROGRESS_BOX
         private Texture2D _progressTextureOn;
         private Texture2D _progressTextureOff;
+        private const int PROGRESS_BOX_X0 = 150;
+        private const int PROGRESS_BOX_Y0 = 300;
+        private const int PROGRESS_BOX_SEPARATION0 = 10;
         private const string PLAYER_PREF_KEY_SHOW_PROGRESS_BOX = "PanoramicDisplayCamera.ShowProgressBox";
         private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
         private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
