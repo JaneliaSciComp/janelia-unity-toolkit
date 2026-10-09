@@ -17,12 +17,6 @@ namespace Janelia
     // these tests in the editor discards any progress box position saved on this machine.
     public class PanoramicDisplayCameraProgressBoxTest
     {
-        private const string PREFS_SHOW = "PanoramicDisplayCamera.ShowProgressBox";
-        private const string PREFS_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
-        private const string PREFS_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
-        private const string PREFS_SEPARATION_X = "PanoramicDisplayCamera.ProgressBoxSeparationX";
-        private const string PREFS_SEPARATION_Y = "PanoramicDisplayCamera.ProgressBoxSeparationY";
-
         private GameObject _root;
         private PanoramicDisplayCamera _pdc;
 
@@ -50,10 +44,10 @@ namespace Janelia
         public IEnumerator StartDoesNotOverwritePositionWhenSaveDelegateIsInstalled()
         {
             // Stale values from an earlier run, left behind in `PlayerPrefs`.
-            PlayerPrefs.SetInt(PREFS_POSITION_X, 999);
-            PlayerPrefs.SetInt(PREFS_POSITION_Y, 888);
-            PlayerPrefs.SetInt(PREFS_SEPARATION_X, 77);
-            PlayerPrefs.SetInt(PREFS_SEPARATION_Y, 66);
+            PlayerPrefs.SetInt(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X, 999);
+            PlayerPrefs.SetInt(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y, 888);
+            PlayerPrefs.SetInt(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X, 77);
+            PlayerPrefs.SetInt(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y, 66);
 
             // A realistic texture size, so that the (500, 400) position below is on the texture and the
             // validity reset in `Start()` leaves it alone.
@@ -74,7 +68,7 @@ namespace Janelia
         [UnityTest]
         public IEnumerator StartDoesNotRestoreVisibilityFromPlayerPrefsWhenSaveDelegateIsInstalled()
         {
-            PlayerPrefs.SetInt(PREFS_SHOW, 1);
+            PlayerPrefs.SetInt(PanoramicDisplayCamera.PLAYER_PREF_KEY_SHOW_PROGRESS_BOX, 1);
 
             MakeComponent();
             _pdc.progressBoxSaveDelegate = (show, position, separation) => { };
@@ -174,11 +168,11 @@ namespace Janelia
 
         private static void ClearPrefs()
         {
-            PlayerPrefs.DeleteKey(PREFS_SHOW);
-            PlayerPrefs.DeleteKey(PREFS_POSITION_X);
-            PlayerPrefs.DeleteKey(PREFS_POSITION_Y);
-            PlayerPrefs.DeleteKey(PREFS_SEPARATION_X);
-            PlayerPrefs.DeleteKey(PREFS_SEPARATION_Y);
+            PlayerPrefs.DeleteKey(PanoramicDisplayCamera.PLAYER_PREF_KEY_SHOW_PROGRESS_BOX);
+            PlayerPrefs.DeleteKey(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X);
+            PlayerPrefs.DeleteKey(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y);
+            PlayerPrefs.DeleteKey(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X);
+            PlayerPrefs.DeleteKey(PanoramicDisplayCamera.PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y);
         }
     }
 }

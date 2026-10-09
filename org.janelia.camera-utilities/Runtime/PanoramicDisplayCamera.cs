@@ -661,11 +661,14 @@ namespace Janelia
         private const int PROGRESS_BOX_X0 = 150;
         private const int PROGRESS_BOX_Y0 = 300;
         private const int PROGRESS_BOX_SEPARATION0 = 10;
-        private const string PLAYER_PREF_KEY_SHOW_PROGRESS_BOX = "PanoramicDisplayCamera.ShowProgressBox";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X = "PanoramicDisplayCamera.ProgressBoxSeparationX";
-        private const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y = "PanoramicDisplayCamera.ProgressBoxSeparationY";
+
+        // Internal for visibility to the tests. See AssemblyInfo.cs.
+        internal const string PLAYER_PREF_KEY_SHOW_PROGRESS_BOX = "PanoramicDisplayCamera.ShowProgressBox";
+        internal const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_X = "PanoramicDisplayCamera.ProgressBoxPositionX";
+        internal const string PLAYER_PREF_KEY_PROGRESS_BOX_POSITION_Y = "PanoramicDisplayCamera.ProgressBoxPositionY";
+        internal const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_X = "PanoramicDisplayCamera.ProgressBoxSeparationX";
+        internal const string PLAYER_PREF_KEY_PROGRESS_BOX_SEPARATION_Y = "PanoramicDisplayCamera.ProgressBoxSeparationY";
+
         private bool _progressBoxWarned = false;
 #endif
 #if PROFILE
