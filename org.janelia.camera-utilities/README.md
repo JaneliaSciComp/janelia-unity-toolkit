@@ -102,3 +102,10 @@ The `p` key interactively toggles this value. Changes are saved across sessions 
 
     Changes are saved across sessions via `PlayerPrefs`. Or changes can be saved elsewhere if other code specifies the `progressBoxSaveDelegate` function.
 - `progressBoxSize`: the box's width (and height, since the box is a square), in pixels.
+
+## Testing
+
+In the Unity editor, choose "Window/General/Test Runner", then the "PlayMode" tab, and press "Run All". The package adds itself to `"testables"` in the project's `Packages/manifest.json`, which Unity requires before it lists a package's tests.
+
+Running the tests discards any progress box positions saved in `PlayerPrefs`.
+
