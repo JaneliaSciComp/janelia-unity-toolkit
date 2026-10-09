@@ -16,7 +16,7 @@ Makes the attached camera use off-axis perspective projection.
 
 ### `Janelia.AdjoiningDisplaysCamera` and `Janelia.AdjoiningDisplaysCameraBuilder`
 
-Unity supports ["multi-display"](https://docs.unity3d.com/Manual/MultiDisplay.html), with a game having multiple cameras each shown on its own external display monitor. Framerates above 60 Hz are not possible, though (as of 2019).
+Unity supports ["multi-display"](https://docs.unity3d.com/Manual/MultiDisplay.html), with a game having multiple cameras each shown on its own external display monitor. Frame rates above 60 Hz are not possible, though (as of 2019).
 
 The `Janelia.AdjoiningDisplaysCamera` script implements an alternative with higher performance. It combines the multiple camera images into one wide image that is associated with another, main camera. The associated `Janelia.AdjoiningDisplaysCameraBuilder` builds a standalone executable with the special options to make the main camera's wide image extend across all the external displays, putting the appropriate part on each display.
 
@@ -35,7 +35,7 @@ To use `AdjoiningDisplaysCamera` on Windows:
 <img src="./adjoiningDisplaysCamera.PNG" id="adjoiningDisplay" height="400">
 </p>
 
-When the game is running, it can display a _progress box_, a small square that alternates between black and white with each frame (so a photodiode attached to an oscilloscope can give an accurate indication of the frame rate).
+When the game is running, it can display a _progress box_, a small square that alternates between black and white with each frame (so a photo diode attached to an oscilloscope can give an accurate indication of the frame rate).
 
 - Pressing the `c` key changes which display shows the progress box.
 - Pressing the `p` key changes which corner of that display contains the progress box, with the fifth press hiding the progress box altogether.
@@ -46,7 +46,7 @@ Also, pressing the `m` key toggles mirroring of the displays on and off (useful 
 
 For animal participants who can see very fast changes (e.g., the _Drosophila_ fruit fly), the `Janelia.AdjoiningDisplaysCamera` supports an optional way of improving the visual smoothness through "frame packing" for DLP (digital light processing) projectors. When ready to render frame _i_ at time _t\_i_, `AdjoiningDisplaysCamera` interpolates the camera pose (position, orientation) at three fractions of the interval from _t\_i-1_ to _t\_i_, and renders the scene at each fraction. It then packs the resulting image from each fraction into one color channel of the image that is finally displayed. [A DLP displays each color channel successively](https://www.benq.com/en-us/business/resource/trends/dlp-and-3lcd-projectors.html) for a fraction of the overall frame time, so the net effect is that the images for the interpolated camera poses are visible as frames at a higher frame rate to animals capable of seeing at the higher rate. The higher-rate frames appear in grayscale instead of color, but that is acceptable in some applications.
 
-The Unity Editor's Inspector gives control over what the three fractions are, and what color channel corresponds to each fraction. The fractions are controlled with three 0-to-1 sliders. What color channel corresponds to each fraction is controled by a "packing order" value; a packing order of "GRB", for example, indicates that the first fraction corresponds to the display of green, the second fraction to red and the third to blue.
+The Unity Editor's Inspector gives control over what the three fractions are, and what color channel corresponds to each fraction. The fractions are controlled with three 0-to-1 sliders. What color channel corresponds to each fraction is controlled by a "packing order" value; a packing order of "GRB", for example, indicates that the first fraction corresponds to the display of green, the second fraction to red and the third to blue.
 
 Note that while frame packing increases effective frame rate and smoothness, it does _not_ reduce latency. In fact, it actually increases the latency by roughly the time to draw one frame.
 
@@ -56,7 +56,7 @@ The `Janelia.PanoramicDisplayCamera` script supports displays that are not tradi
 
 The `Janelia.ExampleUsingPanoramicDisplayCamera` script shows how to set up the data needed for a cylindrical display, which is passed to `PanoramicDisplayCamera` with its `SetDisplaySurfaceData` function. The tracking of the freely moving subject (e.g., using computer vision) must be implemented separately.
 
-The curvature of a display surface like a cylinder may distort the brightness of the projected image (e.g., reducing the brightness at the borders between projectors, since those areas have more of an angle away from projector light source). A compensating texture (e.g., with a reduction factor applied away from the borders between projectors) can be passed to `PanoramicDisplayCamera`. The following image shows the effect for three projectors, with the compensation exagerated for emphasis; note that there are three regions across the image with gradual lightening at the edges of each region.
+The curvature of a display surface like a cylinder may distort the brightness of the projected image (e.g., reducing the brightness at the borders between projectors, since those areas have more of an angle away from projector light source). A compensating texture (e.g., with a reduction factor applied away from the borders between projectors) can be passed to `PanoramicDisplayCamera`. The following image shows the effect for three projectors, with the compensation exaggerated for emphasis; note that there are three regions across the image with gradual lightening at the edges of each region.
 
 <p align="center">
 <img src="./panoramicDisplayCamera.PNG" height="400">
@@ -89,7 +89,7 @@ The public fields on `PanoramicDisplayCamera` are:
 - `surfaceMaskScale`: a 0-to-1 scaling factor for brightness compensation using the mask texture. Setting it to 0 disables compensation, and setting it to 1 gives full compensation. See the `ExampleUsingPanoramicDisplayCamera` script.
 - `surfaceColorCorrectionScale`: a 0-to-1 scaling factor for color correction. Setting it to 0 disables color correction.
 - `invertColorAtMask0`: set to `true` to activate [calibration overlay mode](#calibration-overlay-mode), where pixels at dark mask values are color-inverted for guaranteed contrast against any background.
-- `showProgressBox`: set to `true` to make _progress boxes_ visible, a group of four small squares that change from black to white as the frame count progresses. Each square acts like one binary digit of `Time.frameCount % 16`, and a set of photodiodes positioned over the squares record the true frame rate for the displayed frames. Using four squares allows the recording to detect artifacts of duration up to 16 frames (e.g., several dropped frames in a row). By default, the digits are arranged so they represent the digits in the following order:
+- `showProgressBox`: set to `true` to make _progress boxes_ visible, a group of four small squares that change from black to white as the frame count progresses. Each square acts like one binary digit of `Time.frameCount % 16`, and a set of photo diodes positioned over the squares record the true frame rate for the displayed frames. Using four squares allows the recording to detect artifacts of duration up to 16 frames (e.g., several dropped frames in a row). By default, the digits are arranged so they represent the digits in the following order:
     ```
     2^0     2^1
     2^2     2^3
@@ -98,7 +98,7 @@ The `p` key interactively toggles this value. Changes are saved across sessions 
 - `progressBoxPosition`, `progressBoxSeparation`: a `Vector2Int` for the position (in pixels, origin in the upper-left corner) of the center of the progress boxes, and another for the separations between the boxes. To interactively change these values (e.g., in a running application with no Inspector):
     - Press the `w`, `a`, `s,` and ,`d` keys to move the whole group up, left, down or right, respectively.
     - Press the `1` or `2` keys to shrink or stretch, respectively, the group horizontally (in _X_).
-    - Press the `3` or `4` keys to shrink ors tretch, respectively, the group vertially (in _Y_).
+    - Press the `3` or `4` keys to shrink or stretch, respectively, the group vertically (in _Y_).
 
-    Changes are saved across sessions via `PlayerPrefs`. Or changes can be saved elsewhere if other code specifies the `playerPreferencesAlternative` delegate.
+    Changes are saved across sessions via `PlayerPrefs`. Or changes can be saved elsewhere if other code specifies the `progressBoxSaveDelegate` function.
 - `progressBoxSize`: the box's width (and height, since the box is a square), in pixels.
