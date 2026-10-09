@@ -30,29 +30,40 @@ namespace Janelia
         }
 
         public static void Setup(int numCameras = 4, int numEmptySides = 1, float screenWidth = 5.8f, float screenHeight = 9.5f,
-                                 float fractionalHeight = 0.737f, float rotationY = -18, float offsetX = 0, float offsetZ = 0)
+                                float fractionalHeight = 0.737f, float rotationY = -18, float offsetX = 0, float offsetZ = 0,
+                                bool show = true)
         {
             // Remove the saved UI input values, so `OnEnable` does not load them and set `_cameraScreens`
             // to the wrong size relative to the settings enabled in the rest of this routine.
             AssetDatabase.Refresh();
-            bool success = AssetDatabase.DeleteAsset("Assets/Resources/Editor/savedCamerasNGon.asset");
+            AssetDatabase.DeleteAsset("Assets/Resources/Editor/savedCamerasNGon.asset");
             AssetDatabase.Refresh();
 
-            SetupCamerasNGon window = (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon));
+            SetupCamerasNGon window = show ?
+                (SetupCamerasNGon)GetWindow(typeof(SetupCamerasNGon)) :
+                CreateInstance<SetupCamerasNGon>();
+            try
+            {
+                window._numCameras = numCameras;
+                window._numEmptySides = numEmptySides;
+                window._screenWidth = screenWidth;
+                window._screenHeight = screenHeight;
+                window._fractionalHeight = fractionalHeight;
+                window._rotationY = rotationY;
+                window._offsetX = offsetX;
+                window._offsetZ = offsetZ;
 
-            window._numCameras = numCameras;
-            window._numEmptySides = numEmptySides;
-            window._screenWidth = screenWidth;
-            window._screenHeight = screenHeight;
-            window._fractionalHeight = fractionalHeight;
-            window._rotationY = rotationY;
-            window._offsetX = offsetX;
-            window._offsetZ = offsetZ;
-
-            window.ReconcileCameraScreens();
-            window._rotationY = window.RotationYCentered();
-
-            window.UpdateCameras();
+                window.ReconcileCameraScreens();
+                window._rotationY = window.RotationYCentered();
+                window.UpdateCameras();
+            }
+            finally
+            {
+                if (!show)
+                {
+                    DestroyImmediate(window);
+                }
+            }
         }
 
         private GameObject _fly;
@@ -182,6 +193,7 @@ namespace Janelia
         private void OnDestroy()
         {
             Save();
+            EditorSceneManager.sceneSaved -= OnSceneSaved;
         }
 
         private float RotationYCentered()
