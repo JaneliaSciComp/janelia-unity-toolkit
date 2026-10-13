@@ -61,7 +61,14 @@ namespace Janelia
             {
                 if (!show)
                 {
-                    DestroyImmediate(window);
+                    try
+                    {
+                        DestroyImmediate(window);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
                 }
             }
         }
@@ -380,6 +387,11 @@ namespace Janelia
 
         private void Save()
         {
+            if (_saved == null)
+            {
+                return;
+            }
+
             _saved.flyName = PathName(_fly);
             _saved.cameraNames.Clear();
             _saved.screenNames.Clear();
